@@ -1,0 +1,1747 @@
+{
+  "@@locale": "sv",
+  "appName": "Fuglehund",
+  "common_ok": "OK",
+  "common_close": "Stäng",
+  "common_done": "Klart",
+  "common_cancel": "Avbryt",
+  "common_save": "Spara",
+  "common_copy": "Kopiera",
+  "common_copied": "Kopierat ✅",
+  "common_unknown": "Okänd",
+  "common_unknown_email": "Okänd e-post",
+  "common_unknown_member": "Okänt medlem",
+  "common_yes": "Ja",
+  "common_no": "Nej",
+  "common_invalid_link": "Ogiltig länk",
+  "common_could_not_open_link": "Kunde inte öppna länken",
+  "common_no_permission": "Du har inte behörighet till det här.",
+  "@common_no_permission": {
+    "description": "Visas när användaren saknar behörighet att utföra en åtgärd."
+  },
+  "common_retry": "Försök igen",
+  "age_unknown": "Ålder okänd",
+  "boot_error_title": "Starten misslyckades",
+  "boot_error_body": "Se terminalen för detaljer.\n{message}",
+  "@boot_error_body": {
+    "description": "Body text for boot error screen.",
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "boot_error_unknown": "Okänt fel",
+  "boot_restore_title": "Återställer backup…",
+  "boot_restore_body":
+      "Stäng inte appen.\n\nVi blockerar åtkomst till data medan återställningen pågår för att undvika Hive-fel.",
+  "boot_restart_title": "Backup återställd ✅",
+  "boot_restart_body":
+      "Appen stängs nu så ändringarna kan laddas.\n\nÖppna appen igen efteråt.",
+  "common_comingSoon": "Kommer snart.",
+  "qr_scan_title": "Skanna QR",
+  "home_title": "Hem",
+  "home": "Hem",
+  "sessions": "Pass",
+  "statistics": "Statistik",
+  "stats_week_label": "Vecka {week}",
+  "@stats_week_label": {
+    "description": "Label for the week indicator in statistics cards.",
+    "placeholders": {
+      "week": {}
+    }
+  },
+  "common_conjunction_and": "och",
+  "stats_stands_count": "{count, plural, one{{count} stand} other{{count} stander}}",
+  "@stats_stands_count": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "stats_sessions_count": "{count, plural, one{{count} session} other{{count} sessioner}}",
+  "@stats_sessions_count": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "stats_birds_count": "{count, plural, one{{count} fågel} other{{count} fåglar}}",
+  "@stats_birds_count": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "stats_flushes_count": "{count, plural, one{{count} stöt} other{{count} stöt}}",
+  "@stats_flushes_count": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "common_years": "{count, plural, one{{count} år} other{{count} år}}",
+  "@common_years": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "common_months": "{count, plural, one{{count} månad} other{{count} månader}}",
+  "@common_months": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "common_days": "{count, plural, one{{count} dag} other{{count} dagar}}",
+  "@common_days": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "common_months_short": "mån",
+  "stats_screen_title": "Statistik",
+  "stats_period_daily": "Dagligen",
+  "stats_period_weekly": "Veckovis",
+  "stats_period_monthly": "Månatligen",
+  "stats_no_sessions_registered": "Inga sessioner registrerade ännu",
+  "stats_filter_all_dogs": "Alla hundar",
+  "stats_filter_dynamic_period": "Dynamisk period",
+  "stats_trendline_title": "Trendlinje",
+  "stats_period_range": "{from}–{to}",
+  "@stats_period_range": {
+    "placeholders": {
+      "from": {},
+      "to": {}
+    }
+  },
+  "stats_bucket_title": "{title}",
+  "@stats_bucket_title": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "stats_buckets_count": "{count, plural, one{{count} bucket} other{{count} buckets}}",
+  "@stats_buckets_count": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "stats_total_label": "Total: {count}",
+  "@stats_total_label": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "stats_more_points": "{count, plural, one{{count} poäng mer} other{{count} poäng mer}}",
+  "@stats_more_points": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "stats_trend_point_label": "{label}: {value}",
+  "@stats_trend_point_label": {
+    "placeholders": {
+      "label": {},
+      "value": {}
+    }
+  },
+  "dogs": "Hundar",
+  "dog_sex_male": "Hanhund",
+  "dog_sex_female": "Tik",
+  "dog_subtitle_born_prefix": "Född: {date}",
+  "@dog_subtitle_born_prefix": {
+    "description": "Prefix for dog card subtitle showing birth date.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "dog_editor_error_name_missing": "Namn saknas",
+  "dog_editor_save": "Spara",
+  "dog_editor_saving": "Sparar…",
+  "dog_editor_delete_dog": "Radera hund",
+  "dog_editor_deleting": "Raderar…",
+  "dog_editor_delete_dog_title": "Radera hund",
+  "dog_editor_delete_dog_body": "Vill du radera hunden? Det går inte att ångra.",
+  "dog_editor_button_cancel": "Avbryt",
+  "dog_editor_button_delete": "Radera",
+  "dog_editor_new_breed_title": "Ny ras",
+  "dog_editor_new_breed_hint": "T.ex. Gordon setter",
+  "dog_editor_button_add": "Lägg till",
+  "dog_editor_select_breed_label": "Välj ras",
+  "dog_editor_select_breed_placeholder": "Välj ras",
+  "dog_editor_new_breed_option": "Ny ras…",
+  "dog_editor_name_label": "Namn",
+  "dog_editor_nickname_label": "Smeknamn",
+  "dog_editor_nickname_hint": "Valfritt (t.ex. Zoë, Bowie)",
+  "dog_editor_birthdate_label": "Födelsedatum",
+  "dog_editor_birthdate_not_set": "Inte valt",
+  "dog_editor_regnr_label": "Reg.nr",
+  "dog_editor_pedigree_url_label": "Stamtavle-URL",
+  "dog_editor_memory_words_label": "Minnesord",
+  "dog_editor_image_text_anchor_label": "Textplacering på bild",
+  "dog_editor_death_registered_title": "Registrerad död",
+  "dog_editor_section_breed_title": "Ras",
+  "dog_editor_section_sex": "Kön",
+  "dog_editor_role_section_title": "Välj roll",
+  "dog_editor_role_owner": "Ägare",
+  "dog_editor_role_admin": "Administratör",
+  "dog_editor_role_user": "Användare",
+  "dog_editor_section_hero_title": "Hero-text",
+  "dog_editor_anchor_bottom_left": "Nederst till vänster",
+  "dog_editor_anchor_bottom_center": "Nederst centrerad",
+  "dog_editor_anchor_top_left": "Överst till vänster",
+  "dog_editor_text_size_label": "Textstorlek",
+  "dog_editor_text_size_small": "Liten",
+  "dog_editor_text_size_normal": "Normal",
+  "dog_editor_text_size_large": "Stor",
+  "dog_editor_section_lifecycle_title": "Livscykel",
+  "dog_editor_death_date_label": "Dödsdatum",
+  "dog_editor_death_date_picker_hint": "Välj datum",
+  "dog_detail_snackbar_invite_accepted": "Inbjudan accepterad",
+  "dog_detail_snackbar_invite_declined": "Inbjudan avvisad",
+  "dog_detail_snackbar_invite_sent": "Inbjudan skickad",
+  "dog_detail_snackbar_ownership_accepted": "Ägarskap accepterat",
+  "dog_detail_snackbar_request_declined": "Förfrågan avvisad",
+  "dog_detail_snackbar_request_cancelled": "Förfrågan avbruten",
+  "dog_detail_snackbar_image_save_failed": "Kunde inte spara bilden.",
+  "dog_detail_snackbar_pedigree_invalid": "Stamtavle-länken är ogiltig eller kan inte öppnas.",
+  "dog_detail_photo_source_gallery": "Välj från bilder",
+  "dog_detail_photo_source_camera": "Ta bild",
+  "dog_detail_button_cancel": "Avbryt",
+  "dog_detail_pedigree_section_title": "Stamtavle",
+  "dog_detail_button_open_pedigree": "Öppna stamtavle",
+  "dog_pedigree_no_link": "Ingen länk registrerad",
+  "dog_detail_photo_dialog_title": "Profilbild",
+  "dog_detail_photo_pick_camera": "Ta bild",
+  "dog_detail_photo_pick_gallery": "Välj från bilder",
+  "dog_detail_photo_remove": "Ta bort bild",
+  "dog_detail_snackbar_photo_updated": "Profilbild uppdaterat",
+  "dog_detail_snackbar_photo_removed": "Profilbild borttaget",
+  "dog_detail_snackbar_error_generic": "Något gick fel",
+  "dog_detail_info_label_sex": "Kön",
+  "dog_detail_info_label_born": "Född",
+  "dog_detail_summary_points_label": "Poäng",
+  "dog_detail_summary_session_count_label": "Antal pass",
+  "dog_detail_summary_active_time_label": "Aktiv tid",
+  "dog_detail_summary_birds_down_label": "Fälld fågel",
+  "dog_detail_summary_first_session_label": "Första passet",
+  "dog_detail_summary_last_session_label": "Senaste passet",
+  "dog_detail_tooltip_edit_profile": "Redigera hund",
+  "dog_detail_farewell_prefix": "Avsked",
+  "dog_detail_farewell_age_sentence":
+      "{name} blev {years} {months} {days} gammal",
+  "@dog_detail_farewell_age_sentence": {
+    "description": "Sentence describing how old the dog was when passing.",
+    "placeholders": {
+      "name": {},
+      "years": {},
+      "months": {},
+      "days": {}
+    }
+  },
+  "dog_detail_next_milestones_title": "Nästa milstolpar",
+  "dog_detail_next_milestone_title": "Nästa milstolpe",
+  "milestone_first_session_title": "Första passet genomfört",
+  "milestone_first_session_subtitle": "Första passet med {dogName}",
+  "@milestone_first_session_subtitle": {
+    "placeholders": {
+      "dogName": {}
+    }
+  },
+  "milestone_first_bird_title": "Första fågel",
+  "age_years": "{count, plural, one{{count} år} other{{count} år}}",
+  "@age_years": {
+    "description": "Age measured in years with plural.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "age_years_short": "{count, plural, one{{count} år} other{{count} år}}",
+  "@age_years_short": {
+    "description": "Short year label when showing age in the hero header.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "age_months": "{count, plural, one{{count} mån} other{{count} mån}}",
+  "@age_months": {
+    "description": "Age measured in months with plural.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "age_months_short": "{count, plural, one{{count} mån} other{{count} mån}}",
+  "@age_months_short": {
+    "description": "Short month label when showing age in the hero header.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "age_days": "{count, plural, one{{count} dag} other{{count} dagar}}",
+  "@age_days": {
+    "description": "Age measured in days with plural.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "age_zero_days": "0 dagar",
+  "age_and": "och",
+  "dog_detail_appbar_title": "Hundprofil",
+  "dog_detail_error_dog_not_found": "Hunden hittades inte",
+  "dog_detail_section_access": "Åtkomster",
+  "dog_detail_button_send_invite": "Skicka inbjudan",
+  "dog_detail_section_invites": "Inbjudningar",
+  "invite_send_email_label": "Mottagarens e-post",
+  "invite_send_button": "Skicka inbjudan",
+  "invite_sent_to": "Inbjudan skickad till {email}",
+  "@invite_sent_to": {
+    "description": "Toast som visas efter att en inbjudan skickats.",
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "invite_revoke_button": "Återkalla",
+  "invite_status_invited": "Inbjuden",
+  "invite_status_invited_as_user": "Inbjuden som {role}",
+  "@invite_status_invited_as_user": {
+    "description": "Statusrad som inkluderar den kanoniska rollen.",
+    "placeholders": {
+      "role": {}
+    }
+  },
+  "invite_accept": "Acceptera",
+  "invite_decline": "Avslå",
+  "dog_share_section_title": "Delat med",
+  "dog_detail_access_section_title": "Åtkomst till den här hunden",
+  "dog_detail_member_action_set_reader": "Sätt som läsare",
+  "dog_detail_member_action_set_user": "Sätt som användare",
+  "dog_detail_member_action_remove_access": "Ta bort åtkomst",
+  "share_role_owner": "Ägare",
+  "share_role_admin": "Administratör",
+  "share_role_user": "Användare",
+  "dog_detail_share_empty": "Inga inbjudningar",
+  "dog_detail_share_empty_owner": "Ingen delning ännu.",
+  "dog_detail_my_role_label": "Din roll: {role}",
+  "@dog_detail_my_role_label": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "dog_detail_share_disabled_explanation":
+      "Du har inte rätt att dela den här hunden.",
+  "share_accept_title": "Acceptera delning",
+  "share_accept_code_label": "Delningskod",
+  "share_accept_scan_qr": "Skanna QR",
+  "share_accept_button": "Acceptera",
+  "share_error_dialog_title": "Delning misslyckades",
+  "share_error_not_owner": "Endast ägaren eller en administratör kan dela hunden.",
+  "share_error_invite_not_found": "Inbjudan hittades inte.",
+  "share_error_invite_expired": "Inbjudan har gått ut.",
+  "share_error_invite_revoked": "Inbjudan har återkallats.",
+  "share_error_invite_inactive": "Inbjudan är inte aktiv.",
+  "share_error_already_has_access": "Du har redan åtkomst.",
+  "share_error_invalid_role": "Ogiltig roll.",
+  "share_error_invalid_email": "Ogiltig e-postadress.",
+  "share_error_dog_not_found_title": "Hund hittades inte",
+  "share_error_dog_not_found_detail": "Ingen hund matchar den här koden.",
+  "transfer_error_not_owner": "Endast ägaren kan avslå förfrågan.",
+  "transfer_error_not_recipient": "Du är inte mottagare av denna förfrågan.",
+  "transfer_error_not_found": "Förfrågan hittades inte.",
+  "transfer_error_expired": "Förfrågan har gått ut.",
+  "transfer_error_not_pending": "Förfrågan är inte aktiv.",
+  "transfer_error_cannot_transfer_to_self": "Kan inte överföra till sig själv.",
+  "transfer_error_cancelled": "Förfrågan har redan avslagits.",
+  "role_owner": "Ägare",
+  "role_editor": "Redigerare",
+  "role_viewer": "Läsare",
+  "role_admin": "Administratör",
+  "dog_editor_owner_email_label": "Ägarens e-post",
+  "dog_editor_owner_email_hint": "namn@exempel.se",
+  "dog_editor_owner_email_required_error":
+      "Ange en giltig e-post för ägaren.",
+  "dog_detail_section_owner_request_title": "Ägarskap begärt",
+  "dog_detail_label_from_user": "Från: {userId}",
+  "@dog_detail_label_from_user": {
+    "placeholders": {
+      "userId": {
+        "type": "String"
+      }
+    }
+  },
+  "dog_detail_label_to_user": "Till: {userId}",
+  "@dog_detail_label_to_user": {
+    "placeholders": {
+      "userId": {
+        "type": "String"
+      }
+    }
+  },
+  "dog_detail_button_accept": "Acceptera",
+  "dog_detail_button_decline": "Avslå",
+  "dog_detail_button_cancel_request": "Avbryt förfrågan",
+  "dog_detail_button_edit_photo": "Ändra profilbild",
+  "dog_detail_button_mark_dead": "Markera som död",
+  "dog_detail_label_death_date": "Dödsdatum",
+  "dog_detail_button_edit": "Ändra",
+  "dog_detail_button_register_death": "Registrera",
+  "dog_editor_title_add_dog": "Lägg till hund",
+  "dog_editor_title_edit_dog": "Redigera hund",
+  "dog_profile_title": "Hund",
+  "dog_profile_subtitle_breed_age": "Ras · Ålder",
+  "dog_generic_name": "Hund",
+  "dog_detail_title_add_dog": "Lägg till hund",
+  "home_startNewSession": "Starta nytt pass",
+  "chooseDog": "Välj hund",
+  "dog_unnamed": "Namnlös",
+  "noDogsAddDog": "Inga hundar – lägg till hund",
+  "home_addDogPrompt": "Lägg till hund för att starta ett pass",
+  "home_addDog_button": "Lägg till hund",
+  "@home_addDog_button": {
+    "description": "Knappetekst for å legge til hund fra hjem-skjermen."
+  },
+  "home_empty_title": "Starta resan med din jakthund",
+  "home_empty_body": "Logga sessioner, följ utvecklingen och bygg en historik för din hund – session för session.",
+  "home_empty_bullet_progress": "Se utvecklingen över tid – stånd, flykt och aktivitet.",
+  "home_empty_bullet_training": "Bättre träning och jakt – se vad som faktiskt ger utdelning.",
+  "home_empty_bullet_history": "Jakthistorik du faktiskt använder – säsong för säsong, område för område.",
+  "home_empty_offline_note": "Du kan använda appen helt offline. All data sparas lokalt på din telefon.",
+  "home_visible_empty_title": "Inga hundar tillgängliga",
+  "home_visible_empty_body": "Det här kontot har inga hundar ännu. Kolla inbjudningar eller be någon dela en hund med dig.",
+  "home_visible_empty_button": "Öppna inbjudningar",
+  "home_noDogsRegistered": "Inga hundar registrerade",
+  "home_no_dogs_title": "Inga hundar registrerade än",
+  "home_no_dogs_message": "Registrera dina hundar för att logga träning, jakt och prov. Då får du en tydlig historik och bättre koll på utvecklingen.",
+  "home_no_dogs_bullet_history": "Historik: se sessioner, anteckningar och platser samlat",
+  "home_no_dogs_bullet_progress": "Framsteg: följ stånd, stöt och aktiv tid över tid",
+  "home_no_dogs_bullet_stats": "Statistik: meningsfulla trender som stöder jakten",
+  "home_endActiveSessionButton": "Avsluta aktiv session",
+  "home_endActiveSessionConfirmTitle": "Avsluta aktiv session?",
+  "home_endActiveSessionConfirmSubtitle": "Allt går förlorat om du avslutar. Är du säker?",
+  "home_open_settings_tooltip": "Inställningar",
+  "home_primaryActionSubtitle": "Anteckningar först. Använd + i fälten.",
+  "home_top10_points_title": "Topp 10 – Stand",
+  "top10Title": "Topp 10",
+  "home_top10_points_empty": "Inga stånd registrerade ännu.",
+  "home_top10_points_pointsLabel": "Stand: {count}",
+  "standsLabel": "Stand",
+  "standsCount": "{count, plural, =0{0 stand} one{1 stand} other{{count} stand}}",
+  "@home_top10_points_pointsLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "home_wisdom_empty": "En lugn start ger bättre jakt än stress.",
+  "wisdom_001": "En lugn hund lär sig snabbare än en stressad.",
+  "wisdom_002": "Det du tränar idag får du tillbaka i höst.",
+  "wisdom_003": "Repetera mindre. Vänta mer.",
+  "wisdom_004": "Tystnad är också träning.",
+  "wisdom_005": "Framgång sker ofta mellan passen.",
+  "wisdom_006": "En paus i rätt ögonblick är bättre än en repetition för mycket.",
+  "wisdom_007": "Tålamod är den mest underskattade övningen.",
+  "wisdom_008": "Träna det du vill se, inte det du hoppas på.",
+  "wisdom_009": "En trygg hund lär sig fortare än en ivrig.",
+  "wisdom_010": "Det är okej att avsluta på topp.",
+  "wisdom_011": "Ett stånd byggs innan fågel, inte efter.",
+  "wisdom_012": "Lugn i upptag börjar i huvudet.",
+  "wisdom_013": "Stabilitet är ett val hunden lär sig ta.",
+  "wisdom_014": "Press skapar rörelse. Tid skapar ro.",
+  "wisdom_015": "En bra ståndpunkt behöver inget publik.",
+  "wisdom_016": "När hunden står, låt världen vänta.",
+  "wisdom_017": "En lugn stånd slår tre snabba.",
+  "wisdom_018": "Fågeln lär hunden. Du formar reaktionen.",
+  "wisdom_019": "Stånd är ett ögonblick av balans.",
+  "wisdom_020": "Skynda inte genom tystnad.",
+  "wisdom_021": "Läs vinden innan du läser hunden.",
+  "wisdom_022": "Terrängen tränar hunden lika mycket.",
+  "wisdom_023": "Varje fågel är en ny lektion.",
+  "wisdom_024": "Dåliga förhållanden ger värdefulla erfarenheter.",
+  "wisdom_025": "Jakt är samarbete, inte tävling.",
+  "wisdom_026": "Det är i motvind du ser kvalitet.",
+  "wisdom_027": "En tom omgång kan vara full av lärdom.",
+  "wisdom_028": "Låt hunden hitta lösningen.",
+  "wisdom_029": "Fågelhundens styrka är självständighet med riktning.",
+  "wisdom_030": "Fältet minns allt.",
+  "wisdom_031": "Var konsekvent, inte perfekt.",
+  "wisdom_032": "Hunden speglar ditt tempo.",
+  "wisdom_033": "Det du inte reagerar på, accepterar du.",
+  "wisdom_034": "Klar tanke ger klar hund.",
+  "wisdom_035": "Rättvisa slår stränghet.",
+  "wisdom_036": "Träna med hjärnan innan du höjer rösten.",
+  "wisdom_037": "Förklara inte. Visa.",
+  "wisdom_038": "En trygg förare ger en trygg hund.",
+  "wisdom_039": "Din ro är hundens ram.",
+  "wisdom_040": "Lyssna mer än du korrigerar.",
+  "wisdom_041": "Relation byggs också utan fågel.",
+  "wisdom_042": "En bra tur är aldrig bortkastad.",
+  "wisdom_043": "Förtroende tar tid. Misstro tar sekunder.",
+  "wisdom_044": "Hunden jobbar bäst för den den litar på.",
+  "wisdom_045": "Små rutiner ger stor trygghet.",
+  "wisdom_046": "Det är okej att ibland bara vara hund.",
+  "wisdom_047": "Lekfullhet är inte odisciplin.",
+  "wisdom_048": "En nöjd hund presterar bättre.",
+  "wisdom_049": "Samarbete slår kontroll.",
+  "wisdom_050": "Gemenskap före färdigheter.",
+  "wisdom_051": "Prov är ögonblicksbilder, inte facit.",
+  "wisdom_052": "Domaren ser en dag. Du ser hela året.",
+  "wisdom_053": "Resultat är bonus, inte mål.",
+  "wisdom_054": "En bra upplevelse slår en bra placering.",
+  "wisdom_055": "Press hemma ger lugn på prov.",
+  "wisdom_056": "Träna situationer, inte poäng.",
+  "wisdom_057": "En stabil hund är alltid konkurrenskraftig.",
+  "wisdom_058": "Lär av det som inte gick.",
+  "wisdom_059": "Prov är träning med publik.",
+  "wisdom_060": "Jaga inte premier, bygg hund.",
+  "wisdom_061": "En fågelhund är aldrig fullärd.",
+  "wisdom_062": "Vägen till ståndet är det som räknas.",
+  "wisdom_063": "Tålamod luktar inte stress.",
+  "wisdom_064": "De bästa ögonblicken kan inte loggas.",
+  "wisdom_065": "Fågelhund handlar om tillit i fart.",
+  "wisdom_066": "Tystnad är ofta svaret.",
+  "wisdom_067": "Naturen sätter alltid ramarna.",
+  "wisdom_068": "En bra dag i fältet känns länge.",
+  "wisdom_069": "Hunden minns stämningen.",
+  "wisdom_070": "Jakt är samspel med landskapet.",
+  "wisdom_071": "En kort lina idag kan ge lång lugn imorgon.",
+  "wisdom_072": "Det som belönas upprepas.",
+  "wisdom_073": "Håll kraven små och bygg dem stora över tid.",
+  "wisdom_074": "När du tappar lugnet tappar du också lärandet.",
+  "wisdom_075": "En tydlig start gör slutet enkelt.",
+  "wisdom_076": "Lugn är inte passivitet. Lugn är kontroll.",
+  "wisdom_077": "Träna det tråkiga. Det räddar dagen.",
+  "wisdom_078": "En bra förare syns sällan.",
+  "wisdom_079": "När hunden lyckas har du varit förutsägbar.",
+  "wisdom_080": "Jaga inte tempo. Jaga kvalitet.",
+  "wisdom_081": "Ge hunden tid att tänka klart.",
+  "wisdom_082": "Ett nej utan ilska värderas högre än tio ja med stress.",
+  "wisdom_083": "Stoppa innan du måste stoppa.",
+  "wisdom_084": "Du tränar alltid, även när du bara går tur.",
+  "wisdom_085": "Fågeln avslöjar hålen. Träna hålen.",
+  "wisdom_086": "En bra stopp är starten på ett bra stånd.",
+  "wisdom_087": "Lätt hand ger tungt samarbete.",
+  "wisdom_088": "När det går snett: sänk tempot, öka tydligheten.",
+  "wisdom_089": "En trygg rutin slår en perfekt plan.",
+  "wisdom_090": "Det viktigaste signalet är det du ger med kroppen.",
+  "session_log_title": "Passlogg – Jakthund",
+  "session_saved_list_title": "Sparade pass",
+  "session_unit_min": "min",
+  "session_unit_sec": "sek",
+  "session_label_points": "stånd",
+  "session_label_flushes": "stöt",
+  "session_label_birds": "fågel",
+  "session_label_birds_down": "fältfågel",
+  "session_all_dogs_label": "Alla hundar",
+  "session_map_label": "Karta",
+  "session_gpx_import_label": "Importera GPX",
+  "session_gpx_importing_ellipsis": "Importerar…",
+  "session_gpx_export_label": "Exportera GPX",
+  "session_gpx_exporting_ellipsis": "Exporterar…",
+  "session_form_dog_section_title": "Hund",
+  "session_form_dog_prefix": "Hund:",
+  "session_summary_sessions_label": "Antal pass:",
+  "session_summary_total_time_label": "Total tid:",
+  "session_summary_total_bird_contacts_label": "Fågelkontakter totalt:",
+  "session_summary_total_points_label": "Stånd totalt:",
+  "session_summary_total_secondary_points_label": "Sekundering totalt:",
+  "session_summary_total_flushes_label": "Stötar totalt:",
+  "session_type_title": "Pass-typ",
+  "session_type_training": "Träning",
+  "session_type_hunt": "Jakt",
+  "session_field_location": "Plats",
+  "session_field_active_time_minutes": "Aktiv tid (min)",
+  "session_field_bird_contacts": "Fågelkontakter",
+  "session_field_points": "Stånd",
+  "session_field_secondary_points": "Sekundering",
+  "session_field_flushes": "Stötar",
+  "session_pick_date": "Välj datum",
+  "session_pick_time": "Tid",
+  "session_action_add_new_session": "Lägg till nytt pass",
+  "session_action_cancel": "Avbryt",
+  "session_type_title": "Pass-typ",
+  "supportEmail": "support@gundogtracker.app",
+  "top10_points_unit": "{count, plural, one{stånd} other{stånd}}",
+  "@top10_points_unit": {
+    "description": "Unit label for top10 points.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "flushesCount": "{count, plural, =0{0 stöt} one{1 stöt} other{{count} stötar}}",
+  "birdContactsCount": "{count, plural, =0{0 fågelkontakter} one{1 fågelkontakt} other{{count} fågelkontakter}}",
+  "sessionsCount": "{count, plural, =0{0 pass} one{1 pass} other{{count} pass}}",
+  "home_top10_birds_title": "Topp 10 fågel",
+  "home_top10_birds_empty": "Inga fåglar registrerade ännu.",
+  "home_top10_birds_fieldLabel": "Fågel",
+  "session_media_section_title": "Media",
+  "session_media_add_photo_video": "Lägg till foto/video",
+  "session_media_gallery_label": "Foto från biblioteket",
+  "session_media_camera_label": "Ta foto",
+  "session_media_video_label": "Video från biblioteket",
+  "session_detail_title_edit_session": "Redigera pass",
+  "session_detail_title_new_session": "Nytt pass",
+  "session_detail_label_points": "Poäng",
+  "session_detail_label_flushes": "Flushes",
+  "session_detail_button_add_media": "Lägg till foto/video",
+  "session_detail_total_points": "Poäng totalt: {value}",
+  "session_detail_title_home": "Hem",
+  "session_detail_title_main": "Pass",
+  "session_detail_title_active_session": "Aktivt pass",
+  "active_session_hunt_events_title": "Jakthändelser +1",
+  "active_session_action_stand_plus1": "Stånd +1",
+  "active_session_action_secondary_plus1": "Sekundering +1",
+  "active_session_action_flush_plus1": "Stöt +1",
+  "active_session_action_bird_plus1": "Fågel +1",
+  "active_session_action_undo": "Ångra",
+  "session_detail_label_choose_dog": "Välj hund",
+  "session_detail_button_open_latest_session": "Öppna senaste passet",
+  "session_detail_button_start_new_session": "Starta nytt pass",
+  "session_detail_button_settings": "Inställningar",
+  "session_detail_media_sheet_title": "Lägg till media",
+  "session_detail_media_sheet_action_gallery": "Galleri",
+  "session_detail_media_sheet_action_camera": "Kamera",
+  "session_detail_media_sheet_action_video": "Video",
+  "session_detail_media_section_title": "Media",
+  "session_detail_media_empty_placeholder": "Inga media än",
+  "session_detail_notes_hint": "Anteckningar från passet...",
+  "session_detail_meta_time_minutes": "Aktiv tid: {minutes} min",
+  "@session_detail_meta_time_minutes": {
+    "description": "Label used in the active time chip on the session detail screen.",
+    "placeholders": {
+      "minutes": {}
+    }
+  },
+  "session_detail_meta_birds": "Fågelkontakter: {value}",
+  "@session_detail_meta_birds": {
+    "description": "Label used in the bird contacts chip on the session detail screen.",
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "session_detail_meta_secondary_points": "Sekundering: {count}",
+  "@session_detail_meta_secondary_points": {
+    "description": "Label used in the secondary points chip on the session detail screen.",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "session_detail_meta_flushes": "Stötar: {value}",
+  "@session_detail_meta_flushes": {
+    "description": "Label used in the flushes chip on the session detail screen.",
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "session_detail_screen_title": "Passdetaljer",
+  "session_notes_hint_from_session": "Anteckningar från passet...",
+  "session_notes_section_title": "Anteckningar",
+  "session_notes_field_label": "Anteckning",
+  "session_select_dog_first": "Välj en hund först",
+  "session_detail_section_dog": "Hund",
+  "session_detail_section_media": "Media",
+  "session_detail_section_notes": "Anteckningar",
+  "session_detail_media_open_gallery": "Öppna galleri",
+  "session_detail_button_import_gpx": "Importera GPX",
+  "session_detail_button_importing": "Importerar…",
+  "session_detail_empty_bird_species": "Inga fågelarter",
+  "session_detail_empty_location": "Okänd plats",
+  "session_detail_saved_sessions_title": "Sparade pass",
+  "session_detail_empty_sessions_for_selected_dog": "Inga pass för vald hund",
+  "session_detail_empty_dogs_registered": "Inga hundar registrerade.",
+  "session_form_no_dogs_registered": "Inga hundar registrerade.",
+  "session_detail_empty_sessions_yet": "Inga pass än",
+  "session_detail_track_summary_points": "Spår: {count} punkter",
+  "session_detail_track_summary_start": "Start: {time}",
+  "session_detail_track_summary_end": "Slut: {time}",
+  "session_detail_track_summary_distance_meters": "Distans: {meters} m",
+  "session_detail_track_summary_distance_km": "Distans: {kilometers} km",
+  "session_detail_track_summary_duration": "Varaktighet: {value}",
+  "@session_detail_track_summary_points": {
+    "description": "Label showing count of GPS points.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@session_detail_track_summary_start": {
+    "description": "Label showing the track start time.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@session_detail_track_summary_end": {
+    "description": "Label showing the track end time.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@session_detail_track_summary_distance_meters": {
+    "description": "Label showing the track distance in meters.",
+    "placeholders": {
+      "meters": {
+        "type": "String"
+      }
+    }
+  },
+  "@session_detail_track_summary_distance_km": {
+    "description": "Label showing the track distance in kilometers.",
+    "placeholders": {
+      "kilometers": {
+        "type": "String"
+      }
+    }
+  },
+  "@session_detail_track_summary_duration": {
+    "description": "Label showing formatted track duration.",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "session_detail_action_saving": "Sparar…",
+  "session_detail_action_save_changes": "Spara ändringar",
+  "session_detail_action_save_session": "Spara pass",
+  "session_detail_edit_title": "Redigera pass",
+  "session_detail_button_save": "Spara",
+  "session_detail_button_cancel": "Avbryt",
+  "session_detail_button_delete": "Ta bort",
+  "session_detail_field_location_label": "Plats",
+  "session_detail_field_active_time_minutes_label": "Aktiv tid (min)",
+  "session_detail_field_bird_contacts_label": "Fågelkontakter",
+  "session_detail_field_points_label": "Poäng",
+  "session_detail_field_secondary_points_label": "Sekundering",
+  "session_detail_field_flushes_label": "Stötar",
+  "session_detail_field_notes_label": "Anteckning",
+  "session_detail_version_build": " (build {buildNumber})",
+  "@session_detail_version_build": {
+    "description": "Suffix for the debug build number label.",
+    "placeholders": {
+      "buildNumber": {
+        "type": "String"
+      }
+    }
+  },
+  "session_detail_snackbar_changes_saved": "Ändringar sparade",
+  "session_detail_snackbar_session_saved": "Pass sparat",
+  "session_detail_snackbar_saved_with_imported_gpx":
+      "Pass sparat med importerad GPX ({points} punkter)",
+  "@session_detail_snackbar_saved_with_imported_gpx": {
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_snackbar_saved_with_gps_track":
+      "Pass sparat med GPS-spår ({points} punkter)",
+  "@session_detail_snackbar_saved_with_gps_track": {
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_help_notes_first":
+      "Anteckningar först. Räkneverk med + i fältet.",
+  "session_detail_stats_sessions_count": "Antal pass: {count}",
+  "@session_detail_stats_sessions_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_stats_total_active_time": "Total aktiv tid: {minutes} min",
+  "@session_detail_stats_total_active_time": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_stats_total_birds": "Fågelkontakter totalt: {count}",
+  "@session_detail_stats_total_birds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_stats_total_points": "Stånd totalt: {count}",
+  "@session_detail_stats_total_points": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_stats_total_secondary_points":
+      "Sekundering totalt: {count}",
+  "@session_detail_stats_total_secondary_points": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_stats_total_flushes": "Stöt totalt: {count}",
+  "@session_detail_stats_total_flushes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_button_select_date": "Välj datum",
+  "session_detail_button_select_time": "Tid",
+  "session_detail_label_duration_from_track": "Hämtat från GPS-spår",
+  "session_detail_saved_session_summary":
+      "Tid: {durationMinutes} min, Fågel: {birds}, stånd: {stand}, sekundering: {secondaryPoints}, stöt: {flushes}",
+  "@session_detail_saved_session_summary": {
+    "description": "Summary line for saved session entries.",
+    "placeholders": {
+      "durationMinutes": {
+        "type": "int"
+      },
+      "birds": {
+        "type": "int"
+      },
+      "stand": {
+        "type": "int"
+      },
+      "secondaryPoints": {
+        "type": "int"
+      },
+      "flushes": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_button_exporting": "Exporterar…",
+  "session_detail_button_export_gpx": "Exportera GPX",
+  "session_detail_error_gpx_too_few_points":
+      "Hittade för få GPX-punkter i filen",
+  "session_detail_helper_duration_hours_minutes": "{hours}h {minutes}m",
+    "session_detail_bird_species_picker_title": "Välj fågelarter",
+  "session_detail_bird_section_title": "Fåglar",
+  "session_detail_bird_species_button_label": "Välj fågelarter",
+  "session_detail_bird_species_empty_selection": "Inga arter valda",
+  "session_detail_bird_species_empty_saved": "Inga arter sparade ännu",
+  "session_detail_bird_species_new": "Ny fågel",
+  "session_detail_action_done": "Klar",
+  "session_detail_bird_species_dialog_title": "Ny fågelart",
+  "session_detail_bird_species_dialog_name_label": "Namn",
+  "session_action_save": "Spara",
+
+  "session_detail_media_gallery_title": "Media",
+  "hunt_session_title_new": "Nytt pass",
+  "hunt_session_title_edit": "Redigera pass",
+  "hunt_session_field_location_label": "Plats",
+  "hunt_session_field_duration_minutes_label": "Aktiv tid (min)",
+  "hunt_session_field_birds_seen_label": "Fågelkontakter",
+  "hunt_session_field_points_label": "Poäng",
+  "hunt_session_field_secondary_points_label": "Sekundering",
+  "hunt_session_field_flushes_label": "Stötar",
+  "hunt_session_field_notes_label": "Anteckningar",
+  "hunt_session_action_save": "Spara",
+  "hunt_session_action_cancel": "Avbryt",
+  "hunt_session_action_delete": "Ta bort",
+  "hunt_session_action_import_gpx": "Importera GPX",
+  "hunt_session_action_importing": "Importerar…",
+  "hunt_session_snackbar_saved_with_gps_track": "Pass sparat med GPS-spår ({points} punkter)",
+
+  "session_detail_filter_all_dogs": "Alla hundar",
+  "session_detail_session_menu_export": "Exportera GPX",
+  "session_detail_session_menu_exporting": "Exporterar…",
+  "session_detail_session_menu_edit": "Redigera pass",
+  "session_detail_session_menu_delete": "Ta bort pass",
+  "session_detail_detail_title": "Detaljer",
+  "session_detail_detail_label_date": "Datum",
+  "session_detail_detail_label_location": "Plats",
+  "session_detail_detail_label_active_time": "Aktiv tid",
+  "session_detail_detail_label_bird_contacts": "Fågelkontakter",
+  "session_detail_detail_label_points": "Poäng",
+  "session_detail_detail_label_secondary_points": "Sekundering",
+  "session_detail_detail_label_flushes": "Stötar",
+  "session_detail_label_bird_species": "Fågelarter",
+  "session_detail_label_gps_track": "GPS-spår",
+  "session_detail_label_yes": "Ja",
+  "session_detail_label_no": "Nej",
+  "session_detail_label_dog_prefix": "Hund: ",
+  "session_detail_map_title": "Karta",
+  "session_detail_map_prefix": "Karta – ",
+  "session_map_error_no_tracks": "Hittade inga spår",
+  "session_map_error_map_load_failed": "Kunde inte ladda kartan",
+  "map_page_snackbar_no_tracks_to_focus": "Inga spår att fokusera på",
+  "map_page_dialog_delete_downloaded_map_body":
+      "Vill du ta bort den här nedladdade kartan?",
+  "hunt_session_snackbar_export_ready_opening_share":
+      "Export klar, öppnar delning …",
+  "hunt_session_snackbar_gpx_export_failed_see_log":
+      "GPX-export misslyckades. Se logg.",
+  "map_title": "Karta",
+
+  "session_detail_gpx_replace_title": "Ersätt spår?",
+  "session_detail_gpx_replace_body": "Detta ersätter det befintliga spåret. Fortsätt?",
+  "session_detail_gpx_replace_confirm": "Ersätt",
+
+  "session_detail_gpx_replaced_snackbar": "Spår ersatt: {points} punkter",
+  "@session_detail_gpx_replaced_snackbar": {
+    "placeholders": { "points": { "type": "int" } }
+  },
+  "session_detail_gpx_imported_snackbar": "GPX importerat: {points} punkter",
+  "@session_detail_gpx_imported_snackbar": {
+    "placeholders": { "points": { "type": "int" } }
+  },
+  "gpx_import_label": "Importera GPX",
+  "gpx_importing_ellipsis": "Importerar…",
+  "gpx_export_label": "Exportera GPX",
+  "gpx_exporting_ellipsis": "Exporterar…",
+
+  "session_detail_empty_notes": "Inga anteckningar",
+  "session_detail_empty_media": "Inga medier tillagda",
+
+  "@session_detail_helper_duration_hours_minutes": {
+    "description": "Formatted duration when hours are present.",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_helper_duration_minutes_seconds": "{minutes}m {seconds}s",
+  "@session_detail_helper_duration_minutes_seconds": {
+    "description": "Formatted duration when only minutes and seconds exist.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_helper_duration_seconds": "{seconds}s",
+  "@session_detail_helper_duration_seconds": {
+    "description": "Formatted duration when only seconds exist.",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "@session_detail_total_points": {
+    "description": "Label showing total points in session detail.",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "session_detail_total_flushes": "Flushes totalt: {value}",
+  "@session_detail_total_flushes": {
+    "description": "Label showing total flushes in session detail.",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "session_species_picker_add": "Lägg till",
+  "session_species_picker_done": "Klar",
+  "species_picker_title": "Välj fågelarter",
+  "species_picker_empty": "Inga arter sparade ännu",
+  "species_picker_add_button": "Ny fågel",
+  "species_picker_done_button": "Klar",
+  "species_picker_new_title": "Ny fågelart",
+  "species_picker_name_label": "Namn",
+  "session_species_picker_title": "Välj fågelarter",
+  "session_species_picker_empty": "Inga arter tillgängliga",
+  "session_notes_section_title": "Anteckningar",
+  "session_notes_field_label": "Anteckning",
+  "session_save_button": "Spara session",
+  "session_menu_edit": "Redigera session",
+  "session_menu_delete": "Ta bort session",
+  "stats_trend_label": "Trend: {symbol}",
+  "@stats_trend_label": {
+    "placeholders": {
+      "symbol": {
+        "type": "String"
+      }
+    }
+  },
+  "stats_title_points_and_flushes": "Stånd och flush",
+  "stats_title_sessions": "Sessioner",
+  "stats_title_birds_down_per_year": "Fällda fåglar per år",
+  "stats_subtitle_active_time": "Aktiv tid",
+  "stats_subtitle_session_count": "Antal sessioner",
+  "stats_legend_bars": "Staplar:",
+  "stats_legend_line": "Linje:",
+  "stats_title_development": "Utveckling",
+  "stats_period_30_days": "30 dagar",
+  "stats_period_90_days": "90 dagar",
+  "stats_legend_active_time": "Aktiv tid",
+  "stats_legend_sessions": "Sessioner",
+  "stats_week_label": "Vecka {week}",
+  "stats_week_tooltip": "{weekLabel}: {sessions} sessioner, {time}",
+  "@stats_week_tooltip": {
+    "description": "Tooltip text for weekly stats bars.",
+    "placeholders": {
+      "weekLabel": {
+        "type": "String"
+      },
+      "sessions": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@stats_week_label": {
+    "description": "Week label with placeholder",
+    "placeholders": {
+      "week": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_info_active_time_title": "Aktiv tid",
+  "stats_info_active_time_body_1": "Total tid hunden har arbetat.",
+  "stats_info_active_time_body_2": "Används för att bedöma belastning och kontinuitet.",
+  "stats_info_session_count_title": "Sessioner",
+  "stats_info_session_count_body_1": "Hur ofta hunden har varit aktiv.",
+  "stats_info_session_count_body_2": "Visar tränings- och jaktfrekvens.",
+  "stats_v1_overview_title": "V1-översikt",
+  "stats_total_points_title": "Totala stånd",
+  "stats_total_active_time_title": "Total aktiv tid",
+  "stats_avg_points_per_session_title": "Snitt: stånd per session",
+  "stats_avg_time_per_session_title": "Snitt: tid per session",
+  "stats_last_30_days_sessions_title": "Senaste 30 dagarna: Sessioner",
+  "stats_last_30_days_points_title": "Senaste 30 dagarna: Stånd",
+  "stats_overview_sessions_value": "{count} sessioner",
+  "@stats_overview_sessions_value": {
+    "description": "Total sessions value shown on the stats overview cards.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_overview_points_value": "{count} stånd",
+  "@stats_overview_points_value": {
+    "description": "Total points value shown on the stats overview cards.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_last_30_days_sessions_value": "{count} sessioner",
+  "@stats_last_30_days_sessions_value": {
+    "description": "Session count for the last 30 days card.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_last_30_days_points_value": "{count} stånd",
+  "@stats_last_30_days_points_value": {
+    "description": "Point total for the last 30 days card.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_points_label": "Stånd",
+  "stats_flushes_label": "Flush",
+  "stats_per_month_suffix": "per månad • {year}",
+  "@stats_per_month_suffix": {
+    "description": "Suffix with year.",
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_monthly_sessions_tooltip": "{month} {year}: {count} sessioner",
+  "@stats_monthly_sessions_tooltip": {
+    "description": "Tooltip text for monthly session bars with data.",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_monthly_sessions_tooltip_empty": "{month} {year}: Inga sessioner",
+  "@stats_monthly_sessions_tooltip_empty": {
+    "description": "Tooltip text for monthly session bars without data.",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_total_points_flushes_prefix": "Totalt: {points} stånd, {flushes} flush",
+  "@stats_total_points_flushes_prefix": {
+    "description": "Totals summary.",
+    "placeholders": {
+      "points": {
+        "type": "int"
+      },
+      "flushes": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_stand_flush_tooltip": "{month} {year}: Stånd {stand}, Flush {flush}",
+  "@stats_stand_flush_tooltip": {
+    "description": "Tooltip for the stand and flush bar chart.",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "int"
+      },
+      "stand": {
+        "type": "String"
+      },
+      "flush": {
+        "type": "String"
+      }
+    }
+  },
+  "stats_info_points_flushes_title": "Stånd och flush",
+  "stats_info_points_flushes_body_1": "Visar antal stånd och flush över tid.",
+  "stats_info_points_flushes_body_2": "Ger insikt i hundens arbete i fält och jaktmönster.",
+  "stats_none": "Ingen",
+  "stats_unknown_species": "Okänd",
+  "stats_info_explanation_tooltip": "Förklaring",
+  "stats_total_sessions_prefix": "Totalt: {count} sessioner",
+  "@stats_total_sessions_prefix": {
+    "description": "Total sessions summary.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_info_sessions_title": "Sessioner",
+  "stats_info_sessions_body_1": "Hur ofta hunden har varit aktiv.",
+  "stats_info_sessions_body_2": "Visar tränings- och jaktfrekvens.",
+  "stats_no_birds_down_yet": "Inga fällda fåglar registrerade ännu",
+  "stats_birds_distribution_title": "Förd eldning",
+  "stats_birds_pie_hint": "Tryck på en bit för detaljer",
+  "stats_info_birds_down_title": "Fällda fåglar",
+  "stats_info_birds_down_body_1": "Antal fällda fåglar per kalenderår.",
+  "stats_info_birds_down_body_2": "Ger underlag för jämförelser mellan år.",
+  "stats_info_birds_distribution_title": "Fördelning fälld fågel",
+  "stats_info_birds_distribution_body_1": "Visar vilka arter som fällts under valt år.",
+  "stats_info_birds_distribution_body_2": "Ger en översikt över jaktuttag och variation.",
+  "stats_label_year": "År",
+  "stats_label_total": "Totalt",
+  "stats_label_per_month": "per månad",
+  "session_birds_section_title": "Fåglar",
+  "session_birds_select_species": "Välj fågelarter",
+  "session_birds_none_selected": "Inga arter valda",
+  "session_species_picker_title": "Välj arter",
+  "session_species_picker_empty": "Inga arter tillgängliga",
+  "session_species_picker_add": "Lägg till",
+  "session_species_picker_done": "Klar",
+  "session_error_no_dogs_registered": "Inga hundar registrerade",
+    "session_select_species_title": "Välj art",
+  "session_no_species_saved_yet": "Inga arter sparade än",
+  "session_new_bird_button": "Ny fågel",
+  "session_new_species_title": "Ny art",
+  "session_error_photo_add": "Kunde inte lägga till bild",
+  "session_error_video_add": "Kunde inte lägga till video",
+  "session_error_media_save": "Kunde inte spara mediafilen",
+  "session_error_gpx_import": "GPX-import misslyckades. Se logg.",
+  "session_error_location_services_disabled": "Platstjänster är inaktiverade",
+  "session_error_no_gps": "Ingen GPS-åtkomst",
+  "session_error_gps_failure": "GPS-fel: {error}",
+  "@session_error_gps_failure": {
+    "description": "GPS failure message.",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "session_error_stop_gps": "Kunde inte stoppa GPS",
+  "session_error_select_dog_first": "Välj en hund först",
+  "session_error_no_track_export": "Den här sessionen har inget spår att exportera",
+  "session_error_track_empty": "Spår saknas/är tomt",
+  "session_snackbar_message": "{message}",
+  "@session_snackbar_message": {
+    "description": "Snackbar message with dynamic text.",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "session_media_add_image_failed": "Kunde inte lägga till bild",
+  "session_media_add_video_failed": "Kunde inte lägga till video",
+  "session_media_save_failed": "Kunde inte spara mediafilen",
+  "session_media_video_missing": "Videon saknas eller sparades inte korrekt",
+  "@session_media_video_missing": {
+    "description": "Visas när en video saknas eller är 0 byte"
+  },
+  "session_media_video_open_failed": "Kunde inte öppna videon",
+  "@session_media_video_open_failed": {
+    "description": "Visas när videospelaren inte kan starta valt media"
+  },
+  "gpx_import_failed_see_log": "GPX-import misslyckades. Se logg.",
+  "gps_services_disabled": "Platstjänster är inaktiverade",
+  "gps_no_permission": "Ingen GPS-åtkomst",
+  "gps_error_message": "GPS-fel: {error}",
+  "@gps_error_message": {
+    "description": "GPS error placeholder.",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "gps_stop_failed": "Kunde inte stoppa GPS",
+  "session_select_dog_first": "Välj en hund först",
+  "session_export_no_track": "Den här sessionen har inget spår att exportera",
+  "session_track_missing_or_empty": "Spår saknas/är tomt",
+  "gpx_exported_to_desktop": "GPX exporterad till Skrivbordet: {filename} ✅",
+  "@gpx_exported_to_desktop": {
+    "description": "Snackbar after exporting GPX file.",
+    "placeholders": {
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "session_detail_title_edit_session": "Redigera pass",
+  "session_detail_title_new_session": "Nytt pass",
+  "session_detail_label_points": "Poäng",
+  "session_detail_label_flushes": "Flushes",
+  "session_detail_button_add_media": "Lägg till foto/video",
+  "session_detail_total_points": "Poäng totalt: {value}",
+  "@session_detail_total_points": {
+    "description": "Label showing total points in session detail.",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "session_detail_total_flushes": "Flushes totalt: {value}",
+  "@session_detail_total_flushes": {
+    "description": "Label showing total flushes in session detail.",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "session_species_picker_add": "Lägg till",
+  "session_species_picker_done": "Klar",
+  "session_species_picker_title": "Välj fågelarter",
+  "session_species_picker_empty": "Inga arter tillgängliga",
+  "session_notes_section_title": "Anteckningar",
+  "session_notes_field_label": "Anteckning",
+  "session_save_button": "Spara session",
+  "session_menu_edit": "Redigera session",
+  "session_menu_delete": "Ta bort session",
+  "stats_trend_label": "Trend: {symbol}",
+  "@stats_trend_label": {
+    "placeholders": {
+      "symbol": {
+        "type": "String"
+      }
+    }
+  },
+  "stats_title_points_and_flushes": "Stånd och flush",
+  "stats_title_sessions": "Sessioner",
+  "stats_title_birds_down_per_year": "Fällda fåglar per år",
+  "stats_subtitle_active_time": "Aktiv tid",
+  "stats_subtitle_session_count": "Antal sessioner",
+  "stats_legend_bars": "Staplar:",
+  "stats_legend_line": "Linje:",
+  "stats_title_development": "Utveckling",
+  "stats_period_30_days": "30 dagar",
+  "stats_period_90_days": "90 dagar",
+  "stats_legend_active_time": "Aktiv tid",
+  "stats_legend_sessions": "Sessioner",
+  "stats_week_label": "Vecka {week}",
+  "stats_week_tooltip": "{weekLabel}: {sessions} sessioner, {time}",
+  "@stats_week_tooltip": {
+    "description": "Tooltip text for weekly stats bars.",
+    "placeholders": {
+      "weekLabel": {
+        "type": "String"
+      },
+      "sessions": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@stats_week_label": {
+    "description": "Week label with placeholder",
+    "placeholders": {
+      "week": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_info_active_time_title": "Aktiv tid",
+  "stats_info_active_time_body_1": "Total tid hunden har arbetat.",
+  "stats_info_active_time_body_2": "Används för att bedöma belastning och kontinuitet.",
+  "stats_info_session_count_title": "Sessioner",
+  "stats_info_session_count_body_1": "Hur ofta hunden har varit aktiv.",
+  "stats_info_session_count_body_2": "Visar tränings- och jaktfrekvens.",
+  "stats_v1_overview_title": "V1-översikt",
+  "stats_total_points_title": "Totala stånd",
+  "stats_total_active_time_title": "Total aktiv tid",
+  "stats_avg_points_per_session_title": "Snitt: stånd per session",
+  "stats_avg_time_per_session_title": "Snitt: tid per session",
+  "stats_last_30_days_sessions_title": "Senaste 30 dagarna: Sessioner",
+  "stats_last_30_days_points_title": "Senaste 30 dagarna: Stånd",
+  "stats_overview_sessions_value": "{count} sessioner",
+  "@stats_overview_sessions_value": {
+    "description": "Total sessions value shown on the stats overview cards.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_overview_points_value": "{count} stånd",
+  "@stats_overview_points_value": {
+    "description": "Total points value shown on the stats overview cards.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_last_30_days_sessions_value": "{count} sessioner",
+  "@stats_last_30_days_sessions_value": {
+    "description": "Session count for the last 30 days card.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_last_30_days_points_value": "{count} stånd",
+  "@stats_last_30_days_points_value": {
+    "description": "Point total for the last 30 days card.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_points_label": "Stånd",
+  "stats_flushes_label": "Flush",
+  "stats_per_month_suffix": "per månad • {year}",
+  "@stats_per_month_suffix": {
+    "description": "Suffix with year.",
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_monthly_sessions_tooltip": "{month} {year}: {count} sessioner",
+  "@stats_monthly_sessions_tooltip": {
+    "description": "Tooltip text for monthly session bars with data.",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_monthly_sessions_tooltip_empty": "{month} {year}: Inga sessioner",
+  "@stats_monthly_sessions_tooltip_empty": {
+    "description": "Tooltip text for monthly session bars without data.",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_total_points_flushes_prefix": "Totalt: {points} stånd, {flushes} flush",
+  "@stats_total_points_flushes_prefix": {
+    "description": "Totals summary.",
+    "placeholders": {
+      "points": {
+        "type": "int"
+      },
+      "flushes": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_stand_flush_tooltip": "{month} {year}: Stånd {stand}, Flush {flush}",
+  "@stats_stand_flush_tooltip": {
+    "description": "Tooltip for the stand and flush bar chart.",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "int"
+      },
+      "stand": {
+        "type": "String"
+      },
+      "flush": {
+        "type": "String"
+      }
+    }
+  },
+  "stats_info_points_flushes_title": "Stånd och flush",
+  "stats_info_points_flushes_body_1": "Visar antal stånd och flush över tid.",
+  "stats_info_points_flushes_body_2": "Ger insikt i hundens arbete i fält och jaktmönster.",
+  "stats_none": "Ingen",
+  "stats_unknown_species": "Okänd",
+  "stats_info_explanation_tooltip": "Förklaring",
+  "stats_total_sessions_prefix": "Totalt: {count} sessioner",
+  "@stats_total_sessions_prefix": {
+    "description": "Total sessions summary.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_info_sessions_title": "Sessioner",
+  "stats_info_sessions_body_1": "Hur ofta hunden har varit aktiv.",
+  "stats_info_sessions_body_2": "Visar tränings- och jaktfrekvens.",
+  "stats_no_birds_down_yet": "Inga fällda fåglar registrerade ännu",
+  "stats_birds_distribution_title": "Förd eldning",
+  "stats_birds_pie_hint": "Tryck på en bit för detaljer",
+  "stats_info_birds_down_title": "Fällda fåglar",
+  "stats_info_birds_down_body_1": "Antal fällda fåglar per kalenderår.",
+  "stats_info_birds_down_body_2": "Ger underlag för jämförelser mellan år.",
+  "stats_info_birds_distribution_title": "Fördelning fälld fågel",
+  "stats_info_birds_distribution_body_1": "Visar vilka arter som fällts under valt år.",
+  "stats_info_birds_distribution_body_2": "Ger en översikt över jaktuttag och variation.",
+  "stats_label_year": "År",
+  "stats_label_total": "Totalt",
+  "stats_label_per_month": "per månad",
+  "settings_title": "Inställningar",
+  "settings_section_general": "Allmänt",
+  "settings_section_milestones": "Milstolpar",
+  "milestones_category_firsts": "Första gången",
+  "milestones_category_sessions": "Pass",
+  "milestones_category_points": "Stånd",
+  "milestones_category_time": "Tid",
+  "milestones_category_contacts": "Kontakter",
+  "invitations_title": "Inbjudningar",
+  "invitations_empty": "Inga väntande inbjudningar",
+  "invitations_title": "Inbjudningar",
+  "invitations_empty": "Inga väntande inbjudningar",
+  "settings_section_feedback": "Feedback",
+  "support_email": "support@gundogtracker.app",
+  "settings_feedback_suggest_subtitle": "Skicka förslag via e-post.",
+  "settings_feedback_error_open_email": "Kunde inte öppna e-post.",
+  "settings_feedback_error_copy": "Kunde inte kopiera.",
+  "settings_section_subscription": "Prenumeration",
+  "settings_section_language": "Språk",
+  "settings_section_community": "Community",
+  "settings_section_security": "Säkerhet",
+  "settings_section_backup": "Säkerhetskopiering",
+  "settings_restore_in_progress": "Återställning pågår… vänligen vänta.",
+  "settings_backup_export_action": "Exportera säkerhetskopia (ZIP)",
+  "settings_backup_exporting": "Exporterar…",
+  "settings_backup_subtitle": "Exportera/importera hundar, pass, spår, milstolpar och media.",
+  "settings_backup_import_action": "Importera säkerhetskopia (ZIP)",
+  "settings_backup_importing": "Importerar…",
+  "settings_backup_import_description": "Välj en backup-ZIP och återställ data.",
+  "settings_backup_where_title": "Var lagras säkerhetskopian?",
+  "settings_backup_where_action": "Visa lagringsmapp",
+  "settings_backup_status_collectingData": "Samlar data…",
+  "settings_backup_status_collectingMedia": "Samlar media…",
+  "settings_backup_status_creatingZip": "Skapar ZIP…",
+  "settings_backup_status_sharing": "Dela…",
+  "settings_backup_status_selectZip": "Välj ZIP…",
+  "settings_backup_status_restoring": "Återställer data…",
+  "settings_backup_share_subject": "Jakthund backup",
+  "settings_backup_ready": "Backup klar: {fileName} ✅",
+  "@settings_backup_ready": {
+    "description": "Viser vilken fil som ble eksportert."
+  },
+  "settings_backup_failed": "Backup misslyckades: {message}",
+  "@settings_backup_failed": {
+    "description": "Viser feilbeskjeden dersom backup feiler."
+  },
+  "settings_backup_failed_unknown": "Okänt fel.",
+  "settings_backup_import_failed": "Import misslyckades: {message}",
+  "@settings_backup_import_failed": {
+    "description": "Viser feilbeskjeden dersom import feiler."
+  },
+  "settings_backup_import_success": "Backup importerad",
+  "settings_backup_restore_dialog_title": "Importera säkerhetskopia",
+  "settings_backup_restore_dialog_content": "Detta återställer data från en ZIP-säkerhetskopia.\n\nTips: Efter importen kan det vara bra att starta om appen.",
+  "settings_backup_restore_dialog_confirm": "Importera",
+  "settings_backup_restore_prompt_title": "Återställning klar",
+  "settings_backup_restore_prompt_message": "Återställningen är klar. Starta om appen nu?",
+  "settings_backup_restore_saved": "Återställningen är sparad. Starta om när det passar.",
+  "settings_backup_restore_complete": "Import klar",
+  "settings_backup_storage_title": "Backup-lagring",
+  "settings_backup_storage_description": "Backupfiler lagras här:\n\n{path}",
+  "@settings_backup_storage_description": {
+    "description": "Förklarar var backupfiler lagras.",
+    "placeholders": { "path": { "type": "String" } }
+  },
+  "settings_backup_restore_pending": "Importerar backup…",
+  "settings_backup_restore_pending_message": "Återställer backup… vänta gärna.",
+  "settings_section_appearance": "Utseende",
+  "settings_season_title": "Årstidstema",
+  "settings_season_subtitle": "Färger för topp och botten.",
+  "settings_season_auto": "Automatiskt",
+  "settings_season_spring": "🌱 Vår",
+  "settings_season_summer": "☀️ Sommar",
+  "settings_season_autumn": "🍁 Höst",
+  "settings_season_winter": "❄️ Vinter",
+  "settings_feedback_send_subtitle": "Öppnar e-post med appinfo.",
+  "settings_feedback_bug_subtitle": "Öppnar e-post med felmall.",
+  "settings_feedback_copy_subtitle": "Kopierar app- och enhetsinfo.",
+  "settings_change_password_title": "Ändra lösenord",
+  "settings_change_password_current_password": "Nuvarande lösenord",
+  "settings_change_password_new_password": "Nytt lösenord",
+  "settings_change_password_confirm_password": "Bekräfta nytt lösenord",
+  "settings_change_password_submit": "Uppdatera lösenord",
+  "settings_change_password_success": "Lösenordet är uppdaterat",
+  "settings_reset_password_button": "Glömt lösenord",
+  "settings_reset_password_sent": "Kolla din e-post för en länk",
+  "settings_reset_password_no_email":
+      "Ingen e-post tillgänglig för återställning",
+  "settings_change_password_error_fields": "Fyll i alla fält",
+  "settings_change_password_error_mismatch":
+      "Nytt lösenord och bekräftelse måste matcha",
+  "forgot_password_title": "Glömt lösenord",
+  "forgot_password_description":
+      "Fyll i din e-postadress så skickar vi en länk för att återställa lösenordet.",
+  "forgot_password_email_label": "E-post",
+  "forgot_password_button": "Skicka återställningslänk",
+  "forgot_password_error_missing": "Ange e-post.",
+  "forgot_password_error_invalid": "Ange en giltig e-post.",
+  "forgot_password_check_spam_hint":
+      "Kolla inkorgen. Om mejlet inte dyker upp, kolla skräppost/Spam.",
+  "settings_theme_system": "System",
+  "settings_theme_light": "Ljust",
+  "settings_theme_dark": "Mörkt",
+  "settings_language_title": "Språk",
+  "settings_language_followSystem": "Följ systemet",
+  "settings_language_nb": "Norska (bokmål)",
+  "settings_language_sv": "Svenska",
+  "settings_language_da": "Danska",
+  "settings_language_en": "English",
+  "settings_milestones_enabled_title": "Milstolpar",
+  "settings_milestones_enabled_subtitle": "Visa små ögonblick när hunden når viktiga steg.",
+  "settings_haptics_enabled_title": "Vibration vid milstolpar",
+  "settings_haptics_enabled_subtitle": "Diskret vibration när milstolpar uppnås.",
+  "milestones_achieved_title": "Uppnådda milstolpar",
+  "milestones_achieved_empty": "Inga milstolpar ännu.",
+  "milestones_achieved_duration": "Uppnått {duration}",
+  "@milestones_achieved_duration": {
+    "description": "Label describing how long ago the milestone was achieved.",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "milestone_sheet_button_ok": "Bra!",
+  "milestone_sheet_button_viewAll": "Se milstolpar",
+  "milestone_snackbar_new_title": "Ny milstolpe!",
+  "milestone_snackbar_open_error": "Kunde inte öppna milstolpen",
+  "milestone_stands_count_subtitle": "{dogName} har registrerat {countText}.",
+  "@milestone_stands_count_subtitle": {
+    "placeholders": {
+      "dogName": {},
+      "countText": {}
+    }
+  },
+  "milestone_sessions_count_subtitle": "{dogName} har loggat {countText}.",
+  "@milestone_sessions_count_subtitle": {
+    "placeholders": {
+      "dogName": {},
+      "countText": {}
+    }
+  },
+  "milestone_birds_count_subtitle": "{dogName} har fällt {countText}.",
+  "@milestone_birds_count_subtitle": {
+    "placeholders": {
+      "dogName": {},
+      "countText": {}
+    }
+  },
+  "milestone_first_point_title": "Första stånd",
+  "milestone_first_point_subtitle": "{dogName} har registrerat sitt första stånd.",
+  "@milestone_first_point_subtitle": {
+    "placeholders": {
+      "dogName": {
+        "type": "String"
+      }
+    }
+  },
+  "milestone_first_flush_title": "Första stöt",
+  "milestone_first_flush_subtitle": "{dogName} har registrerat sin första stöt.",
+  "@milestone_first_flush_subtitle": {
+    "placeholders": {
+      "dogName": {
+        "type": "String"
+      }
+    }
+  },
+  "milestone_sessions_10_title": "10 pass",
+  "milestone_sessions_10_subtitle": "{dogName} har loggat 10 pass.",
+  "@milestone_sessions_10_subtitle": {
+    "placeholders": {
+      "dogName": {
+        "type": "String"
+      }
+    }
+  },
+  "milestone_active_hours_10_title": "10 timmar aktiv",
+  "milestone_active_hours_10_subtitle": "{dogName} har passerat 10 timmar aktiv tid.",
+  "@milestone_active_hours_10_subtitle": {
+    "placeholders": {
+      "dogName": {
+        "type": "String"
+      }
+    }
+  },
+  "milestone_section_birds_down_title": "Fälld fågel",
+  "milestone_dog_fallback_name": "Hunden",
+  "milestone_achieved_sentence":
+      "{dog} uppnådde “{milestone}” {date}{age}",
+  "@milestone_achieved_sentence": {
+    "description":
+        "Sentence describing the milestone achievement for the dog with date and age.",
+    "placeholders": {
+      "dog": {},
+      "milestone": {},
+      "date": {},
+      "age": {}
+    }
+  },
+  "milestone_bird_threshold_label": "{threshold}. fågel",
+  "@milestone_bird_threshold_label": {
+    "placeholders": {
+      "threshold": {}
+    }
+  },
+  "milestone_bird_label": "Fågel",
+  "milestone_century_points_title": "{count} stånd",
+  "milestone_century_points_subtitle": "{dogName} har passerat {count} stånd.",
+  "@milestone_century_points_title": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@milestone_century_points_subtitle": {
+    "placeholders": {
+      "dogName": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "subscription_title": "Prenumeration",
+  "subscription_status_label": "Status",
+  "subscription_status_active": "Aktiv",
+  "subscription_status_inactive": "Inte aktiv",
+  "subscription_status_unknown": "Okänd",
+  "subscription_subscribe_button": "Teckna prenumeration",
+  "subscription_restore_button": "Återställ köp",
+  "subscription_manage_button": "Hantera / Avsluta",
+  "feedback_send_title": "Skicka feedback",
+  "feedback_bug_title": "Rapportera ett fel",
+  "feedback_copy_diagnostics_title": "Kopiera diagnostik",
+  "feedback_suggest_milestone_title": "Föreslå milstolpe",
+  "feedback_email_body_intro": "Beskriv din feedback här.",
+  "feedback_bug_prompt": "Vad hände?",
+  "feedback_bug_reproduce": "Hur kan vi återupprepa problemet?",
+  "feedback_suggest_title": "Förslag till ny milstolpe:",
+  "feedback_suggest_question_what_to_celebrate": "Vad bör firas?",
+  "feedback_suggest_question_why_important":
+      "Varför är detta viktigt i praktiken?",
+  "feedback_suggest_question_when_should_trigger": "När bör den utlösas?",
+  "feedback_suggest_trigger_hint":
+      "(första gången, var 10:e, var 100:e, annat)",
+  "feedback_suggest_comments": "Eventuella kommentarer:",
+  "feedback_error_email_not_available": "Ingen e-postapp tillgänglig.",
+  "community_open_discord": "Öppna Discord-grupp",
+  "community_open_facebook": "Öppna Facebook-grupp",
+  "home_continueActiveSessionTitle": "Fortsätt aktivt pass",
+  "home_continueActiveSessionSubtitle": "Ofullständigt pass för {dogName}.",
+  "@home_continueActiveSessionSubtitle": {
+    "placeholders": {
+      "dogName": {
+        "type": "String"
+      }
+    }
+  },
+  "home_continueActiveSessionMissingDogTitle": "Aktivt pass kan inte återställas",
+  "home_continueActiveSessionMissingDogSubtitle": "Hunden finns inte längre tillgänglig. Du kan kasta utkastet.",
+  "home_continueActiveSessionButton": "Fortsätt aktivt pass",
+  "home_discardActiveSessionButton": "Kasta",
+  "home_discardActiveSessionSnackbar": "Aktivt pass kastat",
+  "home_settings_button_label": "Inställningar",
+  "birdsCount": "{count, plural, =0{0 fåglar} one{1 fågel} other{{count} fåglar}}",
+  "birdsDownCount": "{count, plural, =0{0 fällda fåglar} one{1 fälld fågel} other{{count} fällda fåglar}}",
+  "auth_profile_pending_title": "Skapar profil…",
+  "auth_profile_pending_body":
+      "Vi väntar på att backend-dokumentet ska bli klart. Tryck på \"Försök igen\" för att kontrollera igen.",
+  "auth_profile_timeout_error":
+      "Kunde inte hitta användarprofilen inom några sekunder. Kontrollera nätverket eller försök igen."
+}

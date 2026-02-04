@@ -1,0 +1,5 @@
+tags:
+  ci:
+    description: Fast essential tests run in CI.
+  slow:
+    description: Longer-running suites excluded from the CI subset.

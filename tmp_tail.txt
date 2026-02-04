@@ -1,0 +1,78 @@
+
+double _computeDistance(List<GpsPoint> points) {
+  double total = 0;
+  for (var i = 1; i < points.length; i++) {
+    total += _haversine(points[i - 1], points[i]);
+  }
+  return total;
+}
+
+double _haversine(GpsPoint a, GpsPoint b) {
+  const earthRadius = 6371000.0;
+  final dLat = _toRadians(b.lat - a.lat);
+  final dLon = _toRadians(b.lon - a.lon);
+  final lat1 = _toRadians(a.lat);
+  final lat2 = _toRadians(b.lat);
+
+  final hav = math.pow(math.sin(dLat / 2), 2) +
+      math.pow(math.sin(dLon / 2), 2) * math.cos(lat1) * math.cos(lat2);
+  final c = 2 * math.atan2(math.sqrt(hav), math.sqrt(1 - hav));
+  return earthRadius * c;
+}
+
+double _toRadians(double degrees) => degrees * math.pi / 180;
+
+class _TrackSummaryWidget extends StatelessWidget {
+  const _TrackSummaryWidget({
+    required this.summary,
+    required this.timeFormat,
+    super.key,
+  });
+
+  final _TrackSummary summary;
+  final DateFormat timeFormat;
+
+  @override
+  Widget build(BuildContext context) {
+    final duration = summary.duration;
+    final color = Theme.of(context).colorScheme.primary;
+    final distance = summary.distanceMeters;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Spor: ${summary.count} punkter',
+          style: TextStyle(color: color, fontWeight: FontWeight.w600),
+        ),
+        if (summary.start != null)
+          Text('Start: ${timeFormat.format(summary.start!)}'),
+        if (summary.end != null)
+          Text('Slutt: ${timeFormat.format(summary.end!)}'),
+        if (distance != null)
+          Text(
+            distance >= 1000
+                ? 'Distanse: ${(distance / 1000).toStringAsFixed(2)} km'
+                : 'Distanse: ${distance.toStringAsFixed(0)} m',
+          ),
+        if (duration != null) Text('Varighet: ${_formatDuration(duration)}'),
+      ],
+    );
+  }
+}
+
+class _TrackSummary {
+  _TrackSummary({
+    required this.count,
+    this.start,
+    this.end,
+    this.distanceMeters,
+  });
+
+  final int count;
+  final DateTime? start;
+  final DateTime? end;
+  final double? distanceMeters;
+
+  Duration? get duration =>
+      (start != null && end != null) ? end!.difference(start!) : null;
+}

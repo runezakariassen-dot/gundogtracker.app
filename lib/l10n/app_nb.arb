@@ -1,0 +1,1548 @@
+{
+  "@@locale": "nb",
+  "appName": "Fuglehund",
+  "common_ok": "OK",
+  "common_close": "Lukk",
+  "common_done": "Ferdig",
+  "common_cancel": "Avbryt",
+  "common_save": "Lagre",
+  "common_copy": "Kopier",
+  "common_copied": "Kopiert ✅",
+  "common_comingSoon": "Kommer snart.",
+  "common_yes": "Ja",
+  "common_no": "Nei",
+  "common_invalid_link": "Ugyldig lenke",
+  "common_could_not_open_link": "Kunne ikke åpne lenken",
+  "common_unknown": "Ukjent",
+  "common_unknown_email": "Ukjent e-post",
+  "common_unknown_member": "Ukjent medlem",
+  "common_no_permission": "Du har ikke tilgang til dette.",
+  "@common_no_permission": {
+    "description": "Vises når brukeren mangler rettigheter til å utføre en handling."
+  },
+  "common_retry": "Prøv igjen",
+  "age_unknown": "Alder ukjent",
+  "boot_error_title": "Oppstart feilet",
+  "boot_error_body": "Se terminalen for detaljer.\n{message}",
+  "@boot_error_body": {
+    "description": "Body text for boot error screen.",
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "boot_error_unknown": "Ukjent feil",
+  "boot_restore_title": "Gjenoppretter backup…",
+  "boot_restore_body":
+      "Ikke lukk appen.\n\nVi blokkerer tilgang til data mens restore pågår for å unngå Hive-feil.",
+  "boot_restart_title": "Backup gjenopprettet ✅",
+  "boot_restart_body":
+      "Appen lukkes nå slik at endringene kan lastes inn.\n\nÅpne appen igjen etterpå.",
+  "qr_scan_title": "Skann QR",
+  "home_title": "Hjem",
+  "home": "Hjem",
+  "sessions": "Økter",
+  "statistics": "Statistikk",
+  "stats_week_label": "Uke {week}",
+  "@stats_week_label": {
+    "description": "Label for the week indicator in statistics cards.",
+    "placeholders": {
+      "week": {}
+    }
+  },
+  "common_conjunction_and": "og",
+  "stats_stands_count": "{count, plural, one{{count} stand} other{{count} stander}}",
+  "@stats_stands_count": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "stats_sessions_count": "{count, plural, one{{count} økt} other{{count} økter}}",
+  "@stats_sessions_count": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "stats_birds_count": "{count, plural, one{{count} fugl} other{{count} fugler}}",
+  "@stats_birds_count": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "stats_flushes_count": "{count, plural, one{{count} støkk} other{{count} støkk}}",
+  "@stats_flushes_count": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "common_years": "{count, plural, one{{count} år} other{{count} år}}",
+  "@common_years": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "common_months": "{count, plural, one{{count} måned} other{{count} måneder}}",
+  "@common_months": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "common_days": "{count, plural, one{{count} dag} other{{count} dager}}",
+  "@common_days": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "common_months_short": "mnd",
+  "stats_screen_title": "Statistikk",
+  "stats_period_daily": "Daglig",
+  "stats_period_weekly": "Ukentlig",
+  "stats_period_monthly": "Månedlig",
+  "stats_no_sessions_registered": "Ingen økter registrert enda",
+  "stats_filter_all_dogs": "Alle hunder",
+  "stats_filter_dynamic_period": "Dynamisk periode",
+  "stats_trendline_title": "Trendlinje",
+  "stats_period_range": "{from}–{to}",
+  "@stats_period_range": {
+    "placeholders": {
+      "from": {},
+      "to": {}
+    }
+  },
+  "stats_bucket_title": "{title}",
+  "@stats_bucket_title": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "stats_buckets_count": "{count, plural, one{{count} bøtte} other{{count} bøtter}}",
+  "@stats_buckets_count": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "stats_total_label": "Totalt: {count}",
+  "@stats_total_label": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "stats_more_points": "{count, plural, one{{count} flere poeng} other{{count} flere poeng}}",
+  "@stats_more_points": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "stats_trend_point_label": "{label}: {value}",
+  "@stats_trend_point_label": {
+    "placeholders": {
+      "label": {},
+      "value": {}
+    }
+  },
+  "dogs": "Hund",
+  "dog_sex_male": "Hannhund",
+  "dog_sex_female": "Tispe",
+  "dog_unnamed": "Uten navn",
+  "@dog_unnamed": {
+    "description": "Ord for hund uten navn."
+  },
+  "dog_subtitle_born_prefix": "Født: {date}",
+  "@dog_subtitle_born_prefix": {
+    "description": "Prefix showing the dog's birth date in a subtitle.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "dog_editor_error_name_missing": "Navn mangler",
+  "dog_editor_save": "Lagre",
+  "dog_editor_saving": "Lagrer…",
+  "dog_editor_delete_dog": "Slett hund",
+  "dog_editor_deleting": "Sletter…",
+  "dog_editor_delete_dog_title": "Slett hund",
+  "dog_editor_delete_dog_body": "Vil du slette hunden? Dette kan ikke angres.",
+  "dog_editor_button_cancel": "Avbryt",
+  "dog_editor_button_delete": "Slett",
+  "dog_editor_new_breed_title": "Ny rase",
+  "dog_editor_new_breed_hint": "F.eks. Gordon setter",
+  "dog_editor_button_add": "Legg til",
+  "dog_editor_select_breed_label": "Velg rase",
+  "dog_editor_select_breed_placeholder": "Velg rase",
+  "dog_editor_new_breed_option": "Ny rase…",
+  "dog_editor_name_label": "Navn",
+  "dog_editor_nickname_label": "Kallenavn",
+  "dog_editor_nickname_hint": "Valgfritt (f.eks Zoë, Bowie)",
+  "dog_editor_birthdate_label": "Fødselsdato",
+  "dog_editor_birthdate_not_set": "Ikke satt",
+  "dog_editor_regnr_label": "Reg.nr",
+  "dog_editor_pedigree_url_label": "Stamtavle URL",
+  "dog_editor_memory_words_label": "Minneord",
+  "dog_editor_image_text_anchor_label": "Tekstplassering på bilde",
+  "dog_editor_death_registered_title": "Registrert død",
+  "dog_editor_section_breed_title": "Rase",
+  "dog_editor_section_sex": "Kjønn",
+  "dog_editor_role_section_title": "Velg rolle",
+  "dog_editor_role_owner": "Eier",
+  "dog_editor_role_admin": "Administrator",
+  "dog_editor_role_user": "Bruker",
+  "dog_editor_section_hero_title": "Hero-tekst",
+  "dog_editor_anchor_bottom_left": "Nederst til venstre",
+  "dog_editor_anchor_bottom_center": "Nederst midtstilt",
+  "dog_editor_anchor_top_left": "Øverst til venstre",
+  "dog_editor_text_size_label": "Tekststørrelse",
+  "dog_editor_text_size_small": "Lite",
+  "dog_editor_text_size_normal": "Normal",
+  "dog_editor_text_size_large": "Stor",
+  "dog_editor_section_lifecycle_title": "Livsløp",
+  "dog_editor_death_date_label": "Dødsdato",
+  "dog_editor_death_date_picker_hint": "Velg dato",
+  "dog_detail_snackbar_invite_accepted": "Invitasjon akseptert",
+  "dog_detail_snackbar_invite_declined": "Invitasjon avvist",
+  "dog_detail_snackbar_invite_sent": "Invitasjon sendt",
+  "dog_detail_snackbar_ownership_accepted": "Eierskap godtatt",
+  "dog_detail_snackbar_request_declined": "Forespørsel avslått",
+  "dog_detail_snackbar_request_cancelled": "Forespørsel avbrutt",
+  "dog_detail_snackbar_image_save_failed": "Kunne ikke lagre bildet.",
+  "dog_detail_snackbar_pedigree_invalid": "Stamtavle-linken er ugyldig eller kan ikke åpnes.",
+  "dog_detail_photo_source_gallery": "Velg fra bilder",
+  "dog_detail_photo_source_camera": "Ta bilde",
+  "dog_detail_button_cancel": "Avbryt",
+  "dog_detail_pedigree_section_title": "Stamtavle",
+  "dog_detail_button_open_pedigree": "Åpne stamtavle",
+  "dog_pedigree_no_link": "Ingen lenke registrert",
+  "dog_detail_appbar_title": "Hundeprofil",
+  "dog_detail_error_dog_not_found": "Hund ikke funnet",
+  "dog_detail_title_add_dog": "Legg til hund",
+  "dog_editor_title_add_dog": "Legg til hund",
+  "dog_editor_title_edit_dog": "Rediger hund",
+  "dog_profile_title": "Hund",
+  "dog_profile_subtitle_breed_age": "Rase · Alder",
+  "dog_generic_name": "Hund",
+  "dog_detail_section_access": "Tilganger",
+  "dog_detail_button_send_invite": "Send invitasjon",
+  "dog_detail_section_invites": "Invitasjoner",
+  "invite_send_email_label": "Mottakers e-post",
+  "invite_send_button": "Send invitasjon",
+  "invite_sent_to": "Invitasjon sendt til {email}",
+  "@invite_sent_to": {
+    "description": "Toast som vises etter at en invitasjon er sendt.",
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "invite_revoke_button": "Trekk tilbake",
+  "invite_status_invited": "Invitert",
+  "invite_status_invited_as_user": "Invitert som {role}",
+  "@invite_status_invited_as_user": {
+    "description": "Statustekst som inkluderer den kanoniske rollen.",
+    "placeholders": {
+      "role": {}
+    }
+  },
+  "invite_accept": "Aksepter",
+  "invite_decline": "Avslå",
+  "dog_share_section_title": "Delt med",
+  "dog_detail_access_section_title": "Tilgang til denne hunden",
+  "dog_detail_member_action_set_reader": "Sett som leser",
+  "dog_detail_member_action_set_user": "Sett som bruker",
+  "dog_detail_member_action_remove_access": "Fjern tilgang",
+  "share_role_owner": "Eier",
+  "share_role_admin": "Administrator",
+  "share_role_user": "Bruker",
+  "dog_detail_share_empty": "Ingen invitasjoner",
+  "dog_detail_share_empty_owner": "Ingen deling enda.",
+  "dog_detail_my_role_label": "Din rolle: {role}",
+  "@dog_detail_my_role_label": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "dog_detail_share_disabled_explanation":
+      "Du har ikke rettigheter til å dele denne hunden.",
+  "share_accept_title": "Aksepter deling",
+  "share_accept_code_label": "Delingskode",
+  "share_accept_scan_qr": "Skann QR",
+  "share_accept_button": "Aksepter",
+  "share_error_dialog_title": "Deling feilet",
+  "share_error_not_owner": "Kun eier eller administrator kan dele hunden.",
+  "share_error_invite_not_found": "Invitasjonen ble ikke funnet.",
+  "share_error_invite_expired": "Invitasjonen er utløpt.",
+  "share_error_invite_revoked": "Invitasjonen er trukket tilbake.",
+  "share_error_invite_inactive": "Invitasjonen er ikke aktiv.",
+  "share_error_already_has_access": "Du har allerede tilgang.",
+  "share_error_invalid_role": "Ugyldig rolle.",
+  "share_error_invalid_email": "Ugyldig e-postadresse.",
+  "share_error_dog_not_found_title": "Hund ikke funnet",
+  "share_error_dog_not_found_detail": "Fant ingen hund for denne koden.",
+  "transfer_error_not_owner": "Kun eier kan avslå forespørselen.",
+  "transfer_error_not_recipient":
+      "Du er ikke mottaker av denne forespørselen.",
+  "transfer_error_not_found": "Forespørselen ble ikke funnet.",
+  "transfer_error_expired": "Forespørselen er utløpt.",
+  "transfer_error_not_pending": "Forespørselen er ikke aktiv.",
+  "transfer_error_cannot_transfer_to_self":
+      "Kan ikke overføre til seg selv.",
+  "transfer_error_cancelled": "Forespørselen er allerede avslått.",
+  "role_owner": "Eier",
+  "role_editor": "Redaktør",
+  "role_viewer": "Leser",
+  "role_admin": "Administrator",
+  "dog_editor_owner_email_label": "Eierens e-post",
+  "dog_editor_owner_email_hint": "navn@eksempel.no",
+  "dog_editor_owner_email_required_error":
+      "Skriv inn en gyldig e-post for eieren.",
+  "dog_detail_section_owner_request_title": "Eierskap forespurt",
+  "dog_detail_label_from_user": "Fra: {userId}",
+  "@dog_detail_label_from_user": {
+    "placeholders": {
+      "userId": {
+        "type": "String"
+      }
+    }
+  },
+  "dog_detail_label_to_user": "Til: {userId}",
+  "@dog_detail_label_to_user": {
+    "placeholders": {
+      "userId": {
+        "type": "String"
+      }
+    }
+  },
+  "dog_detail_button_accept": "Aksepter",
+  "dog_detail_button_decline": "Avslå",
+  "dog_detail_button_cancel_request": "Avbryt forespørsel",
+  "dog_detail_button_edit_photo": "Endre profilbilde",
+  "dog_detail_button_mark_dead": "Marker som død",
+  "dog_detail_label_death_date": "Dødsdato",
+  "dog_detail_button_edit": "Endre",
+  "dog_detail_button_register_death": "Registrer",
+  "dog_detail_photo_dialog_title": "Profilbilde",
+  "dog_detail_photo_pick_camera": "Ta bilde",
+  "dog_detail_photo_pick_gallery": "Velg fra bilder",
+  "dog_detail_photo_remove": "Fjern bilde",
+  "dog_detail_snackbar_photo_updated": "Profilbilde oppdatert",
+  "dog_detail_snackbar_photo_removed": "Profilbilde fjernet",
+  "dog_detail_snackbar_error_generic": "Noe gikk galt",
+  "dog_detail_info_label_sex": "Kjønn",
+  "dog_detail_info_label_born": "Født",
+  "dog_detail_summary_points_label": "Stander",
+  "dog_detail_summary_session_count_label": "Antall økter",
+  "dog_detail_summary_active_time_label": "Tid aktiv",
+  "dog_detail_summary_birds_down_label": "Fugl felt",
+  "dog_detail_summary_first_session_label": "Første økt",
+  "dog_detail_summary_last_session_label": "Siste økt",
+  "dog_detail_tooltip_edit_profile": "Rediger hund",
+  "dog_detail_farewell_prefix": "Avskjed",
+  "dog_detail_farewell_age_sentence":
+      "{name} ble {years} {months} {days} gammel",
+  "@dog_detail_farewell_age_sentence": {
+    "description": "Sentence describing how old the dog was when passing.",
+    "placeholders": {
+      "name": {},
+      "years": {},
+      "months": {},
+      "days": {}
+    }
+  },
+  "dog_detail_next_milestones_title": "Neste milepæler",
+  "dog_detail_next_milestone_title": "Neste milepæl",
+  "milestone_first_session_title": "Første økt gjennomført",
+  "milestone_first_session_subtitle": "Første økt med {dogName}",
+  "@milestone_first_session_subtitle": {
+    "placeholders": {
+      "dogName": {}
+    }
+  },
+  "milestone_first_bird_title": "Første fugl",
+  "age_years": "{count, plural, one{{count} år} other{{count} år}}",
+  "@age_years": {
+    "description": "Age measured in years with plural.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "age_years_short": "{count, plural, one{{count} år} other{{count} år}}",
+  "@age_years_short": {
+    "description": "Short year label when showing age in the hero header.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "age_months": "{count, plural, one{{count} mnd} other{{count} mnd}}",
+  "@age_months": {
+    "description": "Age measured in months with plural.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "age_months_short": "{count, plural, one{{count} mnd} other{{count} mnd}}",
+  "@age_months_short": {
+    "description": "Short month label when showing age in the hero header.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "age_days": "{count, plural, one{{count} dag} other{{count} dager}}",
+  "@age_days": {
+    "description": "Age measured in days with plural.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@age_days": {
+    "description": "Age measured in days with plural.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "age_zero_days": "0 dager",
+  "age_and": "og",
+  "home_startNewSession": "Start ny økt",
+  "chooseDog": "Velg hund",
+  "noDogsAddDog": "Ingen hunder – legg til hund",
+  "home_addDogPrompt": "Legg til hund for å starte økt",
+  "home_empty_title": "Start reisen med jakthunden din",
+  "@home_empty_title": {
+    "description": "Tittel for tomtilstanden på hjem-skjermen."
+  },
+  "home_empty_body": "Logg økter, følg utviklingen og bygg en historikk på hunden din – økt for økt.",
+  "@home_empty_body": {
+    "description": "Hovedtekst i tomtilstanden på hjem-skjermen."
+  },
+  "home_empty_bullet_progress": "Se utvikling over tid – stand, støkk og aktivitet.",
+  "@home_empty_bullet_progress": {
+    "description": "Første punkt i tomtilstanden."
+  },
+  "home_empty_bullet_training": "Bedre trening og jakt – se hva som faktisk gir uttelling.",
+  "@home_empty_bullet_training": {
+    "description": "Andre punkt i tomtilstanden."
+  },
+  "home_empty_bullet_history": "Jakt-historikk du faktisk bruker – sesong for sesong, område for område.",
+  "@home_empty_bullet_history": {
+    "description": "Tredje punkt i tomtilstanden."
+  },
+  "home_addDog_button": "Legg til hund",
+  "@home_addDog_button": {
+    "description": "Knappetekst for å legge til hund fra hjem-skjermen."
+  },
+  "home_empty_offline_note": "Du kan bruke appen helt offline. All data lagres lokalt på telefonen din.",
+  "@home_empty_offline_note": {
+    "description": "Tekst som forklarer at appen fungerer uten nett."
+  },
+  "home_visible_empty_title": "Ingen hunder tilgjengelig",
+  "home_visible_empty_body": "Du har ingen hunder knyttet til denne kontoen. Sjekk invitasjoner eller be noen dele en hund med deg.",
+  "home_visible_empty_button": "Åpne invitasjoner",
+  "home_noDogsRegistered": "Ingen hunder registrert",
+  "home_primaryActionSubtitle": "Notater først. Tellere med + i felt.",
+  "home_top10_points_title": "Topp 10 stander",
+  "top10Title": "Topp 10",
+  "home_top10_points_empty": "Ingen stand registrert ennå.",
+  "home_top10_points_pointsLabel": "Stander: {count}",
+  "standsLabel": "Stand",
+  "standsCount": "{count, plural, =0{0 stander} one{1 stand} other{{count} stander}}",
+  "@home_top10_points_pointsLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "top10_points_unit": "{count, plural, one{stand} other{stander}}",
+  "@top10_points_unit": {
+    "description": "Unit label for top10 points.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "home_top10_birds_title": "Topp 10 felt fugl",
+  "home_top10_birds_empty": "Ingen fugl registrert ennå.",
+  "home_top10_birds_fieldLabel": "Fugl",
+  "session_log_title": "Øktlogging – Fuglehund",
+  "session_saved_list_title": "Lagrede økter",
+  "session_unit_min": "min",
+  "session_unit_sec": "sek",
+  "session_label_points": "stand",
+  "session_label_flushes": "støkk",
+  "session_label_birds": "fugl",
+  "session_label_birds_down": "felt fugl",
+  "session_all_dogs_label": "Alle hunder",
+  "session_map_label": "Kart",
+  "session_map_error_no_tracks": "Fant ingen spor",
+  "session_map_error_map_load_failed": "Kunne ikke laste kartet",
+  "map_page_snackbar_no_tracks_to_focus": "Ingen spor å fokusere på",
+  "map_page_dialog_delete_downloaded_map_body":
+      "Vil du slette dette nedlastede kartet?",
+  "hunt_session_snackbar_export_ready_opening_share":
+      "Eksport klar, åpner deling …",
+  "hunt_session_snackbar_gpx_export_failed_see_log":
+      "GPX-eksport feilet. Se logg.",
+  "session_gpx_import_label": "Importer GPX",
+  "session_gpx_importing_ellipsis": "Importer…",
+  "session_gpx_export_label": "Eksporter GPX",
+  "session_gpx_exporting_ellipsis": "Eksporterer…",
+  "session_form_dog_section_title": "Hund",
+  "session_form_dog_prefix": "Hund:",
+  "session_form_no_dogs_registered": "Ingen hunder registrert.",
+  "session_summary_sessions_label": "Antall økter:",
+  "session_summary_total_time_label": "Total tid:",
+  "session_summary_total_bird_contacts_label": "Fuglkontakter total:",
+  "session_summary_total_points_label": "Stand total:",
+  "session_summary_total_secondary_points_label": "Sekundering total:",
+  "session_summary_total_flushes_label": "Støkk total:",
+  "session_action_add_new_session": "Legg inn ny økt",
+  "session_action_cancel": "Avbryt",
+  "session_type_title": "Økt-type",
+  "session_type_training": "Trening",
+  "session_type_hunt": "Jakt",
+  "session_field_location": "Sted",
+  "session_field_active_time_minutes": "Tid aktiv (min)",
+  "session_field_bird_contacts": "Fuglkontakter",
+  "session_field_points": "Stand",
+  "session_field_secondary_points": "Sekundering",
+  "session_field_flushes": "Støkk",
+  "session_pick_date": "Velg dato",
+  "session_pick_time": "Klokkeslett",
+  "session_birds_section_title": "Fugl",
+  "session_birds_select_species": "Velg fuglearter",
+  "session_birds_none_selected": "Ingen arter valgt",
+  "session_error_no_dogs_registered": "Ingen hunder registrert",
+      "session_select_species_title": "Velg art",
+  "session_no_species_saved_yet": "Ingen arter lagret ennå",
+  "session_new_bird_button": "Ny fugl",
+  "session_new_species_title": "Ny art",
+  "session_error_photo_add": "Kunne ikke legge til bilde",
+  "session_error_video_add": "Kunne ikke legge til video",
+  "session_error_media_save": "Kunne ikke lagre mediafilen",
+  "session_error_gpx_import": "GPX-import feilet. Se logg.",
+  "session_error_location_services_disabled": "Stedstjenester er deaktivert",
+  "session_error_no_gps": "Ingen GPS-tilgang",
+  "session_error_gps_failure": "Feil fra GPS: {error}",
+  "@session_error_gps_failure": {
+    "description": "GPS failure message.",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "session_error_stop_gps": "Klarte ikke stoppe GPS",
+  "session_error_select_dog_first": "Velg en hund først",
+  "session_error_no_track_export": "Denne økten har ikke noe spor å eksportere",
+  "session_error_track_empty": "Spor mangler/er tomt",
+  "session_snackbar_message": "{message}",
+  "@session_snackbar_message": {
+    "description": "Snackbar message with dynamic text.",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "session_media_add_image_failed": "Kunne ikke legge til bilde",
+  "session_media_add_video_failed": "Kunne ikke legge til video",
+  "session_media_save_failed": "Kunne ikke lagre mediafilen",
+  "session_media_video_missing": "Video mangler eller ble ikke lagret riktig",
+  "@session_media_video_missing": {
+    "description": "Vises når en video mangler eller har størrelse null og ikke kan åpnes"
+  },
+  "session_media_video_open_failed": "Kunne ikke åpne video",
+  "@session_media_video_open_failed": {
+    "description": "Vises når videospilleren ikke klarer å starte opp valgt media"
+  },
+  "gpx_import_failed_see_log": "GPX-import feilet. Se logg.",
+  "gps_services_disabled": "Stedstjenester er deaktivert",
+  "gps_no_permission": "Ingen GPS-tilgang",
+  "gps_error_message": "Feil fra GPS: {error}",
+  "@gps_error_message": {
+    "description": "GPS error placeholder.",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "gps_stop_failed": "Klarte ikke stoppe GPS",
+  "session_select_dog_first": "Velg en hund først",
+  "session_export_no_track": "Denne økten har ikke noe spor å eksportere",
+  "session_track_missing_or_empty": "Spor mangler/er tomt",
+  "gpx_exported_to_desktop": "GPX eksportert til Skrivebordet: {filename} ✅",
+  "@gpx_exported_to_desktop": {
+    "description": "Snackbar after exporting GPX file.",
+    "placeholders": {
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "session_detail_title_edit_session": "Rediger økt",
+  "session_detail_title_new_session": "Ny økt",
+  "session_detail_label_points": "Stand",
+  "session_detail_label_flushes": "Støkk",
+  "session_detail_button_add_media": "Legg til bilde/video",
+  "session_detail_total_points": "Stand totalt: {value}",
+  "session_detail_title_home": "Hjem",
+  "session_detail_title_main": "Økt",
+  "session_detail_title_active_session": "Aktiv økt",
+  "active_session_hunt_events_title": "Jakthendelser +1",
+  "active_session_action_stand_plus1": "Stand +1",
+  "active_session_action_secondary_plus1": "Sekundering +1",
+  "active_session_action_flush_plus1": "Støkk +1",
+  "active_session_action_bird_plus1": "Fugl +1",
+  "active_session_action_undo": "Angre",
+  "session_detail_label_choose_dog": "Velg hund",
+  "session_detail_button_open_latest_session": "Åpne siste økt",
+  "session_detail_button_start_new_session": "Start ny økt",
+  "session_detail_button_settings": "Innstillinger",
+  "session_detail_media_sheet_title": "Legg til media",
+  "session_detail_media_sheet_action_gallery": "Galleri",
+  "session_detail_media_sheet_action_camera": "Kamera",
+  "session_detail_media_sheet_action_video": "Video",
+  "session_detail_media_section_title": "Media",
+  "session_detail_media_empty_placeholder": "Ingen media lagt til",
+  "session_detail_notes_hint": "Notater fra økta...",
+  "session_detail_meta_time_minutes": "Tid aktiv: {minutes} min",
+  "@session_detail_meta_time_minutes": {
+    "description": "Label for the active time chip in session detail.",
+    "placeholders": {
+      "minutes": {}
+    }
+  },
+  "session_detail_meta_birds": "Fuglkontakter: {value}",
+  "@session_detail_meta_birds": {
+    "description": "Label for the bird contacts chip in session detail.",
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "session_detail_meta_secondary_points": "Sekundering: {count}",
+  "@session_detail_meta_secondary_points": {
+    "description": "Label for the secondary points chip in session detail.",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "session_detail_meta_flushes": "Støkk: {value}",
+  "@session_detail_meta_flushes": {
+    "description": "Label for the flushes chip in session detail.",
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "session_detail_screen_title": "Øktdetalj",
+  "session_notes_hint_from_session": "Notater fra økta...",
+  "session_notes_section_title": "Notater",
+  "session_detail_section_dog": "Hund",
+  "session_detail_section_media": "Media",
+  "session_detail_section_notes": "Notater",
+  "session_detail_media_open_gallery": "Åpne galleri",
+  "session_detail_button_import_gpx": "Importer GPX",
+  "session_detail_button_importing": "Importerer…",
+  "session_detail_empty_bird_species": "Ingen fuglearter",
+  "session_detail_empty_location": "Ukjent sted",
+  "session_detail_saved_sessions_title": "Lagrede økter",
+  "session_detail_empty_sessions_for_selected_dog": "Ingen økter for valgt hund",
+  "session_detail_empty_dogs_registered": "Ingen hunder registrert.",
+  "session_detail_empty_sessions_yet": "Ingen økter ennå",
+  "session_detail_track_summary_points": "Spor: {count} punkter",
+  "session_detail_track_summary_start": "Start: {time}",
+  "session_detail_track_summary_end": "Slutt: {time}",
+  "session_detail_track_summary_distance_meters": "Distanse: {meters} m",
+  "session_detail_track_summary_distance_km": "Distanse: {kilometers} km",
+  "session_detail_track_summary_duration": "Varighet: {value}",
+  "@session_detail_track_summary_points": {
+    "description": "Label showing count of GPS points.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@session_detail_track_summary_start": {
+    "description": "Label showing the start time for the track.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@session_detail_track_summary_end": {
+    "description": "Label showing the end time for the track.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@session_detail_track_summary_distance_meters": {
+    "description": "Label showing the track distance in meters.",
+    "placeholders": {
+      "meters": {
+        "type": "String"
+      }
+    }
+  },
+  "@session_detail_track_summary_distance_km": {
+    "description": "Label showing the track distance in kilometers.",
+    "placeholders": {
+      "kilometers": {
+        "type": "String"
+      }
+    }
+  },
+  "@session_detail_track_summary_duration": {
+    "description": "Label showing the track duration.",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "session_detail_action_saving": "Lagrer…",
+  "session_detail_action_save_changes": "Lagre endringer",
+  "session_detail_action_save_session": "Lagre økt",
+  "session_detail_edit_title": "Rediger økt",
+  "session_detail_button_save": "Lagre",
+  "session_detail_button_cancel": "Avbryt",
+  "session_detail_button_delete": "Slett",
+  "session_detail_field_location_label": "Sted",
+  "session_detail_field_active_time_minutes_label": "Tid aktiv (min)",
+  "session_detail_field_bird_contacts_label": "Fuglkontakter",
+  "session_detail_field_points_label": "Stand",
+  "session_detail_field_secondary_points_label": "Sekundering",
+  "session_detail_field_flushes_label": "Støkk",
+  "session_detail_field_notes_label": "Notat",
+  "session_detail_version_build": " (build {buildNumber})",
+  "@session_detail_version_build": {
+    "description": "Suffix for the debug build number label.",
+    "placeholders": {
+      "buildNumber": {
+        "type": "String"
+      }
+    }
+  },
+  "session_detail_snackbar_changes_saved": "Endringer lagret",
+  "session_detail_snackbar_session_saved": "Økt lagret",
+  "session_detail_snackbar_saved_with_imported_gpx":
+      "Økt lagret med importert GPX ({points} punkter)",
+  "@session_detail_snackbar_saved_with_imported_gpx": {
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_snackbar_saved_with_gps_track":
+      "Økt lagret med GPS-spor ({points} punkter)",
+  "@session_detail_snackbar_saved_with_gps_track": {
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_help_notes_first":
+      "Notater først. Tellere med + i felt.",
+  "session_detail_stats_sessions_count": "Antall økter: {count}",
+  "@session_detail_stats_sessions_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_stats_total_active_time": "Total tid aktiv: {minutes} min",
+  "@session_detail_stats_total_active_time": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_stats_total_birds": "Fuglkontakter totalt: {count}",
+  "@session_detail_stats_total_birds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_stats_total_points": "Stand totalt: {count}",
+  "@session_detail_stats_total_points": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_stats_total_secondary_points":
+      "Sekundering totalt: {count}",
+  "@session_detail_stats_total_secondary_points": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_stats_total_flushes": "Støkk totalt: {count}",
+  "@session_detail_stats_total_flushes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_button_select_date": "Velg dato",
+  "session_detail_button_select_time": "Klokkeslett",
+  "session_detail_label_duration_from_track": "Hentet fra GPS-spor",
+  "session_detail_saved_session_summary":
+      "Tid: {durationMinutes} min, Fugl: {birds}, stand: {stand}, sekundering: {secondaryPoints}, støkk: {flushes}",
+  "@session_detail_saved_session_summary": {
+    "description": "Summary line for saved session entries.",
+    "placeholders": {
+      "durationMinutes": {
+        "type": "int"
+      },
+      "birds": {
+        "type": "int"
+      },
+      "stand": {
+        "type": "int"
+      },
+      "secondaryPoints": {
+        "type": "int"
+      },
+      "flushes": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_button_exporting": "Eksporterer…",
+  "session_detail_button_export_gpx": "Eksporter GPX",
+  "session_detail_error_gpx_too_few_points":
+      "Fant for få GPX-punkter i filen",
+  "session_detail_helper_duration_hours_minutes": "{hours}t {minutes}m",
+    "session_detail_bird_species_picker_title": "Velg fuglearter",
+  "session_detail_bird_section_title": "Fugl",
+  "session_detail_bird_species_button_label": "Velg fuglearter",
+  "session_detail_bird_species_empty_selection": "Ingen arter valgt",
+  "session_detail_bird_species_empty_saved": "Ingen arter lagret ennå",
+  "session_detail_bird_species_new": "Ny fugl",
+  "session_detail_action_done": "Ferdig",
+  "session_detail_bird_species_dialog_title": "Ny fugleart",
+  "session_detail_bird_species_dialog_name_label": "Navn",
+  "session_action_save": "Lagre",
+
+  "session_detail_media_gallery_title": "Media",
+  "hunt_session_title_new": "Ny økt",
+  "hunt_session_title_edit": "Rediger økt",
+  "hunt_session_field_location_label": "Sted",
+  "hunt_session_field_duration_minutes_label": "Tid aktiv (min)",
+  "hunt_session_field_birds_seen_label": "Fuglkontakter",
+  "hunt_session_field_points_label": "Stand",
+  "hunt_session_field_secondary_points_label": "Sekundering",
+  "hunt_session_field_flushes_label": "Støkk",
+  "hunt_session_field_notes_label": "Notat",
+  "hunt_session_action_save": "Lagre",
+  "hunt_session_action_cancel": "Avbryt",
+  "hunt_session_action_delete": "Slett",
+  "hunt_session_action_import_gpx": "Importer GPX",
+  "hunt_session_action_importing": "Importer…",
+  "hunt_session_snackbar_saved_with_gps_track": "Økt lagret med GPS-spor ({points} punkter)",
+
+  "session_detail_filter_all_dogs": "Alle hunder",
+  "session_detail_session_menu_export": "Eksporter GPX",
+  "session_detail_session_menu_exporting": "Eksporterer…",
+  "session_detail_session_menu_edit": "Rediger økt",
+  "session_detail_session_menu_delete": "Slett økt",
+  "session_detail_detail_title": "Detaljer",
+  "session_detail_detail_label_date": "Dato",
+  "session_detail_detail_label_location": "Sted",
+  "session_detail_detail_label_active_time": "Tid aktiv",
+  "session_detail_detail_label_bird_contacts": "Fuglkontakter",
+  "session_detail_detail_label_points": "Stand",
+  "session_detail_detail_label_secondary_points": "Sekundering",
+  "session_detail_detail_label_flushes": "Støkk",
+  "session_detail_label_bird_species": "Fuglearter",
+  "session_detail_label_gps_track": "GPS-spor",
+  "session_detail_label_yes": "Ja",
+  "session_detail_label_no": "Nei",
+  "session_detail_label_dog_prefix": "Hund: ",
+  "session_detail_map_title": "Kart",
+  "session_detail_map_prefix": "Kart – ",
+  "map_title": "Kart",
+
+  "session_detail_gpx_replace_title": "Erstatt spor?",
+  "session_detail_gpx_replace_body": "Dette vil erstatte eksisterende spor. Fortsette?",
+  "session_detail_gpx_replace_confirm": "Erstatt",
+
+  "session_detail_gpx_replaced_snackbar": "Spor erstattet: {points} punkter",
+  "@session_detail_gpx_replaced_snackbar": {
+    "placeholders": { "points": { "type": "int" } }
+  },
+  "session_detail_gpx_imported_snackbar": "GPX importert: {points} punkter",
+  "@session_detail_gpx_imported_snackbar": {
+    "placeholders": { "points": { "type": "int" } }
+  },
+
+  "session_detail_empty_notes": "Ingen notat",
+  "session_detail_empty_media": "Ingen media lagt til",
+
+  "@session_detail_helper_duration_hours_minutes": {
+    "description": "Formatted duration when hours are present.",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_helper_duration_minutes_seconds": "{minutes}m {seconds}s",
+  "@session_detail_helper_duration_minutes_seconds": {
+    "description": "Formatted duration when only minutes and seconds exist.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_helper_duration_seconds": "{seconds}s",
+  "@session_detail_helper_duration_seconds": {
+    "description": "Formatted duration when only seconds exist.",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "@session_detail_total_points": {
+    "description": "Label showing total points in session detail.",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "session_detail_total_flushes": "Støkk totalt: {value}",
+  "@session_detail_total_flushes": {
+    "description": "Label showing total flushes in session detail.",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "species_picker_title": "Velg fuglearter",
+  "species_picker_empty": "Ingen arter lagret ennå",
+  "species_picker_add_button": "Ny fugl",
+  "species_picker_done_button": "Ferdig",
+  "species_picker_new_title": "Ny fugleart",
+  "species_picker_name_label": "Navn",
+  "session_species_picker_add": "Legg til",
+  "session_species_picker_done": "Ferdig",
+  "session_species_picker_title": "Velg fuglearter",
+  "session_species_picker_empty": "Ingen arter tilgjengelig",
+  "session_media_section_title": "Media",
+  "session_media_add_photo_video": "Legg til bilde/video",
+  "session_media_gallery_label": "Bilde fra galleri",
+  "session_media_camera_label": "Ta bilde",
+  "session_media_video_label": "Video fra galleri",
+  "session_notes_section_title": "Notater",
+  "session_notes_field_label": "Notat",
+  "session_save_button": "Lagre økt",
+  "gpx_import_label": "Importer GPX",
+  "session_menu_edit": "Rediger økt",
+  "session_menu_delete": "Slett økt",
+  "stats_trend_label": "Trend: {symbol}",
+  "@stats_trend_label": {
+    "placeholders": {
+      "symbol": {
+        "type": "String"
+      }
+    }
+  },
+  "stats_title_points_and_flushes": "Stand og støkk",
+  "stats_title_sessions": "Økter",
+  "stats_title_birds_down_per_year": "Felt fugl per år",
+  "stats_subtitle_active_time": "Aktiv tid",
+  "stats_subtitle_session_count": "Antall økter",
+  "stats_legend_bars": "Stolper:",
+  "stats_legend_line": "Linje:",
+  "stats_title_development": "Utvikling",
+  "stats_period_30_days": "30 dager",
+  "stats_period_90_days": "90 dager",
+  "stats_legend_active_time": "Aktiv tid",
+  "stats_legend_sessions": "Økter",
+  "stats_week_label": "Uke {week}",
+  "@stats_week_label": {
+    "description": "Week label with number.",
+    "placeholders": {
+      "week": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_week_tooltip": "{weekLabel}: {sessions} økter, {time}",
+  "@stats_week_tooltip": {
+    "description": "Tooltip text for weekly stats bars.",
+    "placeholders": {
+      "weekLabel": {
+        "type": "String"
+      },
+      "sessions": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "stats_info_active_time_title": "Aktiv tid",
+  "stats_info_active_time_body_1": "Total tid hunden har vært i arbeid.",
+  "stats_info_active_time_body_2": "Brukes til å vurdere belastning og kontinuitet.",
+  "stats_info_session_count_title": "Økter",
+  "stats_info_session_count_body_1": "Hvor ofte hunden har vært i aktivitet.",
+  "stats_info_session_count_body_2": "Viser trenings- og jaktfrekvens.",
+  "stats_v1_overview_title": "V1-oversikt",
+  "stats_total_points_title": "Totale stander",
+  "stats_total_active_time_title": "Total aktiv tid",
+  "stats_avg_points_per_session_title": "Snitt: stander per økt",
+  "stats_avg_time_per_session_title": "Snitt: tid per økt",
+  "stats_last_30_days_sessions_title": "Siste 30 dager: Økter",
+  "stats_last_30_days_points_title": "Siste 30 dager: Stander",
+  "stats_overview_sessions_value": "{count} økter",
+  "@stats_overview_sessions_value": {
+    "description": "Total sessions value shown on the stats overview cards.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_overview_points_value": "{count} stand",
+  "@stats_overview_points_value": {
+    "description": "Total points value shown on the stats overview cards.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_last_30_days_sessions_value": "{count} økter",
+  "@stats_last_30_days_sessions_value": {
+    "description": "Session count for the last 30 days card.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_last_30_days_points_value": "{count} stand",
+  "@stats_last_30_days_points_value": {
+    "description": "Point total for the last 30 days card.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_points_label": "Stand",
+  "stats_flushes_label": "Støkk",
+  "stats_per_month_suffix": "per måned • {year}",
+  "@stats_per_month_suffix": {
+    "description": "Suffix with year.",
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_monthly_sessions_tooltip": "{month} {year}: {count} økter",
+  "@stats_monthly_sessions_tooltip": {
+    "description": "Tooltip text for monthly session bars with data.",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_monthly_sessions_tooltip_empty": "{month} {year}: Ingen økter",
+  "@stats_monthly_sessions_tooltip_empty": {
+    "description": "Tooltip text for monthly session bars without data.",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_total_points_flushes_prefix": "Totalt: {points} stand, {flushes} støkk",
+  "@stats_total_points_flushes_prefix": {
+    "description": "Totals summary with placeholders.",
+    "placeholders": {
+      "points": {
+        "type": "int"
+      },
+      "flushes": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_stand_flush_tooltip": "{month} {year}: Stand {stand}, Støkk {flush}",
+  "@stats_stand_flush_tooltip": {
+    "description": "Tooltip for the stand and flush bar chart.",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "int"
+      },
+      "stand": {
+        "type": "String"
+      },
+      "flush": {
+        "type": "String"
+      }
+    }
+  },
+  "stats_info_points_flushes_title": "Stand og støkk",
+  "stats_info_points_flushes_body_1": "Viser antall stander og støkk over tid.",
+  "stats_info_points_flushes_body_2": "Gir innsikt i hundens arbeid i felt og jaktmønster.",
+  "stats_none": "Ingen",
+  "stats_unknown_species": "Ukjent",
+  "stats_info_explanation_tooltip": "Forklaring",
+  "stats_total_sessions_prefix": "Totalt: {count} økter",
+  "@stats_total_sessions_prefix": {
+    "description": "Total sessions placeholder.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_info_sessions_title": "Økter",
+  "stats_info_sessions_body_1": "Hvor ofte hunden har vært i aktivitet.",
+  "stats_info_sessions_body_2": "Viser trenings- og jaktfrekvens.",
+  "stats_no_birds_down_yet": "Ingen felte fugler registrert enda",
+  "stats_birds_distribution_title": "Fordeling felt fugl",
+  "stats_birds_pie_hint": "Trykk på et kakestykke for detaljer",
+  "stats_info_birds_down_title": "Felt fugl",
+  "stats_info_birds_down_body_1": "Antall felte fugler per kalenderår.",
+  "stats_info_birds_down_body_2": "Gir grunnlag for sammenligning år for år.",
+  "stats_info_birds_distribution_title": "Fordeling felt fugl",
+  "stats_info_birds_distribution_body_1": "Viser hvilke arter som er felt i valgt år.",
+  "stats_info_birds_distribution_body_2": "Gir oversikt over jaktuttak og variasjon.",
+  "stats_label_year": "År",
+  "stats_label_total": "Totalt",
+  "stats_label_per_month": "per måned",
+  "gpx_importing_ellipsis": "Importer…",
+  "gpx_export_label": "Eksporter GPX",
+  "gpx_exporting_ellipsis": "Eksporterer…",
+  "settings_title": "Innstillinger",
+  "settings_section_general": "Generelt",
+  "settings_section_milestones": "Milepæler",
+  "invitations_title": "Invitasjoner",
+  "invitations_empty": "Ingen ventende invitasjoner",
+  "settings_section_feedback": "Tilbakemelding",
+  "supportEmail": "support@gundogtracker.app",
+  "support_email": "support@gundogtracker.app",
+  "settings_section_subscription": "Abonnement",
+  "settings_section_language": "Språk",
+  "settings_section_community": "Community",
+  "settings_section_security": "Sikkerhet",
+  "settings_change_password_title": "Endre passord",
+  "settings_change_password_current_password": "Gjeldende passord",
+  "settings_change_password_new_password": "Nytt passord",
+  "settings_change_password_confirm_password": "Bekreft nytt passord",
+  "settings_change_password_submit": "Oppdater passord",
+  "settings_change_password_success": "Passordet er oppdatert",
+  "settings_reset_password_button": "Glemt passord",
+  "settings_reset_password_sent": "Sjekk e-posten din for en lenke",
+  "settings_reset_password_no_email":
+      "Ingen e-post tilgjengelig for tilbakestilling",
+  "settings_change_password_error_fields": "Fyll ut alle feltene",
+  "settings_change_password_error_mismatch":
+      "Nytt passord og bekreftelse må være like",
+  "forgot_password_title": "Glemt passord",
+  "forgot_password_description":
+      "Skriv inn e-postadressen din, så sender vi en lenke for å nullstille passordet.",
+  "forgot_password_email_label": "E-post",
+  "forgot_password_button": "Send reset-link",
+  "forgot_password_error_missing": "Skriv inn e-post.",
+  "forgot_password_error_invalid": "Ugyldig e-post.",
+  "forgot_password_check_spam_hint":
+      "Sjekk innboksen din. Hvis du ikke finner e-posten, sjekk søppelpost/spam.",
+  "settings_backup_import_success": "Backup importert",
+  "settings_theme_system": "System",
+  "settings_theme_light": "Lys",
+  "settings_theme_dark": "Mørk",
+  "settings_language_title": "Språk",
+  "settings_language_followSystem": "Følg systemet",
+  "settings_language_nb": "Norsk (bokmål)",
+  "settings_language_sv": "Svenska",
+  "settings_language_da": "Dansk",
+  "settings_language_en": "English",
+  "settings_milestones_enabled_title": "Milepæler",
+  "settings_milestones_enabled_subtitle": "Vis små øyeblikk når hunden når viktige steg.",
+  "settings_haptics_enabled_title": "Vibrering ved milepæler",
+  "settings_haptics_enabled_subtitle": "Diskret vibrering når milepæler oppnås.",
+  "settings_restore_in_progress": "Gjenoppretting pågår… vennligst vent.",
+  "settings_section_backup": "Sikkerhetskopi",
+  "settings_backup_export_action": "Eksporter backup (ZIP)",
+  "settings_backup_exporting": "Eksporterer…",
+  "settings_backup_subtitle": "Eksporter/importer hunder, økter, spor, milepæler og media.",
+  "settings_backup_import_action": "Importer backup (ZIP)",
+  "settings_backup_importing": "Importerer…",
+  "settings_backup_import_description": "Velg en backup-zip og legg tilbake data.",
+  "settings_backup_where_title": "Hvor lagres backup?",
+  "settings_backup_where_action": "Vis lagringsmappe",
+  "settings_backup_status_collectingData": "Samler data…",
+  "settings_backup_status_collectingMedia": "Samler media…",
+  "settings_backup_status_creatingZip": "Lager ZIP…",
+  "settings_backup_status_sharing": "Deler…",
+  "settings_backup_status_selectZip": "Velg ZIP…",
+  "settings_backup_status_restoring": "Gjenoppretter data…",
+  "settings_backup_share_subject": "Fuglehund backup",
+  "settings_backup_ready": "Backup klar: {fileName} ✅",
+  "@settings_backup_ready": {
+    "description": "Viser hvilken fil som ble eksportert."
+  },
+  "settings_backup_failed": "Backup feilet: {message}",
+  "auth_profile_pending_title": "Profil opprettes…",
+  "auth_profile_pending_body":
+      "Vi venter på at backend-dokumentet er klart. Trykk på \"Prøv igjen\" når du vil sjekke på nytt.",
+  "auth_profile_timeout_error":
+      "Finner ikke brukerprofilen på kort tid. Sjekk nettverk eller prøv igjen.",
+  "@settings_backup_failed": {
+    "description": "Viser feilbeskjeden dersom backup feiler."
+  },
+  "settings_backup_failed_unknown": "Ukjent feil.",
+  "settings_backup_import_failed": "Import feilet: {message}",
+  "@settings_backup_import_failed": {
+    "description": "Viser feilbeskjeden dersom import feiler."
+  },
+  "settings_backup_restore_dialog_title": "Importer backup",
+  "settings_backup_restore_dialog_content": "Dette vil legge tilbake data fra en ZIP-backup.\\n\\nTips: Etter import kan det være lurt å starte appen på nytt.",
+  "settings_backup_restore_dialog_confirm": "Importer",
+  "settings_backup_restore_prompt_title": "Gjenoppretting ferdig",
+  "settings_backup_restore_prompt_message": "Gjenoppretting fullført. Start appen på nytt nå?",
+  "settings_backup_restore_saved": "Gjenoppretting lagret. Start appen på nytt når det passer.",
+  "settings_backup_restore_complete": "Import fullført",
+  "settings_backup_storage_title": "Backup-lagring",
+  "settings_backup_storage_description": "Backupfiler lagres her:\\n\\n{path}",
+  "@settings_backup_storage_description": {
+    "description": "Forklarer hvor backup-filer lagres.",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_backup_restore_pending": "Importerer backup…",
+  "settings_backup_restore_pending_message": "Gjenoppretter backup… vennligst vent.",
+  "settings_section_appearance": "Utseende",
+  "settings_season_title": "Årstidstema",
+  "settings_season_subtitle": "Farger for topp og bunn.",
+  "settings_season_auto": "Automatisk",
+  "settings_season_spring": "🌱 Vår",
+  "settings_season_summer": "☀️ Sommer",
+  "settings_season_autumn": "🍁 Høst",
+  "settings_season_winter": "❄️ Vinter",
+  "settings_feedback_send_subtitle": "Åpner e-post med appinfo.",
+  "settings_feedback_bug_subtitle": "Åpner e-post med feilmal.",
+  "settings_feedback_copy_subtitle": "Kopierer app- og enhetsinfo.",
+  "settings_feedback_suggest_subtitle": "Send forslag via e-post.",
+  "settings_feedback_error_open_email": "Kunne ikke åpne e-post.",
+  "settings_feedback_error_copy": "Kunne ikke kopiere.",
+  "milestones_achieved_title": "Oppnådde milepæler",
+  "milestones_achieved_empty": "Ingen milepæler ennå.",
+  "milestones_achieved_duration": "Oppnådd {duration}",
+  "@milestones_achieved_duration": {
+    "description": "Label describing how long ago the milestone was achieved.",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "milestone_sheet_button_ok": "Fint!",
+  "milestone_sheet_button_viewAll": "Se milepæler",
+  "milestone_snackbar_new_title": "Ny milepæl!",
+  "milestone_snackbar_open_error": "Kunne ikke åpne milepæl",
+  "milestone_stands_count_subtitle": "{dogName} har registrert {countText}.",
+  "@milestone_stands_count_subtitle": {
+    "placeholders": {
+      "dogName": {},
+      "countText": {}
+    }
+  },
+  "milestone_sessions_count_subtitle": "{dogName} har logget {countText}.",
+  "@milestone_sessions_count_subtitle": {
+    "placeholders": {
+      "dogName": {},
+      "countText": {}
+    }
+  },
+  "milestone_birds_count_subtitle": "{dogName} har felt {countText}.",
+  "@milestone_birds_count_subtitle": {
+    "placeholders": {
+      "dogName": {},
+      "countText": {}
+    }
+  },
+  "milestone_first_point_title": "Første stand",
+  "milestone_first_point_subtitle": "{dogName} har registrert sin første stand.",
+  "@milestone_first_point_subtitle": {
+    "placeholders": {
+      "dogName": {
+        "type": "String"
+      }
+    }
+  },
+  "milestone_first_flush_title": "Første støkk",
+  "milestone_first_flush_subtitle": "{dogName} har registrert sitt første støkk.",
+  "@milestone_first_flush_subtitle": {
+    "placeholders": {
+      "dogName": {
+        "type": "String"
+      }
+    }
+  },
+  "milestone_sessions_10_title": "10 økter",
+  "milestone_sessions_10_subtitle": "{dogName} har logget 10 økter.",
+  "@milestone_sessions_10_subtitle": {
+    "placeholders": {
+      "dogName": {
+        "type": "String"
+      }
+    }
+  },
+  "milestone_active_hours_10_title": "10 timer aktiv",
+  "milestone_active_hours_10_subtitle": "{dogName} har passert 10 timer aktiv tid.",
+  "@milestone_active_hours_10_subtitle": {
+    "placeholders": {
+      "dogName": {
+        "type": "String"
+      }
+    }
+  },
+  "milestone_section_birds_down_title": "Felt fugl",
+  "milestone_dog_fallback_name": "Hunden",
+  "milestone_achieved_sentence":
+      "{dog} oppnådde «{milestone}» {date}{age}",
+  "@milestone_achieved_sentence": {
+    "description":
+        "Sentence describing the milestone achievement for the dog with date and age.",
+    "placeholders": {
+      "dog": {},
+      "milestone": {},
+      "date": {},
+      "age": {}
+    }
+  },
+  "milestone_bird_threshold_label": "{threshold}. fugl",
+  "@milestone_bird_threshold_label": {
+    "placeholders": {
+      "threshold": {}
+    }
+  },
+  "milestone_bird_label": "Fugl",
+  "milestone_century_points_title": "{count} stand",
+  "milestone_century_points_subtitle": "{dogName} har passert {count} stand.",
+  "@milestone_century_points_title": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@milestone_century_points_subtitle": {
+    "placeholders": {
+      "dogName": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "subscription_title": "Abonnement",
+  "subscription_status_label": "Status",
+  "subscription_status_active": "Aktivt",
+  "subscription_status_inactive": "Ikke aktivt",
+  "subscription_status_unknown": "Ukjent",
+  "subscription_subscribe_button": "Tegn abonnement",
+  "subscription_restore_button": "Gjenopprett kjøp",
+  "subscription_manage_button": "Administrer / Si opp",
+  "feedback_send_title": "Send tilbakemelding",
+  "feedback_bug_title": "Rapporter en feil",
+  "feedback_copy_diagnostics_title": "Kopier diagnoseinfo",
+  "feedback_suggest_milestone_title": "Foreslå milepæl",
+  "feedback_email_body_intro": "Beskriv tilbakemeldingen din her.",
+  "feedback_bug_prompt": "Hva skjedde?",
+  "feedback_bug_reproduce": "Hvordan kan vi reprodusere problemet?",
+  "feedback_suggest_title": "Forslag til ny milepæl:",
+  "feedback_suggest_question_what_to_celebrate": "Hva bør feires?",
+  "feedback_suggest_question_why_important": "Hvorfor er dette viktig i praksis?",
+  "feedback_suggest_question_when_should_trigger": "Når bør den trigges?",
+  "feedback_suggest_trigger_hint": "(første gang, hver 10., hver 100., annet)",
+  "feedback_suggest_comments": "Eventuelle kommentarer:",
+  "feedback_error_email_not_available": "Ingen e-post-app er tilgjengelig.",
+  "community_open_discord": "Åpne Discord-gruppe",
+  "community_open_facebook": "Åpne Facebook-gruppe",
+  "home_continueActiveSessionTitle": "Fortsett aktiv økt",
+  "home_continueActiveSessionSubtitle": "Ufullført økt for {dogName}.",
+  "@home_continueActiveSessionSubtitle": {
+    "placeholders": {
+      "dogName": {
+        "type": "String"
+      }
+    }
+  },
+  "home_continueActiveSessionMissingDogTitle": "Aktiv økt kan ikke gjenopprettes",
+  "home_continueActiveSessionMissingDogSubtitle": "Hunden finnes ikke lenger. Du kan forkaste utkastet.",
+  "home_continueActiveSessionButton": "Fortsett aktiv økt",
+  "home_discardActiveSessionButton": "Forkast",
+  "home_discardActiveSessionSnackbar": "Forkastet aktiv økt",
+  "home_endActiveSessionButton": "Avslutt aktiv økt",
+  "home_endActiveSessionConfirmTitle": "Avslutt aktiv økt?",
+  "home_endActiveSessionConfirmSubtitle": "Alt går tapt dersom du avslutter. Er du sikker?",
+  "home_open_settings_tooltip": "Innstillinger",
+  "home_settings_button_label": "Innstillinger",
+  "home_no_dogs_title": "Ingen hunder registrert ennå",
+  "home_no_dogs_message": "Registrer hundene dine for å logge trening, jakt og prøver. Da får du en ryddig historikk og bedre oversikt over utviklingen.",
+  "home_no_dogs_bullet_history": "Historikk: se økter, notater og steder samlet",
+  "home_no_dogs_bullet_progress": "Progresjon: følg stand, støkk og aktiv tid over tid",
+  "home_no_dogs_bullet_stats": "Statistikk: meningsfulle trender som støtter jakta",
+  "home_wisdom_empty": "En rolig start gir bedre jakt enn hastverk.",
+  "wisdom_001": "En rolig hund lærer raskere enn en stresset.",
+  "wisdom_002": "Det du trener på i dag, får du igjen i høst.",
+  "wisdom_003": "Gjenta mindre. Vent mer.",
+  "wisdom_004": "Stillhet er også trening.",
+  "wisdom_005": "Fremgang skjer ofte mellom øktene.",
+  "wisdom_006": "En pause i tide er bedre enn én repetisjon for mye.",
+  "wisdom_007": "Tålmodighet er den mest undervurderte øvelsen.",
+  "wisdom_008": "Tren det du vil se, ikke det du håper på.",
+  "wisdom_009": "En trygg hund lærer fortere enn en ivrig.",
+  "wisdom_010": "Det er lov å avslutte på topp.",
+  "wisdom_011": "En stand bygges før fugl, ikke etter.",
+  "wisdom_012": "Ro i oppflukt starter i hodet.",
+  "wisdom_013": "Stødighet er et valg hunden lærer å ta.",
+  "wisdom_014": "Press skaper bevegelse. Tid skaper ro.",
+  "wisdom_015": "En god stand trenger ikke publikum.",
+  "wisdom_016": "Når hunden står, la verden vente.",
+  "wisdom_017": "Det er bedre med én rolig stand enn tre raske.",
+  "wisdom_018": "Fuglen lærer hunden. Du former reaksjonen.",
+  "wisdom_019": "Stand er et øyeblikk av balanse.",
+  "wisdom_020": "Ikke hast gjennom stillhet.",
+  "wisdom_021": "Les vinden før du leser hunden.",
+  "wisdom_022": "Terrenget trener hunden like mye som du gjør.",
+  "wisdom_023": "Hver fugl er en ny leksjon.",
+  "wisdom_024": "Dårlige forhold gir gode erfaringer.",
+  "wisdom_025": "Jakt er samarbeid, ikke konkurranse.",
+  "wisdom_026": "Det er i motvind du ser kvalitet.",
+  "wisdom_027": "En tom runde kan være full av læring.",
+  "wisdom_028": "La hunden finne løsningen.",
+  "wisdom_029": "Fuglehundens styrke er selvstendighet med retning.",
+  "wisdom_030": "Feltet husker alt.",
+  "wisdom_031": "Vær konsekvent, ikke perfekt.",
+  "wisdom_032": "Hunden speiler tempoet ditt.",
+  "wisdom_033": "Det du ikke reagerer på, godtar du.",
+  "wisdom_034": "Klar tanke gir klar hund.",
+  "wisdom_035": "Rettferdighet slår strenghet.",
+  "wisdom_036": "Tren med hodet før stemmen.",
+  "wisdom_037": "Ikke forklar. Vis.",
+  "wisdom_038": "En trygg fører gir trygg hund.",
+  "wisdom_039": "Din ro er hundens ramme.",
+  "wisdom_040": "Lytt mer enn du korrigerer.",
+  "wisdom_041": "Relasjon bygges også uten fugl.",
+  "wisdom_042": "En god tur er aldri bortkastet.",
+  "wisdom_043": "Tillit tar tid. Mistillit tar sekunder.",
+  "wisdom_044": "Hunden jobber best for den den stoler på.",
+  "wisdom_045": "Små rutiner gir stor trygghet.",
+  "wisdom_046": "Det er lov å være bare hund iblant.",
+  "wisdom_047": "Lekenhet er ikke udisiplin.",
+  "wisdom_048": "En fornøyd hund presterer bedre.",
+  "wisdom_049": "Samarbeid slår kontroll.",
+  "wisdom_050": "Fellesskap før ferdigheter.",
+  "wisdom_051": "Prøve er øyeblikksbilde, ikke fasit.",
+  "wisdom_052": "Dommeren ser én dag. Du ser hele året.",
+  "wisdom_053": "Resultat er bonus, ikke mål.",
+  "wisdom_054": "En god opplevelse slår en god plassering.",
+  "wisdom_055": "Press hjemme gir ro på prøve.",
+  "wisdom_056": "Tren på situasjoner, ikke poeng.",
+  "wisdom_057": "En stødig hund er alltid konkurransedyktig.",
+  "wisdom_058": "Lær av det som ikke gikk.",
+  "wisdom_059": "Prøver er trening med publikum.",
+  "wisdom_060": "Ikke jag premier, bygg hund.",
+  "wisdom_061": "En fuglehund er aldri ferdig lært.",
+  "wisdom_062": "Det er veien til standen som teller.",
+  "wisdom_063": "Tålmodighet lukter ikke stress.",
+  "wisdom_064": "De beste øyeblikkene kan ikke logges.",
+  "wisdom_065": "Fuglehund handler om tillit i fart.",
+  "wisdom_066": "Stillhet er ofte svaret.",
+  "wisdom_067": "Naturen setter alltid rammene.",
+  "wisdom_068": "En god dag i feltet varer lenge.",
+  "wisdom_069": "Hunden husker stemningen.",
+  "wisdom_070": "Jakt er samspill med landskapet.",
+  "wisdom_071": "En kort line i dag kan gi en lang ro i morgen.",
+  "wisdom_072": "Det som belønnes, blir gjentatt.",
+  "wisdom_073": "Hold kravene små, og bygg dem store over tid.",
+  "wisdom_074": "Når du mister roen, mister du også læring.",
+  "wisdom_075": "En tydelig start gjør slutten enkel.",
+  "wisdom_076": "Ro er ikke passivitet. Ro er kontroll.",
+  "wisdom_077": "Tren på det kjedelige. Det er det som redder dagen.",
+  "wisdom_078": "En god føring er ofte usynlig.",
+  "wisdom_079": "Når hunden lykkes, er det du som har vært forutsigbar.",
+  "wisdom_080": "Ikke jag tempo. Jag kvalitet.",
+  "wisdom_081": "Gi hunden tid til å tenke ferdig.",
+  "wisdom_082": "Et nei uten sinne er mer verdt enn ti ja med stress.",
+  "wisdom_083": "Stopp før du må stoppe.",
+  "wisdom_084": "Du trener alltid, også når du tror du bare går tur.",
+  "wisdom_085": "Fuglen avslører hullene. Tren hullene.",
+  "wisdom_086": "En god stopp er starten på en god stand.",
+  "wisdom_087": "Lett hånd gir tungt samarbeid.",
+  "wisdom_088": "Når ting går skeis: senk tempoet, øk tydeligheten.",
+  "wisdom_089": "En trygg rutine slår en perfekt plan.",
+  "wisdom_090": "Det viktigste signalet er det du gir med kroppen.",
+  "milestones_category_firsts": "Første gang",
+  "milestones_category_sessions": "Økter",
+  "milestones_category_points": "Stand",
+  "milestones_category_time": "Tid",
+  "milestones_category_contacts": "Kontakter",
+  "flushesCount": "{count, plural, =0{0 støkk} one{1 støkk} other{{count} støkk}}",
+  "birdContactsCount": "{count, plural, =0{0 fuglkontakter} one{1 fuglkontakt} other{{count} fuglkontakter}}",
+  "birdsDownCount": "{count, plural, =0{0 felt fugl} one{1 felt fugl} other{{count} felt fugl}}",
+  "sessionsCount": "{count, plural, =0{0 økter} one{1 økt} other{{count} økter}}",
+  "birdsCount": "{count, plural, =0{0 fugler} one{1 fugl} other{{count} fugler}}"
+}

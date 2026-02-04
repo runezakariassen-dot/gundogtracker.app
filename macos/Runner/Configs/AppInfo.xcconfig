@@ -1,0 +1,7 @@
+#include? "../../Flutter/ephemeral/Flutter-Generated.xcconfig"
+
+// App settings
+PRODUCT_NAME = jakthund_app
+PRODUCT_BUNDLE_IDENTIFIER = com.example.jakthundApp
+PRODUCT_COPYRIGHT = Copyright © 2025 com.example. All rights reserved.
+

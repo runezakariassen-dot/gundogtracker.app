@@ -1,0 +1,1547 @@
+{
+  "@@locale": "en",
+  "appName": "Pointing dog",
+  "common_ok": "OK",
+  "common_close": "Close",
+  "common_done": "Done",
+  "common_cancel": "Cancel",
+  "common_save": "Save",
+  "common_copy": "Copy",
+  "common_copied": "Copied ✅",
+  "common_comingSoon": "Coming soon.",
+  "common_yes": "Yes",
+  "common_no": "No",
+  "common_invalid_link": "Invalid link",
+  "common_could_not_open_link": "Couldn't open the link",
+  "common_unknown": "Unknown",
+  "common_unknown_email": "Unknown email",
+  "common_unknown_member": "Unknown member",
+  "common_no_permission": "You don't have permission to do that.",
+  "@common_no_permission": {
+    "description": "Displayed when the user lacks rights to perform the requested action."
+  },
+  "common_retry": "Try again",
+  "age_unknown": "Age unknown",
+  "boot_error_title": "Startup failed",
+  "boot_error_body": "Check the terminal for details.\n{message}",
+  "@boot_error_body": {
+    "description": "Body text for boot error screen.",
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "boot_error_unknown": "Unknown error",
+  "boot_restore_title": "Restoring backup…",
+  "boot_restore_body":
+      "Do not close the app.\n\nWe block data access while the restore runs to avoid Hive issues.",
+  "boot_restart_title": "Backup restored ✅",
+  "boot_restart_body":
+      "The app will close now so changes can load.\n\nReopen the app afterwards.",
+  "qr_scan_title": "Scan QR",
+  "home_title": "Home",
+  "home": "Home",
+  "sessions": "Sessions",
+  "statistics": "Statistics",
+  "stats_week_label": "Week {week}",
+  "@stats_week_label": {
+    "description": "Label for the week indicator in the statistics section.",
+    "placeholders": {
+      "week": {}
+    }
+  },
+  "common_conjunction_and": "and",
+  "stats_stands_count": "{count, plural, one{{count} point} other{{count} points}}",
+  "@stats_stands_count": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "stats_sessions_count": "{count, plural, one{{count} session} other{{count} sessions}}",
+  "@stats_sessions_count": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "stats_birds_count": "{count, plural, one{{count} bird} other{{count} birds}}",
+  "@stats_birds_count": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "stats_flushes_count": "{count, plural, one{{count} flush} other{{count} flushes}}",
+  "@stats_flushes_count": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "common_years": "{count, plural, one{{count} year} other{{count} years}}",
+  "@common_years": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "common_months": "{count, plural, one{{count} month} other{{count} months}}",
+  "@common_months": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "common_days": "{count, plural, one{{count} day} other{{count} days}}",
+  "@common_days": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "common_months_short": "mo",
+  "stats_screen_title": "Statistics",
+  "stats_period_daily": "Daily",
+  "stats_period_weekly": "Weekly",
+  "stats_period_monthly": "Monthly",
+  "stats_no_sessions_registered": "No sessions registered yet",
+  "stats_filter_all_dogs": "All dogs",
+  "stats_filter_dynamic_period": "Dynamic period",
+  "stats_trendline_title": "Trendline",
+  "stats_period_range": "{from}–{to}",
+  "@stats_period_range": {
+    "placeholders": {
+      "from": {},
+      "to": {}
+    }
+  },
+  "stats_bucket_title": "{title}",
+  "@stats_bucket_title": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "stats_buckets_count": "{count, plural, one{{count} bucket} other{{count} buckets}}",
+  "@stats_buckets_count": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "stats_total_label": "Total: {count}",
+  "@stats_total_label": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "stats_more_points": "{count, plural, one{{count} more point} other{{count} more points}}",
+  "@stats_more_points": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "stats_trend_point_label": "{label}: {value}",
+  "@stats_trend_point_label": {
+    "placeholders": {
+      "label": {},
+      "value": {}
+    }
+  },
+  "dogs": "Dogs",
+  "dog_sex_male": "Male",
+  "dog_sex_female": "Female",
+  "dog_unnamed": "Unnamed dog",
+  "@dog_unnamed": {
+    "description": "Fallback label when a dog has no name."
+  },
+  "dog_subtitle_born_prefix": "Born: {date}",
+  "@dog_subtitle_born_prefix": {
+    "description": "Prefix for dog card subtitle showing birth date.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "dog_editor_error_name_missing": "Name is missing",
+  "dog_editor_save": "Save",
+  "dog_editor_saving": "Saving…",
+  "dog_editor_delete_dog": "Delete dog",
+  "dog_editor_deleting": "Deleting…",
+  "dog_editor_delete_dog_title": "Delete dog",
+  "dog_editor_delete_dog_body": "Do you want to delete the dog? This can't be undone.",
+  "dog_editor_button_cancel": "Cancel",
+  "dog_editor_button_delete": "Delete",
+  "dog_editor_new_breed_title": "New breed",
+  "dog_editor_new_breed_hint": "E.g. Gordon Setter",
+  "dog_editor_button_add": "Add",
+  "dog_editor_select_breed_label": "Select breed",
+  "dog_editor_select_breed_placeholder": "Select breed",
+  "dog_editor_new_breed_option": "New breed…",
+  "dog_editor_name_label": "Name",
+  "dog_editor_nickname_label": "Nickname",
+  "dog_editor_nickname_hint": "Optional (e.g. Zoë, Bowie)",
+  "dog_editor_birthdate_label": "Birth date",
+  "dog_editor_birthdate_not_set": "Not set",
+  "dog_editor_regnr_label": "Reg. no.",
+  "dog_editor_pedigree_url_label": "Pedigree URL",
+  "dog_editor_memory_words_label": "Memorial note",
+  "dog_editor_image_text_anchor_label": "Text placement on photo",
+  "dog_editor_death_registered_title": "Registered deceased",
+  "dog_editor_section_breed_title": "Breed",
+  "dog_editor_section_sex": "Sex",
+  "dog_editor_role_section_title": "Choose role",
+  "dog_editor_role_owner": "Owner",
+  "dog_editor_role_admin": "Administrator",
+  "dog_editor_role_user": "User",
+  "dog_editor_section_hero_title": "Hero text",
+  "dog_editor_anchor_bottom_left": "Bottom left",
+  "dog_editor_anchor_bottom_center": "Bottom center",
+  "dog_editor_anchor_top_left": "Top left",
+  "dog_editor_text_size_label": "Text size",
+  "dog_editor_text_size_small": "Small",
+  "dog_editor_text_size_normal": "Normal",
+  "dog_editor_text_size_large": "Large",
+  "dog_editor_section_lifecycle_title": "Lifecycle",
+  "dog_editor_death_date_label": "Death date",
+  "dog_editor_death_date_picker_hint": "Select date",
+  "dog_detail_snackbar_invite_accepted": "Invitation accepted",
+  "dog_detail_snackbar_invite_declined": "Invitation declined",
+  "dog_detail_snackbar_invite_sent": "Invitation sent",
+  "dog_detail_snackbar_ownership_accepted": "Ownership accepted",
+  "dog_detail_snackbar_request_declined": "Request declined",
+  "dog_detail_snackbar_request_cancelled": "Request cancelled",
+  "dog_detail_snackbar_image_save_failed": "Could not save the photo.",
+  "dog_detail_snackbar_pedigree_invalid": "The pedigree link is invalid or can’t be opened.",
+  "dog_detail_photo_source_gallery": "Choose from photos",
+  "dog_detail_photo_source_camera": "Take photo",
+  "dog_detail_button_cancel": "Cancel",
+  "dog_detail_pedigree_section_title": "Pedigree",
+  "dog_detail_button_open_pedigree": "Open pedigree",
+  "dog_pedigree_no_link": "No link registered",
+  "dog_detail_appbar_title": "Dog profile",
+  "dog_detail_error_dog_not_found": "Dog not found",
+  "dog_detail_title_add_dog": "Add dog",
+  "dog_editor_title_add_dog": "Add dog",
+  "dog_editor_title_edit_dog": "Edit dog",
+  "dog_profile_title": "Dog",
+  "dog_profile_subtitle_breed_age": "Breed · Age",
+  "dog_generic_name": "Dog",
+  "dog_detail_section_access": "Access",
+  "dog_detail_button_send_invite": "Send invitation",
+  "dog_detail_section_invites": "Invitations",
+  "invite_send_email_label": "Recipient email",
+  "invite_send_button": "Send invitation",
+  "invite_sent_to": "Invitation sent to {email}",
+  "@invite_sent_to": {
+    "description": "Toast shown after sending an invite.",
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "invite_revoke_button": "Revoke",
+  "invite_status_invited": "Invited",
+  "invite_status_invited_as_user": "Invited as {role}",
+  "@invite_status_invited_as_user": {
+    "description": "Status text that includes the canonical role.",
+    "placeholders": {
+      "role": {}
+    }
+  },
+  "invite_accept": "Accept",
+  "invite_decline": "Decline",
+  "dog_share_section_title": "Shared with",
+  "dog_detail_access_section_title": "Access to this dog",
+  "dog_detail_member_action_set_reader": "Set as reader",
+  "dog_detail_member_action_set_user": "Set as user",
+  "dog_detail_member_action_remove_access": "Remove access",
+  "share_role_owner": "Owner",
+  "share_role_admin": "Administrator",
+  "share_role_user": "User",
+  "dog_detail_share_empty": "No invitations",
+  "dog_detail_share_empty_owner": "No sharing yet.",
+  "dog_detail_my_role_label": "Your role: {role}",
+  "@dog_detail_my_role_label": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "dog_detail_share_disabled_explanation":
+      "You don't have permission to share this dog.",
+  "share_accept_title": "Accept share",
+  "share_accept_code_label": "Share code",
+  "share_accept_scan_qr": "Scan QR",
+  "share_accept_button": "Accept",
+  "share_error_dialog_title": "Share failed",
+  "share_error_not_owner": "Only the owner or an administrator can share the dog.",
+  "share_error_invite_not_found": "Invite not found.",
+  "share_error_invite_expired": "The invite has expired.",
+  "share_error_invite_revoked": "The invite has been revoked.",
+  "share_error_invite_inactive": "The invite is not active.",
+  "share_error_already_has_access": "You already have access.",
+  "share_error_invalid_role": "Invalid role.",
+  "share_error_invalid_email": "Invalid email address.",
+  "share_error_dog_not_found_title": "Dog not found",
+  "share_error_dog_not_found_detail": "No dog matches that code.",
+  "transfer_error_not_owner": "Only the owner can decline the transfer request.",
+  "transfer_error_not_recipient": "You are not the recipient of this request.",
+  "transfer_error_not_found": "Transfer request not found.",
+  "transfer_error_expired": "Transfer request has expired.",
+  "transfer_error_not_pending": "Transfer request is not pending.",
+  "transfer_error_cannot_transfer_to_self":
+      "Cannot transfer ownership to yourself.",
+  "transfer_error_cancelled": "Transfer request has already been declined.",
+  "role_owner": "Owner",
+  "role_editor": "Editor",
+  "role_viewer": "Viewer",
+  "role_admin": "Administrator",
+  "dog_editor_owner_email_label": "Owner email",
+  "dog_editor_owner_email_hint": "name@example.com",
+  "dog_editor_owner_email_required_error":
+      "Enter a valid email for the owner.",
+  "dog_detail_section_owner_request_title": "Ownership requested",
+  "dog_detail_label_from_user": "From: {userId}",
+  "@dog_detail_label_from_user": {
+    "placeholders": {
+      "userId": {
+        "type": "String"
+      }
+    }
+  },
+  "dog_detail_label_to_user": "To: {userId}",
+  "@dog_detail_label_to_user": {
+    "placeholders": {
+      "userId": {
+        "type": "String"
+      }
+    }
+  },
+  "dog_detail_button_accept": "Accept",
+  "dog_detail_button_decline": "Decline",
+  "dog_detail_button_cancel_request": "Cancel request",
+  "dog_detail_button_edit_photo": "Change profile photo",
+  "dog_detail_button_mark_dead": "Mark as deceased",
+  "dog_detail_label_death_date": "Date of death",
+  "dog_detail_button_edit": "Edit",
+  "dog_detail_button_register_death": "Register",
+  "dog_detail_photo_dialog_title": "Profile photo",
+  "dog_detail_photo_pick_camera": "Take photo",
+  "dog_detail_photo_pick_gallery": "Choose from photos",
+  "dog_detail_photo_remove": "Remove photo",
+  "dog_detail_snackbar_photo_updated": "Profile photo updated",
+  "dog_detail_snackbar_photo_removed": "Profile photo removed",
+  "dog_detail_snackbar_error_generic": "Something went wrong",
+  "dog_detail_info_label_sex": "Sex",
+  "dog_detail_info_label_born": "Born",
+  "dog_detail_summary_points_label": "Points",
+  "dog_detail_summary_session_count_label": "Session count",
+  "dog_detail_summary_active_time_label": "Active time",
+  "dog_detail_summary_birds_down_label": "Birds down",
+  "dog_detail_summary_first_session_label": "First session",
+  "dog_detail_summary_last_session_label": "Last session",
+  "dog_detail_tooltip_edit_profile": "Edit dog",
+  "dog_detail_farewell_prefix": "Farewell",
+  "dog_detail_farewell_age_sentence":
+      "{name} was {years} {months} {days} old",
+  "@dog_detail_farewell_age_sentence": {
+    "description": "Sentence describing how old the dog was when passing.",
+    "placeholders": {
+      "name": {},
+      "years": {},
+      "months": {},
+      "days": {}
+    }
+  },
+  "dog_detail_next_milestones_title": "Next milestones",
+  "dog_detail_next_milestone_title": "Next milestone",
+  "milestone_first_session_title": "First session completed",
+  "milestone_first_session_subtitle": "First session with {dogName}",
+  "@milestone_first_session_subtitle": {
+    "placeholders": {
+      "dogName": {}
+    }
+  },
+  "milestone_first_bird_title": "First bird",
+  "age_years": "{count, plural, one{{count} year} other{{count} years}}",
+  "@age_years": {
+    "description": "Age measured in years with plural.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "age_years_short": "{count, plural, one{{count} yr} other{{count} yrs}}",
+  "@age_years_short": {
+    "description": "Short year label when showing age in the hero header.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "age_months": "{count, plural, one{{count} month} other{{count} months}}",
+  "@age_months": {
+    "description": "Age measured in months with plural.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "age_months_short": "{count, plural, one{{count} mo} other{{count} mos}}",
+  "@age_months_short": {
+    "description": "Short month label when showing age in the hero header.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "age_days": "{count, plural, one{{count} day} other{{count} days}}",
+  "@age_days": {
+    "description": "Age measured in days with plural.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@age_days": {
+    "description": "Age measured in days with plural.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "age_zero_days": "0 days",
+  "age_and": "and",
+  "home_startNewSession": "Start new session",
+  "chooseDog": "Choose dog",
+  "noDogsAddDog": "No dogs – add a dog",
+  "home_addDogPrompt": "Add a dog to start a session",
+  "home_empty_title": "Start your journey with your hunting dog",
+  "@home_empty_title": {
+    "description": "Title for the empty home state when no dogs are registered."
+  },
+  "home_empty_body": "Log sessions, track progress, and build a history for your dog – session by session.",
+  "@home_empty_body": {
+    "description": "Body text that explains the empty home state."
+  },
+  "home_empty_bullet_progress": "See development over time – stand, flushes and activity.",
+  "@home_empty_bullet_progress": {
+    "description": "First bullet in the empty home state."
+  },
+  "home_empty_bullet_training": "Train better – see what actually pays off.",
+  "@home_empty_bullet_training": {
+    "description": "Second bullet in the empty home state."
+  },
+  "home_empty_bullet_history": "Hunting history you actually use – season after season, area by area.",
+  "@home_empty_bullet_history": {
+    "description": "Third bullet in the empty home state."
+  },
+  "home_visible_empty_title": "No dogs available",
+  "@home_visible_empty_title": {
+    "description": "Title shown when filtered dog list is empty."
+  },
+  "home_visible_empty_body":
+      "This account has no dogs yet. Check invitations or ask someone to share a dog with you.",
+  "@home_visible_empty_body": {
+    "description":
+        "Explanation shown when the user has no active memberships for any dog."
+  },
+  "home_visible_empty_button": "Open invitations",
+  "@home_visible_empty_button": {
+    "description": "Button label for opening the invitations page."
+  },
+  "home_addDog_button": "Add dog",
+  "@home_addDog_button": {
+    "description": "Label for the add dog action on the home screen."
+  },
+  "home_empty_offline_note": "You can use the app completely offline. All data is stored locally on your phone.",
+  "@home_empty_offline_note": {
+    "description": "Note that the app works offline shown in the empty home state."
+  },
+  "home_noDogsRegistered": "No dogs registered",
+  "home_primaryActionSubtitle": "Notes first. Use the + buttons in the fields.",
+  "home_top10_points_title": "Top 10 – Points",
+  "top10Title": "Top 10",
+  "home_top10_points_empty": "No points recorded yet.",
+  "home_top10_points_pointsLabel": "Points: {count}",
+  "@home_top10_points_pointsLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "top10_points_unit": "{count, plural, one{point} other{points}}",
+  "@top10_points_unit": {
+    "description": "Unit label for top10 points.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "home_top10_birds_title": "Top 10 birds down",
+  "home_top10_birds_empty": "No birds recorded yet.",
+  "home_top10_birds_fieldLabel": "Birds",
+  "session_log_title": "Session log – Gundog",
+  "session_saved_list_title": "Saved sessions",
+  "session_save_button": "Save session",
+  "session_unit_min": "min",
+  "session_unit_sec": "sec",
+  "session_label_points": "points",
+  "session_label_flushes": "flushes",
+  "session_label_birds": "birds",
+  "session_label_birds_down": "birds down",
+  "session_all_dogs_label": "All dogs",
+  "session_map_label": "Map",
+  "session_map_error_no_tracks": "No tracks found",
+  "session_map_error_map_load_failed": "Could not load the map",
+  "map_page_snackbar_no_tracks_to_focus": "No tracks to focus on",
+  "map_page_dialog_delete_downloaded_map_body":
+      "Do you want to delete this downloaded map?",
+  "hunt_session_snackbar_export_ready_opening_share":
+      "Export ready, opening share…",
+  "hunt_session_snackbar_gpx_export_failed_see_log":
+      "GPX export failed. See log.",
+  "session_gpx_import_label": "Import GPX",
+  "session_gpx_importing_ellipsis": "Importing…",
+  "session_gpx_export_label": "Export GPX",
+  "session_gpx_exporting_ellipsis": "Exporting…",
+  "session_form_dog_section_title": "Dog",
+  "session_form_dog_prefix": "Dog:",
+  "session_form_no_dogs_registered": "No dogs registered.",
+  "session_summary_sessions_label": "Sessions:",
+  "session_summary_total_time_label": "Total time:",
+  "session_summary_total_bird_contacts_label": "Total bird contacts:",
+  "session_summary_total_points_label": "Total points:",
+  "session_summary_total_secondary_points_label": "Total secondary points:",
+  "session_summary_total_flushes_label": "Total flushes:",
+  "session_action_add_new_session": "Add new session",
+  "session_action_cancel": "Cancel",
+  "session_type_title": "Session type",
+  "session_type_training": "Training",
+  "session_type_hunt": "Hunt",
+  "session_field_location": "Location",
+  "session_field_active_time_minutes": "Active time (min)",
+  "session_field_bird_contacts": "Bird contacts",
+  "session_field_points": "Points",
+  "session_field_secondary_points": "Secondary points",
+  "session_field_flushes": "Flushes",
+  "session_pick_date": "Select date",
+  "session_pick_time": "Time",
+  "session_birds_section_title": "Birds",
+  "session_birds_select_species": "Select bird species",
+  "session_birds_none_selected": "No species selected",
+  "session_species_picker_title": "Select species",
+  "session_species_picker_empty": "No species available",
+  "session_species_picker_add": "Add",
+  "session_species_picker_done": "Done",
+  "session_error_no_dogs_registered": "No dogs registered",
+  "session_select_species_title": "Select species",
+  "session_no_species_saved_yet": "No species saved yet",
+  "session_new_bird_button": "New bird",
+  "session_new_species_title": "New species",
+  "session_error_photo_add": "Could not add photo",
+  "session_error_video_add": "Could not add video",
+  "session_error_media_save": "Could not save media file",
+  "session_error_gpx_import": "GPX import failed. See log.",
+  "session_error_location_services_disabled": "Location services are disabled",
+  "session_error_no_gps": "No GPS access",
+  "session_error_gps_failure": "GPS error: {error}",
+  "@session_error_gps_failure": {
+    "description": "GPS failure message.",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "session_error_stop_gps": "Could not stop GPS",
+  "session_error_select_dog_first": "Select a dog first",
+  "session_error_no_track_export": "This session has no track to export",
+  "session_error_track_empty": "Track is missing or empty",
+  "session_snackbar_message": "{message}",
+  "@session_snackbar_message": {
+    "description": "Snackbar message with dynamic text.",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "session_media_add_image_failed": "Could not add image",
+  "session_media_add_video_failed": "Could not add video",
+  "session_media_save_failed": "Could not save the media file",
+  "session_media_video_missing": "Video missing or was not saved correctly",
+  "@session_media_video_missing": {
+    "description": "Shown when a session video file cannot be opened because it is gone or empty"
+  },
+  "session_media_video_open_failed": "Could not open video",
+  "@session_media_video_open_failed": {
+    "description": "Displayed when the video player fails to initialize the selected media"
+  },
+  "session_media_section_title": "Media",
+  "session_media_add_photo_video": "Add photo/video",
+  "session_media_gallery_label": "Photo from gallery",
+  "session_media_camera_label": "Take photo",
+  "session_media_video_label": "Video from gallery",
+  "gpx_import_failed_see_log": "GPX import failed. See log.",
+  "gps_services_disabled": "Location services are disabled",
+  "gps_no_permission": "No GPS permission",
+  "gps_error_message": "GPS error: {error}",
+  "@gps_error_message": {
+    "description": "GPS error placeholder.",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "gps_stop_failed": "Could not stop GPS",
+  "session_select_dog_first": "Select a dog first",
+  "session_export_no_track": "This session has no track to export",
+  "session_track_missing_or_empty": "Track is missing or empty",
+  "gpx_exported_to_desktop": "GPX exported to Desktop: {filename} ✅",
+  "@gpx_exported_to_desktop": {
+    "description": "Snackbar after exporting GPX file.",
+    "placeholders": {
+      "filename": {
+        "type": "String"
+      }
+    }
+  },
+  "session_detail_title_edit_session": "Edit session",
+  "session_detail_title_new_session": "New session",
+  "session_detail_label_points": "Points",
+  "session_detail_label_flushes": "Flushes",
+  "session_detail_button_add_media": "Add photo/video",
+  "session_detail_total_points": "Points total: {value}",
+  "session_detail_title_home": "Home",
+  "session_detail_title_main": "Session",
+  "session_detail_title_active_session": "Active session",
+  "active_session_hunt_events_title": "Hunting events +1",
+  "active_session_action_stand_plus1": "Point +1",
+  "active_session_action_secondary_plus1": "Backing +1",
+  "active_session_action_flush_plus1": "Flush +1",
+  "active_session_action_bird_plus1": "Bird +1",
+  "active_session_action_undo": "Undo",
+  "session_detail_label_choose_dog": "Choose dog",
+  "session_detail_button_open_latest_session": "Open latest session",
+  "session_detail_button_start_new_session": "Start new session",
+  "session_detail_button_settings": "Settings",
+  "session_detail_media_sheet_title": "Add media",
+  "session_detail_media_sheet_action_gallery": "Gallery",
+  "session_detail_media_sheet_action_camera": "Camera",
+  "session_detail_media_sheet_action_video": "Video",
+  "session_detail_media_section_title": "Media",
+  "session_detail_media_empty_placeholder": "No media yet",
+  "session_detail_notes_hint": "Notes from the session...",
+  "session_detail_meta_time_minutes": "Active time: {minutes} min",
+  "@session_detail_meta_time_minutes": {
+    "description": "Label used in the active time chip on the session detail screen.",
+    "placeholders": {
+      "minutes": {}
+    }
+  },
+  "session_detail_meta_birds": "Bird contacts: {value}",
+  "@session_detail_meta_birds": {
+    "description": "Label used in the bird contacts chip on the session detail screen.",
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "session_detail_meta_secondary_points": "Secondary points: {count}",
+  "@session_detail_meta_secondary_points": {
+    "description": "Label used in the secondary points chip on the session detail screen.",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "session_detail_meta_flushes": "Flushes: {value}",
+  "@session_detail_meta_flushes": {
+    "description": "Label used in the flushes chip on the session detail screen.",
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "session_detail_screen_title": "Session details",
+  "session_notes_hint_from_session": "Notes from the session...",
+  "session_notes_section_title": "Notes",
+  "session_detail_section_dog": "Dog",
+  "session_detail_section_media": "Media",
+  "session_detail_section_notes": "Notes",
+  "session_detail_media_open_gallery": "Open gallery",
+  "session_detail_button_import_gpx": "Import GPX",
+  "session_detail_button_importing": "Importing…",
+  "session_detail_empty_bird_species": "No bird species",
+  "session_detail_empty_location": "Unknown location",
+  "session_detail_saved_sessions_title": "Saved sessions",
+  "session_detail_empty_sessions_for_selected_dog": "No sessions for the selected dog",
+  "session_detail_empty_dogs_registered": "No dogs registered.",
+  "session_detail_empty_sessions_yet": "No sessions yet",
+  "session_detail_track_summary_points": "Track: {count} points",
+  "session_detail_track_summary_start": "Start: {time}",
+  "session_detail_track_summary_end": "End: {time}",
+  "session_detail_track_summary_distance_meters": "Distance: {meters} m",
+  "session_detail_track_summary_distance_km": "Distance: {kilometers} km",
+  "session_detail_track_summary_duration": "Duration: {value}",
+  "@session_detail_track_summary_points": {
+    "description": "Summary label showing count of GPS points.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@session_detail_track_summary_start": {
+    "description": "Label showing track start time.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@session_detail_track_summary_end": {
+    "description": "Label showing track end time.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@session_detail_track_summary_distance_meters": {
+    "description": "Label showing distance in meters.",
+    "placeholders": {
+      "meters": {
+        "type": "String"
+      }
+    }
+  },
+  "@session_detail_track_summary_distance_km": {
+    "description": "Label showing distance in kilometers.",
+    "placeholders": {
+      "kilometers": {
+        "type": "String"
+      }
+    }
+  },
+  "@session_detail_track_summary_duration": {
+    "description": "Label showing formatted duration.",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "session_detail_action_saving": "Saving…",
+  "session_detail_action_save_changes": "Save changes",
+  "session_detail_action_save_session": "Save session",
+  "session_detail_edit_title": "Edit session",
+  "session_detail_button_save": "Save",
+  "session_detail_button_cancel": "Cancel",
+  "session_detail_button_delete": "Delete",
+  "session_detail_field_location_label": "Location",
+  "session_detail_field_active_time_minutes_label": "Active time (min)",
+  "session_detail_field_bird_contacts_label": "Bird contacts",
+  "session_detail_field_points_label": "Points",
+  "session_detail_field_secondary_points_label": "Secondary points",
+  "session_detail_field_flushes_label": "Flushes",
+  "session_detail_field_notes_label": "Note",
+  "session_detail_version_build": " (build {buildNumber})",
+  "@session_detail_version_build": {
+    "description": "Suffix for the debug build number label.",
+    "placeholders": {
+      "buildNumber": {
+        "type": "String"
+      }
+    }
+  },
+  "session_detail_snackbar_changes_saved": "Changes saved",
+  "session_detail_snackbar_session_saved": "Session saved",
+  "session_detail_snackbar_saved_with_imported_gpx":
+      "Session saved with imported GPX ({points} points)",
+  "@session_detail_snackbar_saved_with_imported_gpx": {
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_snackbar_saved_with_gps_track":
+      "Session saved with GPS track ({points} points)",
+  "@session_detail_snackbar_saved_with_gps_track": {
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_help_notes_first": "Notes first. Counters with + in the field.",
+  "session_detail_stats_sessions_count": "Sessions: {count}",
+  "@session_detail_stats_sessions_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_stats_total_active_time":
+      "Total active time: {minutes} min",
+  "@session_detail_stats_total_active_time": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_stats_total_birds": "Bird contacts total: {count}",
+  "@session_detail_stats_total_birds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_stats_total_points": "Points total: {count}",
+  "@session_detail_stats_total_points": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_stats_total_secondary_points":
+      "Secondary points total: {count}",
+  "@session_detail_stats_total_secondary_points": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_stats_total_flushes": "Flushes total: {count}",
+  "@session_detail_stats_total_flushes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_button_select_date": "Select date",
+  "session_detail_button_select_time": "Time",
+  "session_detail_label_duration_from_track": "Taken from GPS track",
+  "session_detail_saved_session_summary":
+      "Time: {durationMinutes} min, Birds: {birds}, Points: {stand}, Secondary: {secondaryPoints}, Flushes: {flushes}",
+  "@session_detail_saved_session_summary": {
+    "description": "Summary line for saved session entries.",
+    "placeholders": {
+      "durationMinutes": {
+        "type": "int"
+      },
+      "birds": {
+        "type": "int"
+      },
+      "stand": {
+        "type": "int"
+      },
+      "secondaryPoints": {
+        "type": "int"
+      },
+      "flushes": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_button_exporting": "Exporting…",
+  "session_detail_button_export_gpx": "Export GPX",
+  "session_detail_error_gpx_too_few_points":
+      "Too few GPX points in the file",
+  "session_detail_helper_duration_hours_minutes": "{hours}h {minutes}m",
+    "session_detail_bird_species_picker_title": "Select bird species",
+  "session_detail_bird_section_title": "Bird",
+  "session_detail_bird_species_button_label": "Select bird species",
+  "session_detail_bird_species_empty_selection": "No species selected",
+  "session_detail_bird_species_empty_saved": "No species saved yet",
+  "session_detail_bird_species_new": "New bird",
+  "session_detail_action_done": "Done",
+  "session_detail_bird_species_dialog_title": "New bird species",
+  "session_detail_bird_species_dialog_name_label": "Name",
+  "session_action_save": "Save",
+
+  "session_detail_media_gallery_title": "Media",
+  "hunt_session_title_new": "New session",
+  "hunt_session_title_edit": "Edit session",
+  "hunt_session_field_location_label": "Location",
+  "hunt_session_field_duration_minutes_label": "Active time (min)",
+  "hunt_session_field_birds_seen_label": "Bird contacts",
+  "hunt_session_field_points_label": "Points",
+  "hunt_session_field_secondary_points_label": "Secondary points",
+  "hunt_session_field_flushes_label": "Flushes",
+  "hunt_session_field_notes_label": "Notes",
+  "hunt_session_action_save": "Save",
+  "hunt_session_action_cancel": "Cancel",
+  "hunt_session_action_delete": "Delete",
+  "hunt_session_action_import_gpx": "Import GPX",
+  "hunt_session_action_importing": "Importing…",
+  "hunt_session_snackbar_saved_with_gps_track": "Session saved with GPS track ({points} points)",
+
+  "session_detail_filter_all_dogs": "All dogs",
+  "session_detail_session_menu_export": "Export GPX",
+  "session_detail_session_menu_exporting": "Exporting…",
+  "session_detail_session_menu_edit": "Edit session",
+  "session_detail_session_menu_delete": "Delete session",
+  "session_detail_detail_title": "Details",
+  "session_detail_detail_label_date": "Date",
+  "session_detail_detail_label_location": "Location",
+  "session_detail_detail_label_active_time": "Active time",
+  "session_detail_detail_label_bird_contacts": "Bird contacts",
+  "session_detail_detail_label_points": "Points",
+  "session_detail_detail_label_secondary_points": "Secondary points",
+  "session_detail_detail_label_flushes": "Flushes",
+  "session_detail_label_bird_species": "Bird species",
+  "session_detail_label_gps_track": "GPS track",
+  "session_detail_label_yes": "Yes",
+  "session_detail_label_no": "No",
+  "session_detail_label_dog_prefix": "Dog: ",
+  "session_detail_map_title": "Map",
+  "session_detail_map_prefix": "Map – ",
+  "map_title": "Map",
+
+  "session_detail_gpx_replace_title": "Replace track?",
+  "session_detail_gpx_replace_body": "This will replace the existing track. Continue?",
+  "session_detail_gpx_replace_confirm": "Replace",
+
+  "session_detail_gpx_replaced_snackbar": "Track replaced: {points} points",
+  "@session_detail_gpx_replaced_snackbar": {
+    "placeholders": { "points": { "type": "int" } }
+  },
+  "session_detail_gpx_imported_snackbar": "GPX imported: {points} points",
+  "@session_detail_gpx_imported_snackbar": {
+    "placeholders": { "points": { "type": "int" } }
+  },
+
+  "session_detail_empty_notes": "No notes",
+  "session_detail_empty_media": "No media added",
+
+  "@session_detail_helper_duration_hours_minutes": {
+    "description": "Formatted duration when hours are present.",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_helper_duration_minutes_seconds": "{minutes}m {seconds}s",
+  "@session_detail_helper_duration_minutes_seconds": {
+    "description": "Formatted duration when only minutes and seconds exist.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "session_detail_helper_duration_seconds": "{seconds}s",
+  "@session_detail_helper_duration_seconds": {
+    "description": "Formatted duration when only seconds exist.",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "@session_detail_total_points": {
+    "description": "Label showing total points in session detail.",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "session_detail_total_flushes": "Flushes total: {value}",
+  "@session_detail_total_flushes": {
+    "description": "Label showing total flushes in session detail.",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "gpx_import_label": "Import GPX",
+  "session_menu_edit": "Edit session",
+  "session_menu_delete": "Delete session",
+  "stats_trend_label": "Trend: {symbol}",
+  "@stats_trend_label": {
+    "placeholders": {
+      "symbol": {
+        "type": "String"
+      }
+    }
+  },
+  "stats_title_points_and_flushes": "Points and flushes",
+  "stats_title_sessions": "Sessions",
+  "stats_title_birds_down_per_year": "Birds down per year",
+  "stats_subtitle_active_time": "Active time",
+  "stats_subtitle_session_count": "Session count",
+  "stats_legend_bars": "Bars:",
+  "stats_legend_line": "Line:",
+  "stats_title_development": "Development",
+  "stats_period_30_days": "30 days",
+  "stats_period_90_days": "90 days",
+  "stats_legend_active_time": "Active time",
+  "stats_legend_sessions": "Sessions",
+  "stats_week_label": "Week {week}",
+  "@stats_week_label": {
+    "description": "Week number label.",
+    "placeholders": {
+      "week": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_week_tooltip": "{weekLabel}: {sessions} sessions, {time}",
+  "@stats_week_tooltip": {
+    "description": "Tooltip text for weekly stats bars.",
+    "placeholders": {
+      "weekLabel": {
+        "type": "String"
+      },
+      "sessions": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "stats_info_active_time_title": "Active time",
+  "stats_info_active_time_body_1": "Total time the dog has been working.",
+  "stats_info_active_time_body_2": "Used to assess workload and consistency.",
+  "stats_info_session_count_title": "Sessions",
+  "stats_info_session_count_body_1": "How often the dog has been active.",
+  "stats_info_session_count_body_2": "Shows training and hunting frequency.",
+  "stats_v1_overview_title": "V1 overview",
+  "stats_total_points_title": "Total points",
+  "stats_total_active_time_title": "Total active time",
+  "stats_avg_points_per_session_title": "Avg points per session",
+  "stats_avg_time_per_session_title": "Avg time per session",
+  "stats_last_30_days_sessions_title": "Last 30 days: Sessions",
+  "stats_last_30_days_points_title": "Last 30 days: Points",
+  "stats_overview_sessions_value": "{count} sessions",
+  "@stats_overview_sessions_value": {
+    "description": "Total sessions value shown on the stats overview cards.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_overview_points_value": "{count} points",
+  "@stats_overview_points_value": {
+    "description": "Total points value shown on the stats overview cards.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_last_30_days_sessions_value": "{count} sessions",
+  "@stats_last_30_days_sessions_value": {
+    "description": "Session count for the last 30 days card.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_last_30_days_points_value": "{count} points",
+  "@stats_last_30_days_points_value": {
+    "description": "Point total for the last 30 days card.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_points_label": "Points",
+  "stats_flushes_label": "Flushes",
+  "stats_per_month_suffix": "per month • {year}",
+  "@stats_per_month_suffix": {
+    "description": "Months suffix with year.",
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_monthly_sessions_tooltip": "{month} {year}: {count} sessions",
+  "@stats_monthly_sessions_tooltip": {
+    "description": "Tooltip text for monthly session bars with data.",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_monthly_sessions_tooltip_empty": "{month} {year}: No sessions",
+  "@stats_monthly_sessions_tooltip_empty": {
+    "description": "Tooltip for monthly session bars without data.",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_total_points_flushes_prefix": "Total: {points} points, {flushes} flushes",
+  "@stats_total_points_flushes_prefix": {
+    "description": "Summarizes monthly totals.",
+    "placeholders": {
+      "points": {
+        "type": "int"
+      },
+      "flushes": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_stand_flush_tooltip": "{month} {year}: Points {stand}, Flushes {flush}",
+  "@stats_stand_flush_tooltip": {
+    "description": "Tooltip for the stand and flush bar chart.",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "int"
+      },
+      "stand": {
+        "type": "String"
+      },
+      "flush": {
+        "type": "String"
+      }
+    }
+  },
+  "stats_info_points_flushes_title": "Points and flushes",
+  "stats_info_points_flushes_body_1": "Shows the number of points and flushes over time.",
+  "stats_info_points_flushes_body_2": "Gives insight into the dog’s field work and hunting pattern.",
+  "stats_none": "None",
+  "stats_unknown_species": "Unknown",
+  "stats_info_explanation_tooltip": "Explanation",
+  "stats_total_sessions_prefix": "Total: {count} sessions",
+  "@stats_total_sessions_prefix": {
+    "description": "Total sessions prefix.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stats_info_sessions_title": "Sessions",
+  "stats_info_sessions_body_1": "How often the dog has been active.",
+  "stats_info_sessions_body_2": "Shows training and hunting frequency.",
+  "stats_no_birds_down_yet": "No birds down registered yet",
+  "stats_birds_distribution_title": "Birds down distribution",
+  "stats_birds_pie_hint": "Tap a slice for details",
+  "stats_info_birds_down_title": "Birds down",
+  "stats_info_birds_down_body_1": "Number of birds down per calendar year.",
+  "stats_info_birds_down_body_2": "Provides a basis for year-to-year comparison.",
+  "stats_info_birds_distribution_title": "Birds down distribution",
+  "stats_info_birds_distribution_body_1": "Shows which species were taken in the selected year.",
+  "stats_info_birds_distribution_body_2": "Gives an overview of harvest and variation.",
+  "stats_label_year": "Year",
+  "stats_label_total": "Total",
+  "stats_label_per_month": "per month",
+  "gpx_importing_ellipsis": "Importing…",
+  "gpx_export_label": "Export GPX",
+  "gpx_exporting_ellipsis": "Exporting…",
+  "home_open_settings_tooltip": "Settings",
+  "home_settings_button_label": "Settings",
+  "home_no_dogs_title": "No dogs registered yet",
+  "home_no_dogs_message": "Register your dogs to log training, hunting, and trials. You’ll get a clear history and a better view of progress over time.",
+  "home_no_dogs_bullet_history": "History: keep sessions, notes, and locations in one place",
+  "home_no_dogs_bullet_progress": "Progress: track points, flushes, and active time over time",
+  "home_no_dogs_bullet_stats": "Stats: meaningful trends that support your hunting",
+  "home_wisdom_empty": "A calm beginning leads to better hunting than haste.",
+  "wisdom_001": "A calm dog learns faster than a stressed one.",
+  "wisdom_002": "What you train today, you’ll get back in the autumn.",
+  "wisdom_003": "Repeat less. Wait more.",
+  "wisdom_004": "Silence is training too.",
+  "wisdom_005": "Progress often happens between sessions.",
+  "wisdom_006": "A timely break is better than one repetition too many.",
+  "wisdom_007": "Patience is the most underrated exercise.",
+  "wisdom_008": "Train what you want to see, not what you hope for.",
+  "wisdom_009": "A confident dog learns faster than an eager one.",
+  "wisdom_010": "It’s okay to end on a high note.",
+  "wisdom_011": "A point is built before the bird, not after.",
+  "wisdom_012": "Steadiness in the flush starts in the mind.",
+  "wisdom_013": "Steadiness is a choice the dog learns to make.",
+  "wisdom_014": "Pressure creates movement. Time creates steadiness.",
+  "wisdom_015": "A good point doesn’t need an audience.",
+  "wisdom_016": "When the dog points, let the world wait.",
+  "wisdom_017": "One calm point is better than three rushed ones.",
+  "wisdom_018": "The bird teaches the dog. You shape the reaction.",
+  "wisdom_019": "Pointing is a moment of balance.",
+  "wisdom_020": "Don’t rush through stillness.",
+  "wisdom_021": "Read the wind before you read the dog.",
+  "wisdom_022": "The terrain trains the dog as much as you do.",
+  "wisdom_023": "Every bird is a new lesson.",
+  "wisdom_024": "Bad conditions create good experience.",
+  "wisdom_025": "Hunting is cooperation, not competition.",
+  "wisdom_026": "Quality shows in a headwind.",
+  "wisdom_027": "An empty round can still be full of learning.",
+  "wisdom_028": "Let the dog find the solution.",
+  "wisdom_029": "A bird dog’s strength is independence with direction.",
+  "wisdom_030": "The field remembers everything.",
+  "wisdom_031": "Be consistent, not perfect.",
+  "wisdom_032": "The dog mirrors your pace.",
+  "wisdom_033": "What you don’t react to, you accept.",
+  "wisdom_034": "A clear mind makes a clear dog.",
+  "wisdom_035": "Fairness beats harshness.",
+  "wisdom_036": "Train with your head before your voice.",
+  "wisdom_037": "Don’t explain. Show.",
+  "wisdom_038": "A confident handler builds a confident dog.",
+  "wisdom_039": "Your calm is the dog’s framework.",
+  "wisdom_040": "Listen more than you correct.",
+  "wisdom_041": "The relationship is built even without birds.",
+  "wisdom_042": "A good walk is never wasted.",
+  "wisdom_043": "Trust takes time. Distrust takes seconds.",
+  "wisdom_044": "The dog works best for the one it trusts.",
+  "wisdom_045": "Small routines create big security.",
+  "wisdom_046": "It’s okay to just be a dog sometimes.",
+  "wisdom_047": "Playfulness isn’t lack of discipline.",
+  "wisdom_048": "A satisfied dog performs better.",
+  "wisdom_049": "Cooperation beats control.",
+  "wisdom_050": "Relationship before skills.",
+  "wisdom_051": "A trial is a snapshot, not a verdict.",
+  "wisdom_052": "The judge sees one day. You see the whole year.",
+  "wisdom_053": "Results are a bonus, not the goal.",
+  "wisdom_054": "A good experience beats a good placement.",
+  "wisdom_055": "Pressure at home creates calm at the trial.",
+  "wisdom_056": "Train situations, not points.",
+  "wisdom_057": "A steady dog is always competitive.",
+  "wisdom_058": "Learn from what didn’t work.",
+  "wisdom_059": "Trials are training with an audience.",
+  "wisdom_060": "Don’t chase prizes, build the dog.",
+  "wisdom_061": "A bird dog is never fully finished learning.",
+  "wisdom_062": "It’s the road to the point that matters.",
+  "wisdom_063": "Patience doesn’t smell like stress.",
+  "wisdom_064": "The best moments can’t be logged.",
+  "wisdom_065": "A bird dog is trust at speed.",
+  "wisdom_066": "Silence is often the answer.",
+  "wisdom_067": "Nature always sets the limits.",
+  "wisdom_068": "A good day in the field lasts a long time.",
+  "wisdom_069": "The dog remembers the mood.",
+  "wisdom_070": "Hunting is teamwork with the landscape.",
+  "wisdom_071": "A short lead today can create long calm tomorrow.",
+  "wisdom_072": "What gets rewarded, gets repeated.",
+  "wisdom_073": "Keep demands small, and build them big over time.",
+  "wisdom_074": "When you lose calm, you lose learning.",
+  "wisdom_075": "A clear start makes the finish easy.",
+  "wisdom_076": "Calm isn’t passive. Calm is control.",
+  "wisdom_077": "Train the boring stuff. It saves the day.",
+  "wisdom_078": "Good handling is often invisible.",
+  "wisdom_079": "When the dog succeeds, it’s because you were predictable.",
+  "wisdom_080": "Don’t chase speed. Chase quality.",
+  "wisdom_081": "Give the dog time to finish thinking.",
+  "wisdom_082": "A ‘no’ without anger is worth more than ten ‘yes’ with stress.",
+  "wisdom_083": "Stop before you have to stop.",
+  "wisdom_084": "You’re always training, even when you think you’re just walking.",
+  "wisdom_085": "The bird reveals the gaps. Train the gaps.",
+  "wisdom_086": "A good stop is the start of a good point.",
+  "wisdom_087": "A light hand builds heavy cooperation.",
+  "wisdom_088": "When things go sideways: slow down, increase clarity.",
+  "wisdom_089": "A reliable routine beats a perfect plan.",
+  "wisdom_090": "Your most important signal is your body language.",
+  "standsLabel": "Points",
+  "standsCount": "{count, plural, =0{0 points} one{1 point} other{{count} points}}",
+  "settings_title": "Settings",
+  "settings_section_general": "General",
+  "settings_section_milestones": "Milestones",
+  "invitations_title": "Invitations",
+  "invitations_empty": "No pending invitations",
+  "settings_section_feedback": "Feedback",
+  "supportEmail": "support@gundogtracker.app",
+  "support_email": "support@gundogtracker.app",
+  "settings_section_subscription": "Subscription",
+  "settings_section_language": "Language",
+  "settings_section_community": "Community",
+  "settings_section_security": "Security",
+  "settings_change_password_title": "Change password",
+  "settings_change_password_current_password": "Current password",
+  "settings_change_password_new_password": "New password",
+  "settings_change_password_confirm_password": "Confirm new password",
+  "settings_change_password_submit": "Update password",
+  "settings_change_password_success": "Password updated",
+  "settings_reset_password_button": "Forgot password",
+  "settings_reset_password_sent": "Check your email for a reset link",
+  "settings_reset_password_no_email":
+      "No email on record to reset password",
+  "settings_change_password_error_fields": "Fill in all fields",
+  "settings_change_password_error_mismatch":
+      "New password and confirmation must match",
+  "forgot_password_title": "Forgot password",
+  "forgot_password_description":
+      "Enter your email address and we will send you a link to reset your password.",
+  "forgot_password_email_label": "Email",
+  "forgot_password_button": "Send reset link",
+  "forgot_password_error_missing": "Enter an email address.",
+  "forgot_password_error_invalid": "Enter a valid email address.",
+  "forgot_password_check_spam_hint":
+      "Check your inbox. If the email doesn't show up, check Spam/Junk.",
+  "settings_backup_import_success": "Backup imported",
+  "settings_theme_system": "System",
+  "settings_theme_light": "Light",
+  "settings_theme_dark": "Dark",
+  "settings_language_title": "Language",
+  "settings_language_followSystem": "Follow system",
+  "settings_language_nb": "Norwegian (Bokmål)",
+  "settings_language_sv": "Swedish",
+  "settings_language_da": "Danish",
+  "settings_language_en": "English",
+  "settings_milestones_enabled_title": "Milestones",
+  "settings_milestones_enabled_subtitle": "Show small moments when your dog reaches important steps.",
+  "settings_haptics_enabled_title": "Haptics for milestones",
+  "settings_haptics_enabled_subtitle": "Subtle vibration when milestones are achieved.",
+  "settings_restore_in_progress": "Restore in progress… Please wait.",
+  "settings_section_backup": "Backup",
+  "settings_backup_export_action": "Export backup (ZIP)",
+  "settings_backup_exporting": "Exporting…",
+  "settings_backup_subtitle": "Export/import dogs, sessions, tracks, milestones, and media.",
+  "settings_backup_import_action": "Import backup (ZIP)",
+  "settings_backup_importing": "Importing…",
+  "settings_backup_import_description": "Select a backup zip to restore data.",
+  "settings_backup_where_title": "Where is backup stored?",
+  "settings_backup_where_action": "Show storage folder",
+  "settings_backup_status_collectingData": "Collecting data…",
+  "settings_backup_status_collectingMedia": "Collecting media…",
+  "settings_backup_status_creatingZip": "Creating ZIP…",
+  "settings_backup_status_sharing": "Sharing…",
+  "settings_backup_status_selectZip": "Select ZIP…",
+  "settings_backup_status_restoring": "Restoring data…",
+  "settings_backup_share_subject": "Fuglehund backup",
+  "settings_backup_ready": "Backup ready: {fileName} ✅",
+  "@settings_backup_ready": {
+    "description": "Shows the file name of the exported backup."
+  },
+  "settings_backup_failed": "Backup failed: {message}",
+  "@settings_backup_failed": {
+    "description": "Displays the error message when a backup fails."
+  },
+  "auth_profile_pending_title": "Creating profile…",
+  "auth_profile_pending_body":
+      "Waiting for the backend document to exist. Tap \"Try again\" to re-check.",
+  "auth_profile_timeout_error":
+      "Could not find the user profile within a few seconds. Check your network or try again.",
+  "settings_backup_failed_unknown": "Unknown error.",
+  "settings_backup_import_failed": "Import failed: {message}",
+  "@settings_backup_import_failed": {
+    "description": "Displays the error message when an import fails."
+  },
+  "settings_backup_restore_dialog_title": "Restore backup",
+  "settings_backup_restore_dialog_content": "This will restore data from a ZIP backup.\n\nTip: Restart the app once the import finishes.",
+  "settings_backup_restore_dialog_confirm": "Restore",
+  "settings_backup_restore_prompt_title": "Restore complete",
+  "settings_backup_restore_prompt_message": "Restore finished. Restart the app now?",
+  "settings_backup_restore_saved": "Restore saved. Restart the app when convenient.",
+  "settings_backup_restore_complete": "Import complete",
+  "settings_backup_storage_title": "Backup storage",
+  "settings_backup_storage_description": "Backup files are saved here:\n\n{path}",
+  "@settings_backup_storage_description": {
+    "description": "Shows the folder where backups are stored.",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_backup_restore_pending": "Importing backup…",
+  "settings_backup_restore_pending_message": "Restoring backup… please wait.",
+  "settings_section_appearance": "Appearance",
+  "settings_season_title": "Season theme",
+  "settings_season_subtitle": "Colors for the top and bottom of the screen.",
+  "settings_season_auto": "Automatic",
+  "settings_season_spring": "🌱 Spring",
+  "settings_season_summer": "☀️ Summer",
+  "settings_season_autumn": "🍁 Autumn",
+  "settings_season_winter": "❄️ Winter",
+  "settings_feedback_send_subtitle": "Opens email with app info.",
+  "settings_feedback_bug_subtitle": "Opens email with a bug report template.",
+  "settings_feedback_copy_subtitle": "Copies app and device info.",
+  "settings_feedback_suggest_subtitle": "Send suggestions via email.",
+  "settings_feedback_error_open_email": "Couldn't open email.",
+  "settings_feedback_error_copy": "Couldn't copy.",
+  "milestones_achieved_title": "Achieved milestones",
+  "milestones_achieved_empty": "No milestones yet.",
+  "milestones_achieved_duration": "Achieved {duration}",
+  "@milestones_achieved_duration": {
+    "description": "Label describing how long ago the milestone was achieved.",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "milestone_sheet_button_ok": "Nice!",
+  "milestone_sheet_button_viewAll": "View milestones",
+  "milestone_snackbar_new_title": "New milestone!",
+  "milestone_snackbar_open_error": "Could not open milestone",
+  "milestone_stands_count_subtitle": "{dogName} has recorded {countText}.",
+  "@milestone_stands_count_subtitle": {
+    "placeholders": {
+      "dogName": {},
+      "countText": {}
+    }
+  },
+  "milestone_sessions_count_subtitle": "{dogName} has logged {countText}.",
+  "@milestone_sessions_count_subtitle": {
+    "placeholders": {
+      "dogName": {},
+      "countText": {}
+    }
+  },
+  "milestone_birds_count_subtitle": "{dogName} has felled {countText}.",
+  "@milestone_birds_count_subtitle": {
+    "placeholders": {
+      "dogName": {},
+      "countText": {}
+    }
+  },
+  "milestone_first_point_title": "First point",
+  "milestone_first_point_subtitle": "{dogName} recorded its first point.",
+  "@milestone_first_point_subtitle": {
+    "placeholders": {
+      "dogName": {
+        "type": "String"
+      }
+    }
+  },
+  "milestone_first_flush_title": "First flush",
+  "milestone_first_flush_subtitle": "{dogName} recorded its first flush.",
+  "@milestone_first_flush_subtitle": {
+    "placeholders": {
+      "dogName": {
+        "type": "String"
+      }
+    }
+  },
+  "milestone_sessions_10_title": "10 sessions",
+  "milestone_sessions_10_subtitle": "{dogName} has logged 10 sessions.",
+  "@milestone_sessions_10_subtitle": {
+    "placeholders": {
+      "dogName": {
+        "type": "String"
+      }
+    }
+  },
+  "milestone_active_hours_10_title": "10 active hours",
+  "milestone_active_hours_10_subtitle": "{dogName} has passed 10 hours of active time.",
+  "@milestone_active_hours_10_subtitle": {
+    "placeholders": {
+      "dogName": {
+        "type": "String"
+      }
+    }
+  },
+  "milestone_section_birds_down_title": "Birds down",
+  "milestone_dog_fallback_name": "The dog",
+  "milestone_achieved_sentence":
+      "{dog} achieved “{milestone}” on {date}{age}",
+  "@milestone_achieved_sentence": {
+    "description":
+        "Sentence describing the milestone achievement for the dog with date and age.",
+    "placeholders": {
+      "dog": {},
+      "milestone": {},
+      "date": {},
+      "age": {}
+    }
+  },
+  "milestone_bird_threshold_label": "{threshold}th bird",
+  "@milestone_bird_threshold_label": {
+    "placeholders": {
+      "threshold": {}
+    }
+  },
+  "milestone_bird_label": "Bird",
+  "milestone_century_points_title": "{count} points",
+  "milestone_century_points_subtitle": "{dogName} has passed {count} points.",
+  "@milestone_century_points_title": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@milestone_century_points_subtitle": {
+    "placeholders": {
+      "dogName": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "subscription_title": "Subscription",
+  "subscription_status_label": "Status",
+  "subscription_status_active": "Active",
+  "subscription_status_inactive": "Not active",
+  "subscription_status_unknown": "Unknown",
+  "subscription_subscribe_button": "Subscribe",
+  "subscription_restore_button": "Restore purchases",
+  "subscription_manage_button": "Manage / Cancel",
+  "feedback_send_title": "Send feedback",
+  "feedback_bug_title": "Report a bug",
+  "feedback_copy_diagnostics_title": "Copy diagnostics",
+  "feedback_suggest_milestone_title": "Suggest a milestone",
+  "feedback_email_body_intro": "Describe your feedback here.",
+  "feedback_bug_prompt": "What happened?",
+  "feedback_bug_reproduce": "How can we reproduce the issue?",
+  "feedback_suggest_title": "Idea for a new milestone:",
+  "feedback_suggest_question_what_to_celebrate": "What should be celebrated?",
+  "feedback_suggest_question_why_important": "Why is this important in practice?",
+  "feedback_suggest_question_when_should_trigger": "When should it trigger?",
+  "feedback_suggest_trigger_hint": "(first time, every 10th, every 100th, other)",
+  "feedback_suggest_comments": "Any comments:",
+  "feedback_error_email_not_available": "No email app is available.",
+  "community_open_discord": "Open Discord group",
+  "community_open_facebook": "Open Facebook group",
+  "home_continueActiveSessionTitle": "Continue active session",
+  "home_continueActiveSessionSubtitle": "Unfinished session for {dogName}.",
+  "@home_continueActiveSessionSubtitle": {
+    "placeholders": {
+      "dogName": {
+        "type": "String"
+      }
+    }
+  },
+  "home_continueActiveSessionMissingDogTitle": "Active session cannot be restored",
+  "home_continueActiveSessionMissingDogSubtitle": "The dog is no longer available. You can discard the draft.",
+  "home_continueActiveSessionButton": "Continue active session",
+  "home_discardActiveSessionButton": "Discard",
+  "home_discardActiveSessionSnackbar": "Discarded active session",
+  "home_endActiveSessionButton": "End active session",
+  "home_endActiveSessionConfirmTitle": "End active session?",
+  "home_endActiveSessionConfirmSubtitle": "Are you sure you want to discard the active session?",
+  "milestones_category_firsts": "Firsts",
+  "milestones_category_sessions": "Sessions",
+  "milestones_category_points": "Stand",
+  "milestones_category_time": "Time",
+  "milestones_category_contacts": "Contacts",
+  "birdsCount": "{count, plural, =0{0 birds} one{1 bird} other{{count} birds}}",
+  "birdsDownCount": "{count, plural, =0{0 birds down} one{1 bird down} other{{count} birds down}}"
+}

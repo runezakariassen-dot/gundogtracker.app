@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "418416560328",
+    "project_id": "gundogtracker",
+    "storage_bucket": "gundogtracker.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:418416560328:android:17efdc217f61dd4224bdfd",
+        "android_client_info": {
+          "package_name": "com.runezakariassen.jakthund_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDiUWoHbUB7wsBm8WZ62rSga-C1lJLsjOM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
