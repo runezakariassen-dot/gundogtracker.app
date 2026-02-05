@@ -10,6 +10,10 @@ Future<void> openSessionImage({
   required BuildContext context,
   required String storedPath,
   String? displayName,
+  String? watermarkDogTitle,
+  String? watermarkDogName,
+  bool? watermarkShowTitle,
+  bool? watermarkShowName,
 }) async {
   final l10n = AppLocalizations.of(context)!;
   final validation = MediaStorage.resolveAndValidateMedia(storedPath);
@@ -36,6 +40,10 @@ Future<void> openSessionImage({
       builder: (_) => SessionImageViewerPage(
         imagePath: resolved,
         title: name,
+        watermarkDogTitle: watermarkDogTitle,
+        watermarkDogName: watermarkDogName,
+        watermarkShowTitle: watermarkShowTitle,
+        watermarkShowName: watermarkShowName,
       ),
     ),
   );

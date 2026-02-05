@@ -1681,10 +1681,15 @@ class _SessionDetailPageState extends State<SessionDetailPage>
       );
       return;
     }
+    final currentDog = _selectedDog;
     await openSessionImage(
       context: context,
       storedPath: path,
       displayName: p.basename(path),
+      watermarkDogTitle: currentDog?.title,
+      watermarkDogName: currentDog?.displayName,
+      watermarkShowTitle: currentDog?.watermarkShowTitle,
+      watermarkShowName: currentDog?.watermarkShowName,
     );
   }
 

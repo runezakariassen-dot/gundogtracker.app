@@ -9,10 +9,18 @@ class SessionImageViewerPage extends StatelessWidget {
     super.key,
     required this.imagePath,
     this.title,
+    this.watermarkDogTitle,
+    this.watermarkDogName,
+    this.watermarkShowTitle,
+    this.watermarkShowName,
   });
 
   final String imagePath;
   final String? title;
+  final String? watermarkDogTitle;
+  final String? watermarkDogName;
+  final bool? watermarkShowTitle;
+  final bool? watermarkShowName;
 
   @override
   Widget build(BuildContext context) {
@@ -33,18 +41,23 @@ class SessionImageViewerPage extends StatelessWidget {
         width: double.infinity,
         height: double.infinity,
         color: Theme.of(context).colorScheme.surfaceVariant,
-        child: Center(
-          child: InteractiveViewer(
-            panEnabled: true,
-            minScale: 1.0,
-            maxScale: 5.0,
-            clipBehavior: Clip.hardEdge,
-            child: Image.file(
-              File(imagePath),
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => _buildPlaceholder(context, l10n),
+        child: Stack(
+          children: [
+            Center(
+              child: InteractiveViewer(
+                panEnabled: true,
+                minScale: 1.0,
+                maxScale: 5.0,
+                clipBehavior: Clip.hardEdge,
+                child: Image.file(
+                  File(imagePath),
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => _buildPlaceholder(context, l10n),
+                ),
+              ),
             ),
-          ),
+            _buildWatermarkOverlay(context),
+          ],
         ),
       ),
     );
@@ -64,4 +77,82 @@ class SessionImageViewerPage extends StatelessWidget {
       ],
     );
   }
+
+  Widget _buildWatermarkOverlay(BuildContext context) {
+    final titleText = watermarkDogTitle?.trim();
+    final nameText = watermarkDogName?.trim();
+    final theme = Theme.of(context);
+    final showTitleToggle = watermarkShowTitle ?? true;
+    final showNameToggle = watermarkShowName ?? true;
+    var showTitle = showTitleToggle && (titleText?.isNotEmpty ?? false);
+    var showName = showNameToggle && (nameText?.isNotEmpty ?? false);
+    if (!showTitle && !showName && (nameText?.isNotEmpty ?? false)) {
+      showName = true;
+    }
+    if (!showTitle && !showName) {
+      return const SizedBox.shrink();
+    }
+
+    final titleStyle = theme.textTheme.titleSmall?.copyWith(
+      color: Colors.white,
+      letterSpacing: 0.8,
+    );
+    final nameStyle = theme.textTheme.headlineSmall?.copyWith(
+      color: Colors.white,
+      fontWeight: FontWeight.w600,
+    );
+    final stampStyle = theme.textTheme.bodySmall?.copyWith(
+      color: Colors.white70,
+      letterSpacing: 0.6,
+    );
+
+    return Positioned(
+      bottom: 16,
+      right: 16,
+      left: 16,
+      child: IgnorePointer(
+        child: Align(
+          alignment: Alignment.bottomRight,
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 260),
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.42),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (showTitle)
+                  Text(
+                    titleText!,
+                    style: titleStyle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                if (showName)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      nameText!,
+                      style: nameStyle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    '@gundogtracker',
+                    style: stampStyle,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
 }
