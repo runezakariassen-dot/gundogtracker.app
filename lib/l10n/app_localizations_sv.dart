@@ -657,6 +657,30 @@ class AppLocalizationsSv extends AppLocalizations {
   String get dog_detail_button_mark_dead => 'Markera som död';
 
   @override
+  String get dog_detail_watermark_section_title => 'Vattenstämpel';
+
+  @override
+  String get dog_detail_watermark_info => 'Vattenstämpel krävs när du delar hundbilder.';
+
+  @override
+  String get dog_detail_watermark_toggle_title => 'Visa titel';
+
+  @override
+  String get dog_detail_watermark_toggle_name => 'Visa namn';
+
+  @override
+  String get dog_detail_watermark_toggle_min_one => 'Minst ett av namn/titel måste vara på.';
+
+  @override
+  String get dog_detail_watermark_share_button => 'Dela profilbild';
+
+  @override
+  String get dog_detail_watermark_share_subject => 'Bild från GundogTracker';
+
+  @override
+  String get dog_detail_watermark_share_message => 'Delad via GundogTracker';
+
+  @override
   String get dog_detail_label_death_date => 'Dödsdatum';
 
   @override

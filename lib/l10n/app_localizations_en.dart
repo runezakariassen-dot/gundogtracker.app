@@ -657,6 +657,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dog_detail_button_mark_dead => 'Mark as deceased';
 
   @override
+  String get dog_detail_watermark_section_title => 'Watermark';
+
+  @override
+  String get dog_detail_watermark_info => 'A watermark is required when sharing dog photos.';
+
+  @override
+  String get dog_detail_watermark_toggle_title => 'Show title';
+
+  @override
+  String get dog_detail_watermark_toggle_name => 'Show name';
+
+  @override
+  String get dog_detail_watermark_toggle_min_one => 'At least one of name/title must be on.';
+
+  @override
+  String get dog_detail_watermark_share_button => 'Share profile photo';
+
+  @override
+  String get dog_detail_watermark_share_subject => 'Photo from GundogTracker';
+
+  @override
+  String get dog_detail_watermark_share_message => 'Shared via GundogTracker';
+
+  @override
   String get dog_detail_label_death_date => 'Date of death';
 
   @override

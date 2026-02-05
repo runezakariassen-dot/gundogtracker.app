@@ -93,6 +93,15 @@ class Dog implements JsonEncodable {
   @HiveField(18)
   final String? ownerEmail;
 
+  @HiveField(19)
+  final String? title;
+
+  @HiveField(20, defaultValue: true)
+  final bool watermarkShowTitle;
+
+  @HiveField(21, defaultValue: true)
+  final bool watermarkShowName;
+
   static const Object _noValue = Object();
 
   Dog({
@@ -106,6 +115,7 @@ class Dog implements JsonEncodable {
     this.breed,
     this.ownerUserId,
     this.ownerEmail,
+    this.title,
     DateTime? updatedAt,
     this.regNr,
     List<AchievedMilestone>? achievedMilestones,
@@ -115,6 +125,8 @@ class Dog implements JsonEncodable {
     this.profileHeroTextAnchor = 'bottomLeft',
     this.profileHeroTextScale = 1.0,
     this.nickname,
+    this.watermarkShowTitle = true,
+    this.watermarkShowName = true,
   })  : id = id ?? const Uuid().v4(),
         updatedAt = updatedAt ?? DateTime.now(),
         achievedMilestones = achievedMilestones ?? const [],
@@ -132,10 +144,13 @@ class Dog implements JsonEncodable {
     String? breed,
     String? ownerUserId,
     String? ownerEmail,
+    String? title,
     DateTime? updatedAt,
     String? regNr,
     List<AchievedMilestone>? achievedMilestones,
     DogSex? sex,
+    bool? watermarkShowTitle,
+    bool? watermarkShowName,
     Object? deceasedAt = _noValue,
     Object? memorialNote = _noValue,
     String? profileHeroTextAnchor,
@@ -157,11 +172,15 @@ class Dog implements JsonEncodable {
       breed: breed ?? this.breed,
       ownerUserId: ownerUserId ?? this.ownerUserId,
       ownerEmail: ownerEmail ?? this.ownerEmail,
+      title: title ?? this.title,
       updatedAt: updatedAt ?? this.updatedAt,
       id: id ?? this.id,
       regNr: regNr ?? this.regNr,
       achievedMilestones: achievedMilestones ?? this.achievedMilestones,
       sex: sex ?? this.sex,
+      watermarkShowTitle:
+          watermarkShowTitle ?? this.watermarkShowTitle,
+      watermarkShowName: watermarkShowName ?? this.watermarkShowName,
       deceasedAt: finalDeceasedAt,
       memorialNote: finalMemorialNote,
       profileHeroTextAnchor: profileHeroTextAnchor ?? this.profileHeroTextAnchor,
@@ -183,6 +202,9 @@ class Dog implements JsonEncodable {
       'breed': breed,
       'ownerUserId': ownerUserId,
       'ownerEmail': ownerEmail,
+      'title': title,
+      'watermarkShowTitle': watermarkShowTitle,
+      'watermarkShowName': watermarkShowName,
       'updatedAt': updatedAt.toIso8601String(),
       'regNr': regNr,
       'achievedMilestones':

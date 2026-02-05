@@ -389,6 +389,16 @@
   "dog_detail_button_cancel_request": "Avbryt förfrågan",
   "dog_detail_button_edit_photo": "Ändra profilbild",
   "dog_detail_button_mark_dead": "Markera som död",
+  "dog_detail_watermark_section_title": "Vattenstämpel",
+  "dog_detail_watermark_info":
+      "Vattenstämpel krävs när du delar hundbilder.",
+  "dog_detail_watermark_toggle_title": "Visa titel",
+  "dog_detail_watermark_toggle_name": "Visa namn",
+  "dog_detail_watermark_toggle_min_one":
+      "Minst ett av namn/titel måste vara på.",
+  "dog_detail_watermark_share_button": "Dela profilbild",
+  "dog_detail_watermark_share_subject": "Bild från GundogTracker",
+  "dog_detail_watermark_share_message": "Delad via GundogTracker",
   "dog_detail_label_death_date": "Dödsdatum",
   "dog_detail_button_edit": "Ändra",
   "dog_detail_button_register_death": "Registrera",

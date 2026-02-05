@@ -1203,6 +1203,54 @@ abstract class AppLocalizations {
   /// **'Mark as deceased'**
   String get dog_detail_button_mark_dead;
 
+  /// No description provided for @dog_detail_watermark_section_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Watermark'**
+  String get dog_detail_watermark_section_title;
+
+  /// No description provided for @dog_detail_watermark_info.
+  ///
+  /// In en, this message translates to:
+  /// **'A watermark is required when sharing dog photos.'**
+  String get dog_detail_watermark_info;
+
+  /// No description provided for @dog_detail_watermark_toggle_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Show title'**
+  String get dog_detail_watermark_toggle_title;
+
+  /// No description provided for @dog_detail_watermark_toggle_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Show name'**
+  String get dog_detail_watermark_toggle_name;
+
+  /// No description provided for @dog_detail_watermark_toggle_min_one.
+  ///
+  /// In en, this message translates to:
+  /// **'At least one of name/title must be on.'**
+  String get dog_detail_watermark_toggle_min_one;
+
+  /// No description provided for @dog_detail_watermark_share_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Share profile photo'**
+  String get dog_detail_watermark_share_button;
+
+  /// No description provided for @dog_detail_watermark_share_subject.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo from GundogTracker'**
+  String get dog_detail_watermark_share_subject;
+
+  /// No description provided for @dog_detail_watermark_share_message.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared via GundogTracker'**
+  String get dog_detail_watermark_share_message;
+
   /// No description provided for @dog_detail_label_death_date.
   ///
   /// In en, this message translates to:

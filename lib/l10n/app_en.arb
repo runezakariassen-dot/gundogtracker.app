@@ -315,6 +315,16 @@
   "dog_detail_button_cancel_request": "Cancel request",
   "dog_detail_button_edit_photo": "Change profile photo",
   "dog_detail_button_mark_dead": "Mark as deceased",
+  "dog_detail_watermark_section_title": "Watermark",
+  "dog_detail_watermark_info":
+      "A watermark is required when sharing dog photos.",
+  "dog_detail_watermark_toggle_title": "Show title",
+  "dog_detail_watermark_toggle_name": "Show name",
+  "dog_detail_watermark_toggle_min_one":
+      "At least one of name/title must be on.",
+  "dog_detail_watermark_share_button": "Share profile photo",
+  "dog_detail_watermark_share_subject": "Photo from GundogTracker",
+  "dog_detail_watermark_share_message": "Shared via GundogTracker",
   "dog_detail_label_death_date": "Date of death",
   "dog_detail_button_edit": "Edit",
   "dog_detail_button_register_death": "Register",

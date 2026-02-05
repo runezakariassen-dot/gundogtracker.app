@@ -316,6 +316,16 @@
   "dog_detail_button_cancel_request": "Avbryt forespørsel",
   "dog_detail_button_edit_photo": "Endre profilbilde",
   "dog_detail_button_mark_dead": "Marker som død",
+  "dog_detail_watermark_section_title": "Vannmerke",
+  "dog_detail_watermark_info":
+      "Vannmerke er obligatorisk ved deling av hundebilder.",
+  "dog_detail_watermark_toggle_title": "Vis tittel",
+  "dog_detail_watermark_toggle_name": "Vis navn",
+  "dog_detail_watermark_toggle_min_one":
+      "Minst én av navn/tittel må være på.",
+  "dog_detail_watermark_share_button": "Del profilbilde",
+  "dog_detail_watermark_share_subject": "Bilde fra GundogTracker",
+  "dog_detail_watermark_share_message": "Delt fra GundogTracker",
   "dog_detail_label_death_date": "Dødsdato",
   "dog_detail_button_edit": "Endre",
   "dog_detail_button_register_death": "Registrer",

@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:jakthund_app/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../data/dog_box_helpers.dart';
 import '../data/hive_boxes.dart';
@@ -26,6 +27,7 @@ import '../models/hunt_session.dart';
 import '../models/ownership_transfer.dart';
 import '../models/share_invitation.dart';
 import '../services/dog_photo_storage.dart';
+import '../services/dog_photo_watermark.dart';
 import '../services/hive_lifecycle_service.dart';
 import '../services/ownership_service.dart';
 import '../services/sharing_service.dart';
@@ -1478,6 +1480,99 @@ class _DogDetailPageState extends State<DogDetailPage> {
     });
   }
 
+  Future<void> _updateWatermarkPreference({
+    required Dog dog,
+    required bool showTitle,
+    required bool showName,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    if (!showTitle && !showName) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.dog_detail_watermark_toggle_min_one)),
+      );
+      setState(() {});
+      return;
+    }
+
+    final key = _keyForDog(dog.id);
+    if (key == null) return;
+
+    final updated = dog.copyWith(
+      watermarkShowTitle: showTitle,
+      watermarkShowName: showName,
+      updatedAt: DateTime.now(),
+    );
+
+    await _dogsBox.put(key, updated);
+  }
+
+  Future<void> _handleShareWatermarkedProfile(
+    Dog dog,
+    String? resolvedAvatarPath,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    if (resolvedAvatarPath == null ||
+        !File(resolvedAvatarPath).existsSync()) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.session_detail_media_empty_placeholder)),
+      );
+      return;
+    }
+
+    try {
+      final lines = _watermarkLinesForDog(dog);
+      final rendered = await DogPhotoWatermark().render(
+        sourcePath: resolvedAvatarPath,
+        lines: lines,
+        suffix: '_dog_profile_share',
+      );
+      if (!mounted) return;
+      await Share.shareXFiles(
+        [XFile(rendered.path)],
+        subject: l10n.dog_detail_watermark_share_subject,
+        text: l10n.dog_detail_watermark_share_message,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.common_unknown)),
+      );
+    }
+  }
+
+  List<WatermarkLine> _watermarkLinesForDog(Dog dog) {
+    final lines = <WatermarkLine>[];
+    if (dog.watermarkShowTitle) {
+      final title = dog.title?.trim();
+      if (title != null && title.isNotEmpty) {
+        lines.add(
+          WatermarkLine(
+            text: title,
+            isTitle: true,
+          ),
+        );
+      }
+    }
+    if (dog.watermarkShowName) {
+      final name = dog.displayName.trim();
+      if (name.isNotEmpty) {
+        lines.add(
+          WatermarkLine(
+            text: name,
+            isTitle: false,
+          ),
+        );
+      }
+    }
+    if (lines.isEmpty) {
+      final fallback = dog.displayName.trim();
+      final text = fallback.isNotEmpty ? fallback : 'GundogTracker';
+      lines.add(WatermarkLine(text: text, isTitle: false));
+    }
+    return lines;
+  }
+
   Future<_DeceasedDetails?> _promptForDeceasedDetails() async {
     final l10n = AppLocalizations.of(context)!;
     DateTime selectedDate = DateTime.now();
@@ -1871,6 +1966,59 @@ class _DogDetailPageState extends State<DogDetailPage> {
                 onPressed: () => _showPhotoOptions(dog),
               ),
             ),
+            const SizedBox(height: 12),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      l10n.dog_detail_watermark_section_title,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.dog_detail_watermark_info,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 16),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                      title: Text(l10n.dog_detail_watermark_toggle_title),
+                      value: dog.watermarkShowTitle,
+                      onChanged: (value) => _updateWatermarkPreference(
+                        dog: dog,
+                        showTitle: value,
+                        showName: dog.watermarkShowName,
+                      ),
+                    ),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                      title: Text(l10n.dog_detail_watermark_toggle_name),
+                      value: dog.watermarkShowName,
+                      onChanged: (value) => _updateWatermarkPreference(
+                        dog: dog,
+                        showTitle: dog.watermarkShowTitle,
+                        showName: value,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      icon: const Icon(Icons.share),
+                      label: Text(l10n.dog_detail_watermark_share_button),
+                      onPressed: () => _handleShareWatermarkedProfile(
+                        dog,
+                        resolvedAvatarPath,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
             if (dog.deceasedAt != null) ...[
               const SizedBox(height: 12),
               _buildDeceasedBanner(dog),

@@ -27,12 +27,17 @@ class DogAdapter extends TypeAdapter<Dog> {
       breed: fields[7] as String?,
       ownerUserId: fields[8] as String?,
       ownerEmail: fields[18] as String?,
+      title: fields[19] as String?,
       updatedAt: fields[9] as DateTime?,
       regNr: fields[10] as String?,
       achievedMilestones: fields[11] == null
           ? []
           : (fields[11] as List?)?.cast<AchievedMilestone>(),
       sex: fields[12] == null ? DogSex.male : fields[12] as DogSex?,
+      watermarkShowTitle:
+          fields[20] == null ? true : fields[20] as bool,
+      watermarkShowName:
+          fields[21] == null ? true : fields[21] as bool,
       deceasedAt: fields[13] as DateTime?,
       memorialNote: fields[14] as String?,
       profileHeroTextAnchor:
@@ -45,7 +50,7 @@ class DogAdapter extends TypeAdapter<Dog> {
   @override
   void write(BinaryWriter writer, Dog obj) {
     writer
-      ..writeByte(19)
+      ..writeByte(22)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -83,7 +88,13 @@ class DogAdapter extends TypeAdapter<Dog> {
       ..writeByte(17)
       ..write(obj.nickname)
       ..writeByte(18)
-      ..write(obj.ownerEmail);
+      ..write(obj.ownerEmail)
+      ..writeByte(19)
+      ..write(obj.title)
+      ..writeByte(20)
+      ..write(obj.watermarkShowTitle)
+      ..writeByte(21)
+      ..write(obj.watermarkShowName);
   }
 
   @override
