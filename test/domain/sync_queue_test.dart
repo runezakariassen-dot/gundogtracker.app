@@ -43,8 +43,8 @@ void main() {
     final tasks = syncTasksBox().values.toList();
     expect(tasks, hasLength(1));
     expect(tasks.first.status, SyncStatus.pending);
-    expect(tasks.first.entityType, 'dog');
-    expect(tasks.first.entityId, dog.dogKey);
+    expect(tasks.first.entityType, 'dog_upsert');
+    expect(tasks.first.entityId, dog.id);
   });
 
   test('upsert invite enqueues pending sync task', () async {

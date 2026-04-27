@@ -62,7 +62,7 @@ class DogMilestoneStateRepository {
 
     for (final dogId in dogIds) {
       final dogSessions = sessionsBoxRef.values
-          .where((s) => s.dogId == dogId)
+          .where((s) => s.dogId == dogId && !s.isDeleted)
           .toList(growable: false);
 
       if (dogSessions.isEmpty) continue;
@@ -144,8 +144,8 @@ class DogMilestoneStateRepository {
           }
         }
 
-        final highestBirdIndex = birdMilestoneIds
-            .lastIndexWhere((id) => achieved.contains(id));
+        final highestBirdIndex =
+            birdMilestoneIds.lastIndexWhere((id) => achieved.contains(id));
         if (highestBirdIndex >= 0) {
           for (var idx = 0; idx < highestBirdIndex; idx++) {
             final id = birdMilestoneIds[idx];

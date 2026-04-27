@@ -6,13 +6,15 @@ class HuntSessionDto {
     required this.id,
     required this.dogId,
     required this.dateTime,
-    required this.location,
+    required String location,
     required this.durationMinutes,
     required this.birdsSeen,
     required this.points,
     required this.flushes,
     required this.notes,
     required this.secondaryPoints,
+    required this.updatedAt,
+    this.deletedAt,
     this.dogKey,
     this.trackKey,
     this.trackId,
@@ -22,7 +24,8 @@ class HuntSessionDto {
     this.sessionType = SessionType.training,
     this.birdsShotCount = 0,
     this.birdsShotSpecies,
-  })  : birdSpecies = birdSpecies ?? const [],
+  })  : location = HuntSession.normalizeLocation(location),
+        birdSpecies = birdSpecies ?? const [],
         mediaPaths = mediaPaths ?? const [];
 
   final String id;
@@ -44,20 +47,25 @@ class HuntSessionDto {
   final SessionType sessionType;
   final int birdsShotCount;
   final String? birdsShotSpecies;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
 
   factory HuntSessionDto.fromJson(Map<String, dynamic> json) {
+    final dateTime = _requireDate(json, 'dateTime');
     return HuntSessionDto(
       id: _requireString(json, 'id'),
       dogId: _requireString(json, 'dogId'),
       dogKey: _readString(json, 'dogKey'),
-      dateTime: _requireDate(json, 'dateTime'),
-      location: _requireString(json, 'location'),
+      dateTime: dateTime,
+      location: _readLocation(json, 'location'),
       durationMinutes: _requireInt(json, 'durationMinutes'),
       birdsSeen: _requireInt(json, 'birdsSeen'),
       points: _requireInt(json, 'points'),
       flushes: _requireInt(json, 'flushes'),
       notes: _requireString(json, 'notes'),
       secondaryPoints: _requireInt(json, 'secondaryPoints'),
+      updatedAt: _readDate(json, 'updatedAt') ?? dateTime,
+      deletedAt: _readDate(json, 'deletedAt'),
       trackKey: _readInt(json, 'trackKey'),
       trackId: _readString(json, 'trackId'),
       birdSpecies: _readStringList(json, 'birdSpecies'),
@@ -90,6 +98,8 @@ class HuntSessionDto {
       'sessionType': sessionType.name,
       'birdsShotCount': birdsShotCount,
       'birdsShotSpecies': birdsShotSpecies,
+      'updatedAt': updatedAt.toIso8601String(),
+      'deletedAt': deletedAt?.toIso8601String(),
     };
   }
 
@@ -106,6 +116,7 @@ class HuntSessionDto {
       flushes: session.flushes,
       notes: session.notes,
       secondaryPoints: session.secondaryPoints,
+      updatedAt: session.updatedAt,
       trackKey: session.trackKey,
       trackId: session.trackId,
       birdSpecies: session.birdSpecies,
@@ -114,6 +125,7 @@ class HuntSessionDto {
       sessionType: session.sessionType,
       birdsShotCount: session.birdsShotCount,
       birdsShotSpecies: session.birdsShotSpecies,
+      deletedAt: session.deletedAt,
     );
   }
 
@@ -137,6 +149,8 @@ class HuntSessionDto {
       sessionType: sessionType,
       birdsShotCount: birdsShotCount,
       birdsShotSpecies: birdsShotSpecies,
+      updatedAt: updatedAt,
+      deletedAt: deletedAt,
     );
   }
 }
@@ -160,13 +174,27 @@ String? _readString(Map<String, dynamic> json, String key) {
   throw FormatException('Invalid string for "$key".');
 }
 
-DateTime _requireDate(Map<String, dynamic> json, String key) {
+String _readLocation(Map<String, dynamic> json, String key) {
   final value = json[key];
-  final parsed = _parseDate(value);
+  if (value == null) {
+    return '';
+  }
+  if (value is String) {
+    return HuntSession.normalizeLocation(value);
+  }
+  return HuntSession.normalizeLocation(value.toString());
+}
+
+DateTime _requireDate(Map<String, dynamic> json, String key) {
+  final parsed = _readDate(json, key);
   if (parsed == null) {
     throw FormatException('Missing or invalid date for "$key".');
   }
   return parsed;
+}
+
+DateTime? _readDate(Map<String, dynamic> json, String key) {
+  return _parseDate(json[key]);
 }
 
 DateTime? _parseDate(dynamic value) {

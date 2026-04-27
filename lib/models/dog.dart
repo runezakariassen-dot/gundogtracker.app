@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use_from_same_package
+
 import 'package:hive/hive.dart';
 import 'package:uuid/uuid.dart';
 
@@ -102,6 +104,24 @@ class Dog implements JsonEncodable {
   @HiveField(21, defaultValue: true)
   final bool watermarkShowName;
 
+  @HiveField(22, defaultValue: true)
+  final bool watermarkShowOfficialName;
+
+  @HiveField(23, defaultValue: true)
+  final bool watermarkShowNickname;
+
+  @HiveField(24, defaultValue: false)
+  final bool watermarkUseDarkText;
+
+  @HiveField(25)
+  final String? cloudId;
+
+  @HiveField(26)
+  final String? cloudOwnerUid;
+
+  @HiveField(27)
+  final DateTime? deletedAt;
+
   static const Object _noValue = Object();
 
   Dog({
@@ -127,6 +147,12 @@ class Dog implements JsonEncodable {
     this.nickname,
     this.watermarkShowTitle = true,
     this.watermarkShowName = true,
+    this.watermarkShowOfficialName = true,
+    this.watermarkShowNickname = true,
+    this.watermarkUseDarkText = false,
+    this.cloudId,
+    this.cloudOwnerUid,
+    this.deletedAt,
   })  : id = id ?? const Uuid().v4(),
         updatedAt = updatedAt ?? DateTime.now(),
         achievedMilestones = achievedMilestones ?? const [],
@@ -151,10 +177,16 @@ class Dog implements JsonEncodable {
     DogSex? sex,
     bool? watermarkShowTitle,
     bool? watermarkShowName,
+    bool? watermarkShowOfficialName,
+    bool? watermarkShowNickname,
+    bool? watermarkUseDarkText,
     Object? deceasedAt = _noValue,
     Object? memorialNote = _noValue,
     String? profileHeroTextAnchor,
     double? profileHeroTextScale,
+    String? cloudId,
+    String? cloudOwnerUid,
+    Object? deletedAt = _noValue,
   }) {
     final DateTime? finalDeceasedAt = identical(deceasedAt, _noValue)
         ? this.deceasedAt
@@ -162,6 +194,9 @@ class Dog implements JsonEncodable {
     final String? finalMemorialNote = identical(memorialNote, _noValue)
         ? this.memorialNote
         : memorialNote as String?;
+    final DateTime? finalDeletedAt = identical(deletedAt, _noValue)
+        ? this.deletedAt
+        : deletedAt as DateTime?;
     return Dog(
       name: name ?? this.name,
       dogKey: dogKey ?? this.dogKey,
@@ -178,14 +213,22 @@ class Dog implements JsonEncodable {
       regNr: regNr ?? this.regNr,
       achievedMilestones: achievedMilestones ?? this.achievedMilestones,
       sex: sex ?? this.sex,
-      watermarkShowTitle:
-          watermarkShowTitle ?? this.watermarkShowTitle,
+      watermarkShowTitle: watermarkShowTitle ?? this.watermarkShowTitle,
       watermarkShowName: watermarkShowName ?? this.watermarkShowName,
+      watermarkShowOfficialName:
+          watermarkShowOfficialName ?? this.watermarkShowOfficialName,
+      watermarkShowNickname:
+          watermarkShowNickname ?? this.watermarkShowNickname,
+      watermarkUseDarkText: watermarkUseDarkText ?? this.watermarkUseDarkText,
       deceasedAt: finalDeceasedAt,
       memorialNote: finalMemorialNote,
-      profileHeroTextAnchor: profileHeroTextAnchor ?? this.profileHeroTextAnchor,
+      profileHeroTextAnchor:
+          profileHeroTextAnchor ?? this.profileHeroTextAnchor,
       profileHeroTextScale: profileHeroTextScale ?? this.profileHeroTextScale,
       nickname: nickname ?? this.nickname,
+      cloudId: cloudId ?? this.cloudId,
+      cloudOwnerUid: cloudOwnerUid ?? this.cloudOwnerUid,
+      deletedAt: finalDeletedAt,
     );
   }
 
@@ -205,6 +248,9 @@ class Dog implements JsonEncodable {
       'title': title,
       'watermarkShowTitle': watermarkShowTitle,
       'watermarkShowName': watermarkShowName,
+      'watermarkShowOfficialName': watermarkShowOfficialName,
+      'watermarkShowNickname': watermarkShowNickname,
+      'watermarkUseDarkText': watermarkUseDarkText,
       'updatedAt': updatedAt.toIso8601String(),
       'regNr': regNr,
       'achievedMilestones':
@@ -215,8 +261,13 @@ class Dog implements JsonEncodable {
       'profileHeroTextAnchor': profileHeroTextAnchor,
       'profileHeroTextScale': profileHeroTextScale,
       'nickname': nickname,
+      'cloudId': cloudId,
+      'cloudOwnerUid': cloudOwnerUid,
+      'deletedAt': deletedAt?.toIso8601String(),
     };
   }
+
+  bool get isDeleted => deletedAt != null;
 
   String get displayName {
     final nick = nickname?.trim();

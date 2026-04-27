@@ -22,16 +22,18 @@ class DogProfileScreen extends StatelessWidget {
                 child: Icon(
                   Icons.pets,
                   size: 64,
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.6),
                 ),
               ),
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          const Text(
-            'Navn (placeholder)',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+          Text(
+            l10n.dog_unnamed,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
@@ -42,7 +44,7 @@ class DogProfileScreen extends StatelessWidget {
           OutlinedButton.icon(
             onPressed: () {},
             icon: const Icon(Icons.link),
-            label: const Text('Åpne stamtavle'),
+            label: Text(l10n.dog_detail_button_open_pedigree),
           ),
         ],
       ),

@@ -1,4 +1,6 @@
+// ignore_for_file: avoid_types_as_parameter_names, depend_on_referenced_packages, deprecated_member_use, prefer_const_constructors, use_build_context_synchronously
 // lib/pages/dog_detail_page.dart
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -10,15 +12,15 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:jakthund_app/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:share_plus/share_plus.dart';
-
 import '../data/dog_box_helpers.dart';
 import '../data/hive_boxes.dart';
 import '../domain/dog_milestone_backfill_bootstrap.dart';
+import '../domain/dogs/dog_visibility.dart';
 import '../domain/domain_errors.dart';
 import '../domain/milestones/milestone_catalog.dart';
 import '../domain/milestones/milestone_helpers.dart';
 import '../domain/repositories/dog_milestone_state_repository.dart';
+import '../domain/sessions/session_visibility.dart';
 import '../domain/services/dog_milestone_display_service.dart';
 import '../models/dog.dart';
 import '../models/dog_membership.dart';
@@ -27,7 +29,7 @@ import '../models/hunt_session.dart';
 import '../models/ownership_transfer.dart';
 import '../models/share_invitation.dart';
 import '../services/dog_photo_storage.dart';
-import '../services/dog_photo_watermark.dart';
+import 'session_media_image_helper.dart';
 import '../services/hive_lifecycle_service.dart';
 import '../services/ownership_service.dart';
 import '../services/sharing_service.dart';
@@ -38,6 +40,49 @@ import '../ui/text/text_helpers.dart';
 import '../utils/dog_image_path_resolver.dart';
 import '../domain/user/app_user.dart';
 import 'dog_editor_page.dart';
+
+@visibleForTesting
+Role? resolveHighestActiveRoleForUserIds({
+  required Iterable<DogMembership> memberships,
+  required String dogKey,
+  required Iterable<String> userIds,
+}) {
+  final normalizedIds = userIds
+      .map((value) => value.trim())
+      .where((value) => value.isNotEmpty)
+      .toSet();
+  if (normalizedIds.isEmpty) {
+    return null;
+  }
+
+  Role? resolvedRole;
+  for (final membership in memberships) {
+    if (membership.dogKey != dogKey ||
+        membership.status != Status.active ||
+        !normalizedIds.contains(membership.userId)) {
+      continue;
+    }
+    if (resolvedRole == null ||
+        _globalRolePriority(membership.role) <
+            _globalRolePriority(resolvedRole)) {
+      resolvedRole = membership.role;
+    }
+  }
+  return resolvedRole;
+}
+
+int _globalRolePriority(Role role) {
+  switch (role) {
+    case Role.owner:
+      return 0;
+    case Role.admin:
+      return 1;
+    case Role.editor:
+      return 2;
+    case Role.viewer:
+      return 3;
+  }
+}
 
 class DogDetailPage extends StatefulWidget {
   const DogDetailPage({
@@ -76,6 +121,10 @@ class _DogDetailPageState extends State<DogDetailPage> {
   int _avatarRevision = 0;
 
   final Set<String> _ownerEmailEnsured = <String>{};
+  bool _wmShowTitle = true;
+  bool _wmShowOfficialName = true;
+  bool _wmPrefsInitialized = false;
+  String? _wmPrefsDogId;
 
   late final DogMilestoneStateRepository _milestoneStateRepository;
   late final DogMilestoneDisplayService _milestoneDisplayService;
@@ -129,6 +178,19 @@ class _DogDetailPageState extends State<DogDetailPage> {
     );
   }
 
+  Set<String> get _currentMembershipUserIds {
+    final ids = <String>{};
+    final localId = _currentUserId.trim();
+    if (localId.isNotEmpty) {
+      ids.add(localId);
+    }
+    final authId = FirebaseAuth.instance.currentUser?.uid.trim();
+    if (authId != null && authId.isNotEmpty) {
+      ids.add(authId);
+    }
+    return ids;
+  }
+
   void _showShareError(ShareException error) {
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
@@ -163,14 +225,16 @@ class _DogDetailPageState extends State<DogDetailPage> {
         return l10n.share_error_invite_revoked;
       case ShareError.inviteInactive:
         return l10n.share_error_invite_inactive;
-    case ShareError.alreadyHasAccess:
-      return l10n.share_error_already_has_access;
-    case ShareError.invalidRole:
-      return l10n.share_error_invalid_role;
-    case ShareError.invalidEmail:
-      return l10n.share_error_invalid_email;
+      case ShareError.alreadyHasAccess:
+        return l10n.share_error_already_has_access;
+      case ShareError.alreadyInvited:
+        return l10n.share_error_already_invited;
+      case ShareError.invalidRole:
+        return l10n.share_error_invalid_role;
+      case ShareError.invalidEmail:
+        return l10n.share_error_invalid_email;
+    }
   }
-}
 
   String _transferErrorMessage(AppLocalizations l10n, TransferError code) {
     switch (code) {
@@ -317,6 +381,7 @@ class _DogDetailPageState extends State<DogDetailPage> {
 
       await DogBoxHelpers.updateDogPhotoPath(
         dogId: dog.id,
+        fallbackDogKey: dog.dogKey,
         photoPath: savedPath,
       );
 
@@ -751,15 +816,19 @@ class _DogDetailPageState extends State<DogDetailPage> {
   }
 
   int _totalStandsForDog(Dog dog) {
-    return _sessionsBox.values
-        .where((session) => session.dogId == dog.id)
-        .fold<int>(0, (sum, session) => sum + session.points);
+    return filterVisibleSessionsForDog(
+      sessions: _sessionsBox.values,
+      dogId: dog.id,
+      dogs: [dog],
+    ).fold<int>(0, (sum, session) => sum + session.points);
   }
 
   int _totalBirdsForDog(Dog dog) {
-    return _sessionsBox.values
-        .where((session) => session.dogId == dog.id)
-        .fold<int>(0, (sum, session) => sum + session.birdsShotCount);
+    return filterVisibleSessionsForDog(
+      sessions: _sessionsBox.values,
+      dogId: dog.id,
+      dogs: [dog],
+    ).fold<int>(0, (sum, session) => sum + session.birdsShotCount);
   }
 
   Widget _buildNextMilestoneSection({
@@ -787,6 +856,13 @@ class _DogDetailPageState extends State<DogDetailPage> {
     final target = _chooseMilestoneTarget(standTarget, birdTarget);
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final settingsBox =
+        HiveLifecycleService.getBox<dynamic>(appSettingsBoxName);
+    final seasonGoal =
+        (settingsBox.get(milestoneSeasonGoalPointsKey) as int?) ?? 0;
+    final personalGoal =
+        (settingsBox.get(milestonePersonalGoalPointsKey) as int?) ?? 0;
+
     if (target == null) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -854,6 +930,27 @@ class _DogDetailPageState extends State<DogDetailPage> {
           ],
         ),
         const SizedBox(height: 16),
+        if (seasonGoal > 0 || personalGoal > 0) ...[
+          Text(
+            'Mål:',
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurface.withOpacity(0.8),
+            ),
+          ),
+          const SizedBox(height: 4),
+          if (seasonGoal > 0)
+            Text(
+              'Sesongmål: $seasonGoal stander',
+              style: theme.textTheme.bodySmall,
+            ),
+          if (personalGoal > 0)
+            Text(
+              'Personlig mål: $personalGoal stander',
+              style: theme.textTheme.bodySmall,
+            ),
+          const SizedBox(height: 12),
+        ],
       ],
     );
   }
@@ -961,7 +1058,8 @@ class _DogDetailPageState extends State<DogDetailPage> {
   Widget _buildAccessSection(Dog dog, AppLocalizations l10n) {
     final membershipEntries = _membershipBox.values
         .where((membership) =>
-            membership.dogKey == dog.dogKey && membership.status == Status.active)
+            membership.dogKey == dog.dogKey &&
+            membership.status == Status.active)
         .toList()
       ..sort((a, b) => _rolePriority(a.role).compareTo(_rolePriority(b.role)));
 
@@ -975,8 +1073,7 @@ class _DogDetailPageState extends State<DogDetailPage> {
       ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
     final myRole = _resolveMyRole(dog);
-    final roleLabel =
-        myRole != null ? _shareRoleLabel(l10n, myRole) : null;
+    final roleLabel = myRole != null ? _shareRoleLabel(l10n, myRole) : null;
     final canShare = myRole == Role.owner || myRole == Role.admin;
 
     final children = <Widget>[
@@ -1084,10 +1181,10 @@ class _DogDetailPageState extends State<DogDetailPage> {
           ),
           subtitle: Text(l10n.invite_status_invited),
           trailing: TextButton(
-            onPressed: (!canRevoke ||
-                    _processingInvites.contains(invite.inviteId))
-                ? null
-                : () => _handleRevokeInvite(invite),
+            onPressed:
+                (!canRevoke || _processingInvites.contains(invite.inviteId))
+                    ? null
+                    : () => _handleRevokeInvite(invite),
             child: Text(l10n.invite_revoke_button),
           ),
         ),
@@ -1132,7 +1229,8 @@ class _DogDetailPageState extends State<DogDetailPage> {
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(l10n.invite_sent_to(invite.recipientEmail)),
+                        content:
+                            Text(l10n.invite_sent_to(invite.recipientEmail)),
                       ),
                     );
                     setState(() {
@@ -1213,7 +1311,7 @@ class _DogDetailPageState extends State<DogDetailPage> {
 
   bool _canManageMembership(DogMembership membership, Role? myRole) {
     if (myRole != Role.owner && myRole != Role.admin) return false;
-    if (membership.userId == _currentUserId) return false;
+    if (_currentMembershipUserIds.contains(membership.userId)) return false;
     if (membership.role == Role.owner || membership.role == Role.admin) {
       return false;
     }
@@ -1280,18 +1378,8 @@ class _DogDetailPageState extends State<DogDetailPage> {
   }
 
   int _rolePriority(Role role) {
-    switch (role) {
-      case Role.owner:
-        return 0;
-      case Role.admin:
-        return 1;
-      case Role.editor:
-        return 2;
-      case Role.viewer:
-        return 3;
-    }
+    return _globalRolePriority(role);
   }
-
 
   String _shareRoleLabel(AppLocalizations l10n, Role role) {
     switch (role) {
@@ -1309,29 +1397,19 @@ class _DogDetailPageState extends State<DogDetailPage> {
     return role.isCanonicalAdmin ? l10n.share_role_admin : l10n.share_role_user;
   }
 
-
   Role? _resolveMyRole(Dog dog) {
+    final resolvedRole = resolveHighestActiveRoleForUserIds(
+      memberships: _membershipBox.values,
+      dogKey: dog.dogKey,
+      userIds: _currentMembershipUserIds,
+    );
+    if (resolvedRole != null) {
+      return resolvedRole;
+    }
+
     final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser == null) {
-      return null;
-    }
-
-    DogMembership? membership;
-    for (final entry in _membershipBox.values) {
-      if (entry.dogKey != dog.dogKey ||
-          entry.userId != currentUser.uid ||
-          entry.status != Status.active) {
-        continue;
-      }
-      membership = entry;
-      break;
-    }
-    if (membership != null) {
-      return membership.role;
-    }
-
     final ownerEmail = dog.ownerEmail?.trim();
-    final currentEmail = currentUser.email?.trim();
+    final currentEmail = currentUser?.email?.trim();
     if (ownerEmail != null &&
         ownerEmail.isNotEmpty &&
         currentEmail != null &&
@@ -1439,7 +1517,7 @@ class _DogDetailPageState extends State<DogDetailPage> {
 
     final hasOwnerMembership = _membershipBox.values.any((membership) {
       return membership.dogKey == dog.dogKey &&
-          membership.userId == _currentUserId &&
+          _currentMembershipUserIds.contains(membership.userId) &&
           membership.status == Status.active &&
           membership.role == Role.owner;
     });
@@ -1480,97 +1558,70 @@ class _DogDetailPageState extends State<DogDetailPage> {
     });
   }
 
-  Future<void> _updateWatermarkPreference({
+  void _onWatermarkToggle({
+    required bool value,
     required Dog dog,
-    required bool showTitle,
-    required bool showName,
-  }) async {
-    final l10n = AppLocalizations.of(context)!;
-    if (!showTitle && !showName) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.dog_detail_watermark_toggle_min_one)),
-      );
-      setState(() {});
-      return;
-    }
+    required bool isTitle,
+  }) {
+    setState(() {
+      if (isTitle) {
+        _wmShowTitle = value;
+      } else {
+        _wmShowOfficialName = value;
+      }
+    });
+    unawaited(
+      _persistWmPrefs(
+        dog,
+        showTitle: _wmShowTitle,
+        showOfficialName: _wmShowOfficialName,
+      ),
+    );
+  }
 
+  Future<void> _persistWmPrefs(
+    Dog dog, {
+    required bool showTitle,
+    required bool showOfficialName,
+  }) async {
     final key = _keyForDog(dog.id);
     if (key == null) return;
 
     final updated = dog.copyWith(
       watermarkShowTitle: showTitle,
-      watermarkShowName: showName,
+      watermarkShowOfficialName: showOfficialName,
       updatedAt: DateTime.now(),
     );
 
     await _dogsBox.put(key, updated);
   }
 
-  Future<void> _handleShareWatermarkedProfile(
-    Dog dog,
-    String? resolvedAvatarPath,
-  ) async {
-    final l10n = AppLocalizations.of(context)!;
-    if (resolvedAvatarPath == null ||
-        !File(resolvedAvatarPath).existsSync()) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.session_detail_media_empty_placeholder)),
-      );
-      return;
-    }
-
-    try {
-      final lines = _watermarkLinesForDog(dog);
-      final rendered = await DogPhotoWatermark().render(
-        sourcePath: resolvedAvatarPath,
-        lines: lines,
-        suffix: '_dog_profile_share',
-      );
-      if (!mounted) return;
-      await Share.shareXFiles(
-        [XFile(rendered.path)],
-        subject: l10n.dog_detail_watermark_share_subject,
-        text: l10n.dog_detail_watermark_share_message,
-      );
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.common_unknown)),
-      );
-    }
+  void _showWatermarkShareMissingPhoto(AppLocalizations l10n) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.dog_detail_watermark_share_missing_photo)),
+    );
   }
 
-  List<WatermarkLine> _watermarkLinesForDog(Dog dog) {
-    final lines = <WatermarkLine>[];
-    if (dog.watermarkShowTitle) {
-      final title = dog.title?.trim();
-      if (title != null && title.isNotEmpty) {
-        lines.add(
-          WatermarkLine(
-            text: title,
-            isTitle: true,
-          ),
-        );
-      }
+  Future<void> _openDogPhotoViewer(Dog dog) async {
+    final l10n = AppLocalizations.of(context)!;
+    final storedPath = dog.imagePath;
+    if (storedPath == null || storedPath.trim().isEmpty) {
+      _showWatermarkShareMissingPhoto(l10n);
+      return;
     }
-    if (dog.watermarkShowName) {
-      final name = dog.displayName.trim();
-      if (name.isNotEmpty) {
-        lines.add(
-          WatermarkLine(
-            text: name,
-            isTitle: false,
-          ),
-        );
-      }
-    }
-    if (lines.isEmpty) {
-      final fallback = dog.displayName.trim();
-      final text = fallback.isNotEmpty ? fallback : 'GundogTracker';
-      lines.add(WatermarkLine(text: text, isTitle: false));
-    }
-    return lines;
+    await openSessionImage(
+      context: context,
+      storedPath: storedPath,
+      displayName: dog.displayName,
+      watermarkDogTitle: dog.title,
+      watermarkDogOfficialName: dog.name,
+      watermarkDogNickname: dog.nickname,
+      watermarkShowTitle: dog.watermarkShowTitle,
+      watermarkShowOfficialName: dog.watermarkShowOfficialName,
+      watermarkShowNickname: dog.watermarkShowNickname,
+      dogId: dog.id,
+    );
   }
 
   Future<_DeceasedDetails?> _promptForDeceasedDetails() async {
@@ -1647,10 +1698,11 @@ class _DogDetailPageState extends State<DogDetailPage> {
   }
 
   Future<void> _showDeceasedSummary(Dog dog) async {
-    final sessions = _sessionsBox.values
-        .where((session) => session.dogId == dog.id)
-        .toList(growable: false);
-    sessions.sort((a, b) => a.dateTime.compareTo(b.dateTime));
+    final sessions = filterVisibleSessionsForDog(
+      sessions: _sessionsBox.values,
+      dogId: dog.id,
+      dogs: [dog],
+    )..sort((a, b) => a.dateTime.compareTo(b.dateTime));
     final sessionCount = sessions.length;
     final totalMinutes =
         sessions.fold<int>(0, (sum, session) => sum + session.durationMinutes);
@@ -1875,9 +1927,10 @@ class _DogDetailPageState extends State<DogDetailPage> {
   bool _isOwner(Dog dog) {
     return _membershipBox.values.any((membership) {
       final isTargetDog = membership.dogKey == dog.dogKey;
-      final isCurrentUser = membership.userId == _currentUserId;
-      final hasPrivileges = membership.role == Role.owner ||
-          membership.role == Role.admin;
+      final isCurrentUser =
+          _currentMembershipUserIds.contains(membership.userId);
+      final hasPrivileges =
+          membership.role == Role.owner || membership.role == Role.admin;
       return isTargetDog &&
           isCurrentUser &&
           membership.status == Status.active &&
@@ -1892,7 +1945,12 @@ class _DogDetailPageState extends State<DogDetailPage> {
       builder: (context, Box<Dog> box, _) {
         final l10n = AppLocalizations.of(context)!;
         final foundDog = _resolveDog(box);
-        if (foundDog == null) {
+        if (!isDogVisibleInUi(foundDog)) {
+          if (kDebugMode) {
+            debugPrint(
+              '[UI][DETAIL] deleted entity fallback: dog ${widget.dog.id}',
+            );
+          }
           return Scaffold(
             appBar: AppBar(title: Text(l10n.dog_detail_appbar_title)),
             body: Center(
@@ -1904,7 +1962,7 @@ class _DogDetailPageState extends State<DogDetailPage> {
           );
         }
 
-        Dog dog = foundDog;
+        Dog dog = foundDog!;
         if (_ensureOwnerEmail(dog)) {
           final refreshed = _resolveDog(box);
           if (refreshed != null) {
@@ -1925,6 +1983,7 @@ class _DogDetailPageState extends State<DogDetailPage> {
             if (migrated != null && migrated != storedPath) {
               await DogBoxHelpers.updateDogPhotoPath(
                 dogId: dog.id,
+                fallbackDogKey: dog.dogKey,
                 photoPath: migrated,
               );
               if (mounted) setState(() => _avatarRevision++);
@@ -1932,6 +1991,12 @@ class _DogDetailPageState extends State<DogDetailPage> {
           });
         }
 
+        if (!_wmPrefsInitialized || _wmPrefsDogId != dog.id) {
+          _wmShowTitle = dog.watermarkShowTitle;
+          _wmShowOfficialName = dog.watermarkShowOfficialName;
+          _wmPrefsInitialized = true;
+          _wmPrefsDogId = dog.id;
+        }
         final myRoleSection = _buildMyRoleSection(dog);
         final bodyContent = ListView(
           padding: const EdgeInsets.all(16),
@@ -1987,32 +2052,23 @@ class _DogDetailPageState extends State<DogDetailPage> {
                       contentPadding: EdgeInsets.zero,
                       dense: true,
                       title: Text(l10n.dog_detail_watermark_toggle_title),
-                      value: dog.watermarkShowTitle,
-                      onChanged: (value) => _updateWatermarkPreference(
-                        dog: dog,
-                        showTitle: value,
-                        showName: dog.watermarkShowName,
-                      ),
+                      value: _wmShowTitle,
+                      onChanged: (value) => _onWatermarkToggle(
+                          value: value, dog: dog, isTitle: true),
                     ),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
                       dense: true,
                       title: Text(l10n.dog_detail_watermark_toggle_name),
-                      value: dog.watermarkShowName,
-                      onChanged: (value) => _updateWatermarkPreference(
-                        dog: dog,
-                        showTitle: dog.watermarkShowTitle,
-                        showName: value,
-                      ),
+                      value: _wmShowOfficialName,
+                      onChanged: (value) => _onWatermarkToggle(
+                          value: value, dog: dog, isTitle: false),
                     ),
                     const SizedBox(height: 12),
                     FilledButton.icon(
                       icon: const Icon(Icons.share),
                       label: Text(l10n.dog_detail_watermark_share_button),
-                      onPressed: () => _handleShareWatermarkedProfile(
-                        dog,
-                        resolvedAvatarPath,
-                      ),
+                      onPressed: () => _openDogPhotoViewer(dog),
                     ),
                   ],
                 ),

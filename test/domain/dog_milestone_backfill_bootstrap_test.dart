@@ -17,7 +17,7 @@ import 'package:jakthund_app/models/session_type_adapter.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  var _adaptersRegistered = false;
+  var adaptersRegistered = false;
 
   late Directory tempDir;
   late Box<Dog> dogsBox;
@@ -29,13 +29,13 @@ void main() {
     tempDir =
         await Directory.systemTemp.createTemp('jakthund_backfill_bootstrap_');
     Hive.init(tempDir.path);
-    if (!_adaptersRegistered) {
+    if (!adaptersRegistered) {
       Hive.registerAdapter(DogAdapter());
       Hive.registerAdapter(DogSexAdapter());
       Hive.registerAdapter(DogMilestoneStateAdapter());
       Hive.registerAdapter(HuntSessionAdapter());
       Hive.registerAdapter(SessionTypeAdapter());
-      _adaptersRegistered = true;
+      adaptersRegistered = true;
     }
 
     dogsBox = await Hive.openBox<Dog>('dogs_backfill_bootstrap');
@@ -127,8 +127,7 @@ void main() {
 }
 
 class _CountingDogMilestoneStateRepository extends DogMilestoneStateRepository {
-  _CountingDogMilestoneStateRepository({Box<DogMilestoneState>? box})
-      : super(box: box);
+  _CountingDogMilestoneStateRepository({super.box});
 
   int backfillCalls = 0;
 

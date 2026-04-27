@@ -1188,6 +1188,8 @@ PODS:
     - abseil/meta/type_traits
     - abseil/xcprivacy
   - abseil/xcprivacy (1.20240722.0)
+  - audioplayers_darwin (0.0.1):
+    - Flutter
   - BoringSSL-GRPC (0.0.37):
     - BoringSSL-GRPC/Implementation (= 0.0.37)
     - BoringSSL-GRPC/Interface (= 0.0.37)
@@ -1482,6 +1484,7 @@ PODS:
     - FlutterMacOS
 
 DEPENDENCIES:
+  - audioplayers_darwin (from `.symlinks/plugins/audioplayers_darwin/ios`)
   - cloud_firestore (from `.symlinks/plugins/cloud_firestore/ios`)
   - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
   - file_picker (from `.symlinks/plugins/file_picker/ios`)
@@ -1537,6 +1540,8 @@ SPEC REPOS:
     - SwiftyGif
 
 EXTERNAL SOURCES:
+  audioplayers_darwin:
+    :path: ".symlinks/plugins/audioplayers_darwin/ios"
   cloud_firestore:
     :path: ".symlinks/plugins/cloud_firestore/ios"
   device_info_plus:
@@ -1576,6 +1581,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   abseil: a05cc83bf02079535e17169a73c5be5ba47f714b
+  audioplayers_darwin: ccf9c770ee768abb07e26d90af093f7bab1c12ab
   BoringSSL-GRPC: dded2a44897e45f28f08ae87a55ee4bcd19bc508
   cloud_firestore: fdcc87898326e396d6ef6df543acf9b5c2034b95
   device_info_plus: 71ffc6ab7634ade6267c7a93088ed7e4f74e5896

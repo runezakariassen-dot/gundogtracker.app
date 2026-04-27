@@ -1,6 +1,9 @@
 {
   "@@locale": "da",
   "appName": "Fuglehund",
+  "app_store_identity_subtitle": "Offline jagtlog for stående fuglehunde",
+  "app_store_identity_short_description":
+      "Log sessioner, følg fremgang og byg historik for din hund – også offline.",
 
   "common_ok": "OK",
   "common_close": "Luk",
@@ -16,7 +19,7 @@
   "common_no": "Nej",
   "common_invalid_link": "Ugyldig link",
   "common_could_not_open_link": "Kunne ikke åbne linket",
-  "common_no_permission": "Du har ikke tilladelse til det.",
+  "common_no_permission": "Du har ikke adgang til denne handling.",
   "@common_no_permission": {
     "description": "Vises når brugeren mangler rettigheder til at udføre en handling."
   },
@@ -66,6 +69,8 @@
   "home_empty_bullet_training": "Bedre træning og jagt – se hvad der faktisk giver afkast.",
   "home_empty_bullet_history": "Jagt-historik du rent faktisk bruger – sæson for sæson, område for område.",
   "home_empty_offline_note": "Du kan bruge appen helt offline. Alle data gemmes lokalt på din telefon.",
+  "home_first_session_title": "Klar til dit første pas?",
+  "home_first_session_body": "Du har registreret din hund. Næste trin er at logge et pas – så begynder din historik og statistik at vokse.",
 
   "home_visible_empty_title": "Ingen hunde tilgængelige",
   "home_visible_empty_body": "Denne konto har ingen hunde endnu. Tjek invitationer eller bed nogen om at dele en hund med dig.",
@@ -75,6 +80,10 @@
   "home_endActiveSessionConfirmTitle": "Afslut aktiv session?",
   "home_endActiveSessionConfirmSubtitle": "Alt mistes, hvis du afslutter. Er du sikker?",
   "home_open_settings_tooltip": "Indstillinger",
+  "home_sessions_empty": "Ingen sessioner endnu",
+  "home_openSession": "Åbn",
+  "home_select_dog": "Vælg hund",
+  "home_no_sessions_yet": "Ingen sessioner endnu",
 
   "home_noDogsRegistered": "Ingen hunde registreret",
   "home_no_dogs_title": "Ingen hunde registreret endnu",
@@ -282,6 +291,9 @@
   "dog_editor_deleting": "Sletter…",
   "dog_editor_delete_dog_title": "Slet hund",
   "dog_editor_delete_dog_body": "Vil du slette hunden? Det kan ikke fortrydes.",
+  "dog_editor_discard_changes_title": "Forkast ændringer?",
+  "dog_editor_discard_changes_body": "Dine ændringer er ikke gemt endnu.",
+  "dog_editor_discard_changes_confirm": "Forkast",
   "dog_editor_button_cancel": "Annuller",
   "dog_editor_button_delete": "Slet",
   "dog_editor_new_breed_title": "Ny race",
@@ -434,6 +446,7 @@
   "share_error_invite_revoked": "Inviteringen er trukket tilbage.",
   "share_error_invite_inactive": "Inviteringen er ikke aktiv.",
   "share_error_already_has_access": "Du har allerede adgang.",
+  "share_error_already_invited": "Denne e-mail er allerede blevet inviteret.",
   "share_error_invalid_role": "Ugyldig rolle.",
   "share_error_invalid_email": "Ugyldig e-mailadresse.",
   "share_error_dog_not_found_title": "Hund ikke fundet",
@@ -472,11 +485,21 @@
       "Vandmærke er obligatorisk ved deling af hundebilleder.",
   "dog_detail_watermark_toggle_title": "Vis titel",
   "dog_detail_watermark_toggle_name": "Vis navn",
-  "dog_detail_watermark_toggle_min_one":
-      "Mindst ét af navn/titel skal være slået til.",
-  "dog_detail_watermark_share_button": "Del profilbillede",
+  "dog_detail_watermark_share_button": "Del billede",
   "dog_detail_watermark_share_subject": "Billede fra GundogTracker",
   "dog_detail_watermark_share_message": "Delt via GundogTracker",
+  "session_image_viewer_watermark_toggle_title": "Vis titel",
+  "session_image_viewer_watermark_toggle_official_name": "Vis officielt navn",
+  "session_image_viewer_watermark_toggle_nickname": "Vis kælenavn",
+  "session_image_viewer_watermark_color_title": "Tekstfarve",
+  "session_image_viewer_watermark_color_light": "Hvid",
+  "session_image_viewer_watermark_color_dark": "Sort",
+  "session_image_viewer_watermark_presets_title": "Forvalg",
+  "session_image_viewer_watermark_preset_discreet": "Diskret",
+  "session_image_viewer_watermark_preset_clear": "Klar",
+  "session_image_viewer_watermark_preset_contrast": "Kontrast",
+  "dog_detail_watermark_share_missing_photo": "Kunne ikke finde et billede at dele.",
+  "dog_detail_watermark_share_error": "Kunne ikke dele billedet.",
   "dog_detail_label_death_date": "Dødsdato",
   "dog_detail_button_edit": "Rediger",
   "dog_detail_button_register_death": "Registrer",
@@ -504,6 +527,23 @@
   "session_map_error_map_load_failed": "Kunne ikke indlæse kortet",
   "map_page_snackbar_no_tracks_to_focus": "Ingen spor at fokusere på",
   "map_page_dialog_delete_downloaded_map_body": "Vil du slette dette downloadede kort?",
+  "map_download_title": "Download kort",
+  "map_download_area_label": "Område",
+  "map_download_cancel": "Annuller",
+  "map_download_start": "Start download",
+  "map_downloaded_maps_title": "Downloadede kort",
+  "map_downloaded_maps_empty": "Ingen downloadede kort endnu.",
+  "map_delete_offline_title": "Slet offline kort",
+  "map_delete_offline_body": "Dette sletter downloadede kortfliser for den valgte stil.",
+  "map_delete_offline_cancel": "Annuller",
+  "map_delete_offline_confirm": "Slet",
+  "map_downloading_title": "Downloader kort",
+  "map_downloading_cancel": "Annuller",
+  "map_go_to": "Gå til",
+  "map_delete": "Slet",
+  "map_delete_title": "Slet kort",
+  "map_tracks": "Spor",
+  "map_me": "Mig",
 
   "hunt_session_snackbar_export_ready_opening_share": "Eksport klar, åbner deling …",
   "hunt_session_snackbar_gpx_export_failed_see_log": "GPX-eksport fejlede. Se log.",
@@ -719,6 +759,14 @@
   "@session_detail_version_build": {
     "description": "Suffix for the debug build number label.",
     "placeholders": { "buildNumber": { "type": "String" } }
+  },
+  "settings_version_label": "Version {version}",
+  "@settings_version_label": {
+    "placeholders": { "version": {} }
+  },
+  "settings_version_build": " (build {buildNumber})",
+  "@settings_version_build": {
+    "placeholders": { "buildNumber": {} }
   },
 
   "session_detail_snackbar_changes_saved": "Ændringer gemt",
@@ -993,6 +1041,10 @@
   "settings_feedback_suggest_subtitle": "Send forslag via e-mail.",
   "settings_feedback_error_open_email": "Kunne ikke åbne e-mail.",
   "settings_feedback_error_copy": "Kunne ikke kopiere.",
+  "settings_sound_on_app_start_title": "Lyd ved opstart",
+  "settings_sound_on_app_start_subtitle": "Afspil rype-lyd når appen starter",
+  "settings_sound_on_milestone_title": "Lyd ved milepæle",
+  "settings_sound_on_milestone_subtitle": "Afspil lyd når du opnår en milepæl",
 
   "settings_section_subscription": "Abonnement",
   "settings_section_language": "Sprog",
@@ -1056,6 +1108,101 @@
   "settings_feedback_send_subtitle": "Åbner e-mail med appinfo.",
   "settings_feedback_bug_subtitle": "Åbner e-mail med fejlskabelon.",
   "settings_feedback_copy_subtitle": "Kopierer app- og enhedsinfo.",
+  "settings_diagnostics_section_title": "Diagnostik",
+  "settings_diagnostics_title": "Avanceret diagnostik",
+  "settings_diagnostics_subtitle": "Værktøjer til fejlsøgning og support.",
+  "settings_diagnostics_outbox_label": "Outbox",
+  "settings_diagnostics_count_pending": "Venter",
+  "settings_diagnostics_count_inProgress": "I gang",
+  "settings_diagnostics_count_failed": "Mislykket",
+  "settings_diagnostics_count_sent": "Sendt",
+  "settings_diagnostics_action_dog_restore_title": "Hent hunde igen",
+  "settings_diagnostics_action_dog_restore_subtitle":
+      "Henter tilgængelige hunde fra skyen til lokal lagring.",
+  "settings_diagnostics_action_session_fetch_title": "Tjek sessioner i skyen",
+  "settings_diagnostics_action_session_fetch_subtitle":
+      "Henter sessioner for den første hund, der er koblet til skyen.",
+  "settings_diagnostics_action_session_restore_title":
+      "Læg sessioner tilbage lokalt",
+  "settings_diagnostics_action_session_restore_subtitle":
+      "Lagrer sessioner fra skyen lokalt for den første tilkoblede hund.",
+  "settings_diagnostics_action_process_outbox_title": "Kør synkkø nu",
+  "settings_diagnostics_action_process_outbox_subtitle":
+      "Behandler ventende synkopgaver én gang.",
+  "settings_diagnostics_action_retry_outbox_title":
+      "Nulstil mislykkede synkopgaver",
+  "settings_diagnostics_action_retry_outbox_subtitle":
+      "Sætter mislykkede synkopgaver tilbage i kø til et nyt forsøg.",
+  "settings_diagnostics_missing_cloud_dog":
+      "Fandt ingen lokal hund, der er koblet til skyen.",
+  "settings_diagnostics_dog_restore_success":
+      "Hundedata hentet igen: {count}",
+  "@settings_diagnostics_dog_restore_success": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "settings_diagnostics_dog_restore_failed":
+      "Kunne ikke hente hundedata igen: {error}",
+  "@settings_diagnostics_dog_restore_failed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "settings_diagnostics_session_fetch_success":
+      "Fandt {count} sessioner i skyen.",
+  "@settings_diagnostics_session_fetch_success": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "settings_diagnostics_session_fetch_failed":
+      "Kunne ikke hente sessioner fra skyen: {error}",
+  "@settings_diagnostics_session_fetch_failed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "settings_diagnostics_session_restore_success":
+      "Lagde {count} sessioner tilbage lokalt.",
+  "@settings_diagnostics_session_restore_success": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "settings_diagnostics_session_restore_failed":
+      "Kunne ikke lægge sessioner tilbage lokalt: {error}",
+  "@settings_diagnostics_session_restore_failed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "settings_diagnostics_outbox_process_success":
+      "Synkkøen blev behandlet.",
+  "settings_diagnostics_outbox_process_failed":
+      "Kunne ikke behandle synkkøen: {error}",
+  "@settings_diagnostics_outbox_process_failed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "settings_diagnostics_retry_success":
+      "Nulstillede {count} synkopgaver.",
+  "@settings_diagnostics_retry_success": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "settings_diagnostics_retry_failed":
+      "Kunne ikke nulstille synkopgaver: {error}",
+  "@settings_diagnostics_retry_failed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "settings_sign_out_button": "Log ud",
+  "settings_sign_out_success": "Du er logget ud.",
+  "settings_sign_out_failed": "Kunne ikke logge ud lige nu.",
 
   "settings_change_password_title": "Skift adgangskode",
   "settings_change_password_current_password": "Nuværende adgangskode",
@@ -1090,6 +1237,21 @@
 
   "settings_milestones_enabled_title": "Milepæle",
   "settings_milestones_enabled_subtitle": "Vis små øjeblikke når hunden når vigtige skridt.",
+  "settings_milestones_goal_title": "Milepælsmål",
+  "settings_milestones_goal_subtitle": "Indstil sæson- og personlige mål for standpoint.",
+  "settings_milestones_season_goal_title": "Sæsonmål (standpoint)",
+  "settings_milestones_personal_goal_title": "Personligt mål (standpoint)",
+  "milestone_goal_achieved": "{dogName} nåede {goalTitle}!",
+  "@milestone_goal_achieved": {
+    "placeholders": {
+      "dogName": {
+        "type": "String"
+      },
+      "goalTitle": {
+        "type": "String"
+      }
+    }
+  },
   "settings_haptics_enabled_title": "Vibration ved milepæle",
   "settings_haptics_enabled_subtitle": "Diskret vibration når milepæle opnås.",
 
@@ -1155,9 +1317,32 @@
   "subscription_status_active": "Aktivt",
   "subscription_status_inactive": "Ikke aktivt",
   "subscription_status_unknown": "Ukendt",
-  "subscription_subscribe_button": "Tegn abonnement",
+  "subscription_product_title": "Fuglehund Pro",
+  "subscription_description":
+      "Lås op for ubegrænset antal hunde og ubegrænset antal sessioner.",
+  "subscription_benefit_unlimited_dogs": "Ubegrænset antal hunde",
+  "subscription_benefit_unlimited_sessions": "Ubegrænset antal sessioner",
+  "subscription_price_unavailable": "Pris utilgængelig",
+  "subscription_subscribe_button": "Opgrader til Pro",
   "subscription_restore_button": "Gendan køb",
   "subscription_manage_button": "Administrer / Opsig",
+  "subscription_purchase_success": "Pro er nu aktivt.",
+  "subscription_purchase_cancelled": "Købet blev annulleret.",
+  "subscription_restore_success": "Gendannelse er startet.",
+  "subscription_limit_dogs_reached":
+      "Gratisversionen er fuld for hunde. Opgrader til Pro for at tilføje flere.",
+  "subscription_limit_sessions_reached":
+      "Gratisversionen er fuld for sessioner. Opgrader til Pro for at gemme flere.",
+  "subscription_error_load_status":
+      "Kunne ikke hente abonnementsstatus lige nu.",
+  "subscription_error_purchase_start":
+      "Kunne ikke starte købet lige nu.",
+  "subscription_error_product_unavailable":
+      "Produktet er ikke tilgængeligt i butikken lige nu.",
+  "subscription_error_restore_purchase":
+      "Kunne ikke gendanne køb lige nu.",
+  "subscription_error_manage_open":
+      "Kunne ikke åbne abonnementssiden.",
 
   "feedback_send_title": "Send feedback",
   "feedback_bug_title": "Rapportér en fejl",
@@ -1193,5 +1378,40 @@
 
   "auth_profile_pending_title": "Opretter profil…",
   "auth_profile_pending_body": "Vi venter på, at backend-dokumentet er klart. Tryk på \"Prøv igen\" for at tjekke igen.",
-  "auth_profile_timeout_error": "Kan ikke finde brugerprofilen inden for kort tid. Tjek netværket eller prøv igen."
+  "auth_loading_waiting": "Gør log ind klar…",
+  "auth_profile_load_failed_title": "Kunne ikke indlæse din profil",
+  "auth_profile_load_failed_body":
+      "Prøv igen om et øjeblik. Hvis problemet fortsætter, kan du lukke og åbne appen igen.",
+  "auth_profile_timeout_error": "Kan ikke finde brugerprofilen inden for kort tid. Tjek netværket eller prøv igen.",
+  "signup_title": "Opret konto",
+  "signup_intro":
+      "Opret konto med e-mail og adgangskode for at komme i gang.",
+  "signup_email_label": "E-mail",
+  "signup_password_label": "Adgangskode",
+  "signup_password_repeat_label": "Gentag adgangskode",
+  "signup_create_button": "Opret konto",
+  "signup_success": "Kontoen er oprettet.",
+  "signup_error_email_in_use":
+      "Denne e-mailadresse er allerede i brug.",
+  "signup_error_invalid_email":
+      "Indtast en gyldig e-mailadresse.",
+  "signup_error_weak_password":
+      "Adgangskoden skal være mindst 6 tegn.",
+  "signup_error_operation_not_allowed":
+      "Det er ikke muligt at oprette konto lige nu.",
+  "signup_error_network": "Tjek internettet og prøv igen.",
+  "signup_error_generic": "Kunne ikke oprette konto lige nu.",
+  "signup_validation_email_missing": "Indtast e-mail.",
+  "signup_validation_email_invalid": "Indtast en gyldig e-mail.",
+  "signup_validation_password_missing": "Indtast adgangskode.",
+  "signup_validation_password_short":
+      "Adgangskoden skal være mindst 6 tegn.",
+  "signup_validation_password_repeat_missing":
+      "Gentag adgangskoden.",
+  "signup_validation_password_mismatch":
+      "Adgangskoderne matcher ikke.",
+  "dog_editor_intro_title": "Tilføj din hund",
+  "dog_editor_intro_body": "Du kan begynde enkelt nu. Et navn er nok for at komme i gang, og flere detaljer kan tilføjes senere.",
+  "home_empty_next_step": "Begynd med at tilføje din hund. Derefter kan du logge den første session, når I er klar.",
+  "session_form_no_dogs_help": "Tilføj en hund først, så kan du starte din første session."
 }

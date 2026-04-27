@@ -1,6 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:flutter/services.dart'; // FontLoader, ByteData
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;

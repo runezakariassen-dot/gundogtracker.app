@@ -73,6 +73,48 @@ void main() {
     }
     expect(newIds, isNot(contains(MilestoneId.stands300)));
   });
+
+  test('MilestoneService ignores deleted sessions in milestone basis',
+      () async {
+    final sessionDate = DateTime.utc(2024, 1, 3);
+    final service = MilestoneService(
+      evaluator: evaluateMilestones,
+      milestoneStateRepository: _InMemoryDogMilestoneStateRepository(),
+      huntSessionRepository: _FakeHuntSessionRepository([
+        HuntSession(
+          dogId: 'dog-3',
+          dateTime: sessionDate,
+          location: '',
+          durationMinutes: 5,
+          birdsSeen: 0,
+          points: 1,
+          flushes: 0,
+          notes: '',
+        ),
+        HuntSession(
+          dogId: 'dog-3',
+          dateTime: sessionDate.add(const Duration(days: 1)),
+          location: '',
+          durationMinutes: 5,
+          birdsSeen: 0,
+          points: 25,
+          flushes: 0,
+          notes: '',
+          updatedAt: sessionDate.add(const Duration(days: 1)),
+          deletedAt: sessionDate.add(const Duration(days: 1)),
+        ),
+      ]),
+    );
+
+    final newIds = await service.evaluateForDog(
+      'dog-3',
+      sessionDateTime: sessionDate,
+    );
+
+    expect(newIds, contains(MilestoneId.stands1));
+    expect(newIds, isNot(contains(MilestoneId.stands10)));
+    expect(newIds, isNot(contains(MilestoneId.stands25)));
+  });
 }
 
 class _FakeHuntSessionRepository implements HuntSessionRepository {
@@ -145,7 +187,7 @@ class _InMemoryDogMilestoneStateRepository
       sessionsProcessed: 0,
     );
   }
-  
+
   @override
   Future<DogMilestoneState> getOrCreate(String dogId) async {
     return _store.putIfAbsent(

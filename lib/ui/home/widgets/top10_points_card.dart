@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 
 import 'package:jakthund_app/l10n/app_localizations.dart';
@@ -7,6 +9,7 @@ import '../../../domain/repositories/dog_milestone_state_repository.dart';
 import '../../../models/dog.dart';
 import '../../../models/dog_milestone_state.dart';
 import '../../../services/dog_photo_storage.dart';
+import '../../../widgets/animated_dog_widget.dart';
 import '../top10/top10_strings.dart';
 
 const _standIconAsset = 'assets/icon/stand_dog.png';
@@ -284,11 +287,17 @@ class _Top10MilestoneRow extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Image.asset(
-                    iconAsset,
-                    width: iconSize,
-                    height: iconSize,
-                  ),
+                  if (iconAsset == _standIconAsset)
+                    AnimatedDogWidget(
+                      width: iconSize,
+                      height: iconSize,
+                    )
+                  else
+                    Image.asset(
+                      iconAsset,
+                      width: iconSize,
+                      height: iconSize,
+                    ),
                   const SizedBox(width: 8),
                   Text(
                     '$threshold',
@@ -429,7 +438,7 @@ class Top10BirdsCard extends StatelessWidget {
                             const SizedBox(height: 2),
                           ],
                           Text(
-                            l10n.birdsDownCount(this.totalBirds),
+                            l10n.birdsDownCount(totalBirds),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: labelStyle?.copyWith(

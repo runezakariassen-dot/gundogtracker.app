@@ -1,6 +1,9 @@
 {
   "@@locale": "en",
-  "appName": "Pointing dog",
+  "appName": "Fuglehund",
+  "app_store_identity_subtitle": "Offline hunting log for pointing dogs",
+  "app_store_identity_short_description":
+      "Log sessions, track progress, and build your dog's history – even offline.",
   "common_ok": "OK",
   "common_close": "Close",
   "common_done": "Done",
@@ -16,7 +19,7 @@
   "common_unknown": "Unknown",
   "common_unknown_email": "Unknown email",
   "common_unknown_member": "Unknown member",
-  "common_no_permission": "You don't have permission to do that.",
+  "common_no_permission": "You don't have access to this action.",
   "@common_no_permission": {
     "description": "Displayed when the user lacks rights to perform the requested action."
   },
@@ -42,6 +45,77 @@
   "home": "Home",
   "sessions": "Sessions",
   "statistics": "Statistics",
+  "advanced_statistics": "Advanced statistics",
+  "advanced_statistics_overview": "Overview",
+  "advanced_statistics_progress": "Progress",
+  "advanced_statistics_season": "Season",
+  "advanced_statistics_comparison": "Comparison",
+  "advanced_statistics_export": "Export",
+  "advanced_statistics_no_progress_data": "No progress data",
+  "advanced_statistics_no_season_data": "No seasonal data",
+  "advanced_statistics_need_two_dogs": "Need at least 2 dogs to compare",
+  "advanced_statistics_exporting": "Exporting...",
+  "advanced_statistics_export_stats": "Export statistics",
+  "advanced_statistics_export_sessions": "Export sessions",
+  "advanced_statistics_generate_text_report": "Generate text report",
+  "advanced_statistics_key_metrics_for": "Key metrics for {dogName}",
+  "@advanced_statistics_key_metrics_for": {
+    "placeholders": {
+      "dogName": {}
+    }
+  },
+  "advanced_statistics_stand_rate_per_hour": "Stand-rate per hour",
+  "advanced_statistics_bird_contacts_per_session": "Bird contacts per session",
+  "advanced_statistics_average_flushes_per_session": "Average flushes per session",
+  "advanced_statistics_success_rate": "Success rate",
+  "advanced_statistics_totals": "Totals",
+  "advanced_statistics_sessions_total": "Sessions total",
+  "advanced_statistics_active_time": "Active time",
+  "advanced_statistics_total_points": "Total points",
+  "advanced_statistics_total_flushes": "Total flushes",
+  "advanced_statistics_bird_contacts": "Bird contacts",
+  "advanced_statistics_birds_shot": "Birds shot",
+  "advanced_statistics_no_progress_data": "No progress data available",
+  "advanced_statistics_progress_over_time": "Progress over time - {dogName}",
+  "@advanced_statistics_progress_over_time": {
+    "placeholders": {
+      "dogName": {}
+    }
+  },
+  "advanced_statistics_average_points_per_session_over_time": "Average points per session over time",
+  "advanced_statistics_trend_analysis": "Trend analysis",
+  "advanced_statistics_improvement": "Improvement!",
+  "advanced_statistics_declining": "Declining",
+  "advanced_statistics_stable": "Stable",
+  "advanced_statistics_no_season_data": "No seasonal data available",
+  "advanced_statistics_seasonal_analysis": "Seasonal analysis - {dogName}",
+  "@advanced_statistics_seasonal_analysis": {
+    "placeholders": {
+      "dogName": {}
+    }
+  },
+  "advanced_statistics_sessions": "Sessions",
+  "advanced_statistics_points": "Points",
+  "advanced_statistics_points_per_hour": "Points per hour",
+  "advanced_statistics_dog_comparison": "Dog comparison",
+  "advanced_statistics_success_rate_percent": "Success rate (%)",
+  "advanced_statistics_export_reports": "Export reports",
+  "advanced_statistics_export_statistics_csv": "Export statistics as CSV",
+  "advanced_statistics_contains_comparison_all_dogs": "Contains comparison of all dogs with key figures.",
+  "advanced_statistics_export_sessions_csv": "Export sessions as CSV",
+  "advanced_statistics_sessions_csv_description": "Contains all hunt sessions with detailed data.",
+  "advanced_statistics_generate_text_report_description": "Generate a text summary of all statistics.",
+  "advanced_statistics_export_sessions_csv": "Export all session data as CSV",
+  "advanced_statistics_sessions_csv_description": "Detailed overview of all hunt sessions with all fields.",
+  "advanced_statistics_export_session_data": "Export session data",
+  "advanced_statistics_text_report_for": "Text report for {dogName}",
+  "@advanced_statistics_text_report_for": {
+    "placeholders": {
+      "dogName": {}
+    }
+  },
+  "advanced_statistics_generate_readable_text_report": "Generate a readable text report with all statistics.",
+  "advanced_statistics_generate_text_report": "Generate text report",
   "stats_week_label": "Week {week}",
   "@stats_week_label": {
     "description": "Label for the week indicator in the statistics section.",
@@ -162,6 +236,11 @@
   "dog_editor_deleting": "Deleting…",
   "dog_editor_delete_dog_title": "Delete dog",
   "dog_editor_delete_dog_body": "Do you want to delete the dog? This can't be undone.",
+  "dog_editor_discard_changes_title": "Discard changes?",
+  "dog_editor_discard_changes_body": "Your changes haven't been saved yet.",
+  "dog_editor_discard_changes_confirm": "Discard",
+  "dog_editor_intro_title": "Add your dog",
+  "dog_editor_intro_body": "You can start simple now. A name is enough to get going, and you can fill in more details later.",
   "dog_editor_button_cancel": "Cancel",
   "dog_editor_button_delete": "Delete",
   "dog_editor_new_breed_title": "New breed",
@@ -273,6 +352,7 @@
   "share_error_invite_revoked": "The invite has been revoked.",
   "share_error_invite_inactive": "The invite is not active.",
   "share_error_already_has_access": "You already have access.",
+  "share_error_already_invited": "This email has already been invited.",
   "share_error_invalid_role": "Invalid role.",
   "share_error_invalid_email": "Invalid email address.",
   "share_error_dog_not_found_title": "Dog not found",
@@ -320,11 +400,21 @@
       "A watermark is required when sharing dog photos.",
   "dog_detail_watermark_toggle_title": "Show title",
   "dog_detail_watermark_toggle_name": "Show name",
-  "dog_detail_watermark_toggle_min_one":
-      "At least one of name/title must be on.",
-  "dog_detail_watermark_share_button": "Share profile photo",
+  "dog_detail_watermark_share_button": "Share image",
   "dog_detail_watermark_share_subject": "Photo from GundogTracker",
   "dog_detail_watermark_share_message": "Shared via GundogTracker",
+  "session_image_viewer_watermark_toggle_title": "Show title",
+  "session_image_viewer_watermark_toggle_official_name": "Show official name",
+  "session_image_viewer_watermark_toggle_nickname": "Show nickname",
+  "session_image_viewer_watermark_color_title": "Text color",
+  "session_image_viewer_watermark_color_light": "White",
+  "session_image_viewer_watermark_color_dark": "Black",
+  "session_image_viewer_watermark_presets_title": "Presets",
+  "session_image_viewer_watermark_preset_discreet": "Discreet",
+  "session_image_viewer_watermark_preset_clear": "Clear",
+  "session_image_viewer_watermark_preset_contrast": "Contrast",
+  "dog_detail_watermark_share_missing_photo": "Could not find an image to share.",
+  "dog_detail_watermark_share_error": "Failed to share the image.",
   "dog_detail_label_death_date": "Date of death",
   "dog_detail_button_edit": "Edit",
   "dog_detail_button_register_death": "Register",
@@ -405,6 +495,62 @@
   "age_days": "{count, plural, one{{count} day} other{{count} days}}",
   "@age_days": {
     "description": "Age measured in days with plural.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "age_zero_days": "0 days",
+  "age_and": "and",
+  "home_startNewSession": "Start new session",
+  "chooseDog": "Choose dog",
+  "dog_unnamed": "Unnamed dog",
+  "noDogsAddDog": "No dogs – add dog",
+  "home_addDogPrompt": "Add a dog to start a session",
+  "home_empty_title": "Start your journey with your gun dog",
+  "@home_empty_title": {
+    "description": "Title for empty state on home screen."
+  },
+  "home_empty_body": "Track sessions, follow progress, and build a history of your dog – session by session.",
+  "@home_empty_body": {
+    "description": "Body text for empty state on home screen."
+  },
+  "home_empty_bullet_progress": "Track progress over time – points, flushes, and activity.",
+  "@home_empty_bullet_progress": {
+    "description": "First bullet point in empty state."
+  },
+  "home_empty_bullet_training": "Better training and hunting – see what actually delivers results.",
+  "@home_empty_bullet_training": {
+    "description": "Second bullet point in empty state."
+  },
+  "home_empty_bullet_history": "Hunting history you'll actually use – season by season, location by location.",
+  "@home_empty_bullet_history": {
+    "description": "Third bullet point in empty state."
+  },
+  "home_addDog_button": "Add dog",
+  "@home_addDog_button": {
+    "description": "Button text for adding a dog from home screen."
+  },
+  "home_empty_next_step": "Start by adding your dog. Then when you're ready, log your first session and build your history from day one.",
+  "home_first_session_title": "Ready for your first session?",
+  "home_first_session_body": "You've got your dog registered. Next step is to log your first session – that's where your history and stats begin.",
+  "home_empty_offline_note": "You can use the app completely offline. All data is saved locally on your phone.",
+  "@home_empty_offline_note": {
+    "description": "Text explaining the app works without internet."
+  },
+  "home_visible_empty_title": "No dogs available",
+  "home_visible_empty_body": "You have no dogs linked to this account. Check invitations or ask someone to share a dog with you.",
+  "home_visible_empty_button": "Open invitations",
+  "home_noDogsRegistered": "No dogs registered",
+  "home_primaryActionSubtitle": "Notes first. Count with + in fields.",
+  "home_top10_points_title": "Top 10 points",
+  "top10Title": "Top 10",
+  "home_top10_points_empty": "No points registered yet.",
+  "home_top10_points_pointsLabel": "Points: {count}",
+  "standsLabel": "Point",
+  "standsCount": "{count, plural, =0{0 points} one{1 point} other{{count} points}}",
+  "@home_top10_points_pointsLabel": {
     "placeholders": {
       "count": {
         "type": "int"
@@ -508,6 +654,23 @@
   "map_page_snackbar_no_tracks_to_focus": "No tracks to focus on",
   "map_page_dialog_delete_downloaded_map_body":
       "Do you want to delete this downloaded map?",
+  "map_download_title": "Download map",
+  "map_download_area_label": "Area",
+  "map_download_cancel": "Cancel",
+  "map_download_start": "Start download",
+  "map_downloaded_maps_title": "Downloaded maps",
+  "map_downloaded_maps_empty": "No downloaded maps yet.",
+  "map_delete_offline_title": "Delete offline map",
+  "map_delete_offline_body": "This deletes downloaded map tiles for the selected style.",
+  "map_delete_offline_cancel": "Cancel",
+  "map_delete_offline_confirm": "Delete",
+  "map_downloading_title": "Downloading map",
+  "map_downloading_cancel": "Cancel",
+  "map_go_to": "Go to",
+  "map_delete": "Delete",
+  "map_delete_title": "Delete map",
+  "map_tracks": "Tracks",
+  "map_me": "Me",
   "hunt_session_snackbar_export_ready_opening_share":
       "Export ready, opening share…",
   "hunt_session_snackbar_gpx_export_failed_see_log":
@@ -519,6 +682,7 @@
   "session_form_dog_section_title": "Dog",
   "session_form_dog_prefix": "Dog:",
   "session_form_no_dogs_registered": "No dogs registered.",
+  "session_form_no_dogs_help": "Add a dog first, then you can start your first session.",
   "session_summary_sessions_label": "Sessions:",
   "session_summary_total_time_label": "Total time:",
   "session_summary_total_bird_contacts_label": "Total bird contacts:",
@@ -763,6 +927,18 @@
       "buildNumber": {
         "type": "String"
       }
+    }
+  },
+  "settings_version_label": "Version {version}",
+  "@settings_version_label": {
+    "placeholders": {
+      "version": {}
+    }
+  },
+  "settings_version_build": " (build {buildNumber})",
+  "@settings_version_build": {
+    "placeholders": {
+      "buildNumber": {}
     }
   },
   "session_detail_snackbar_changes_saved": "Changes saved",
@@ -1180,6 +1356,10 @@
   "gpx_exporting_ellipsis": "Exporting…",
   "home_open_settings_tooltip": "Settings",
   "home_settings_button_label": "Settings",
+  "home_sessions_empty": "No sessions yet",
+  "home_openSession": "Open",
+  "home_select_dog": "Select dog",
+  "home_no_sessions_yet": "No sessions yet",
   "home_no_dogs_title": "No dogs registered yet",
   "home_no_dogs_message": "Register your dogs to log training, hunting, and trials. You’ll get a clear history and a better view of progress over time.",
   "home_no_dogs_bullet_history": "History: keep sessions, notes, and locations in one place",
@@ -1312,6 +1492,29 @@
   "forgot_password_error_invalid": "Enter a valid email address.",
   "forgot_password_check_spam_hint":
       "Check your inbox. If the email doesn't show up, check Spam/Junk.",
+  "signup_title": "Create account",
+  "signup_intro": "Create an account with email and password to get started.",
+  "signup_email_label": "Email",
+  "signup_password_label": "Password",
+  "signup_password_repeat_label": "Repeat password",
+  "signup_create_button": "Create account",
+  "signup_success": "Account created.",
+  "signup_error_email_in_use": "This email address is already in use.",
+  "signup_error_invalid_email": "Enter a valid email address.",
+  "signup_error_weak_password":
+      "Password must be at least 6 characters.",
+  "signup_error_operation_not_allowed":
+      "Account creation is not available right now.",
+  "signup_error_network": "Check your connection and try again.",
+  "signup_error_generic": "Could not create account right now.",
+  "signup_validation_email_missing": "Enter an email address.",
+  "signup_validation_email_invalid": "Enter a valid email address.",
+  "signup_validation_password_missing": "Enter a password.",
+  "signup_validation_password_short":
+      "Password must be at least 6 characters.",
+  "signup_validation_password_repeat_missing": "Repeat the password.",
+  "signup_validation_password_mismatch":
+      "Passwords do not match.",
   "settings_backup_import_success": "Backup imported",
   "settings_theme_system": "System",
   "settings_theme_light": "Light",
@@ -1324,6 +1527,21 @@
   "settings_language_en": "English",
   "settings_milestones_enabled_title": "Milestones",
   "settings_milestones_enabled_subtitle": "Show small moments when your dog reaches important steps.",
+  "settings_milestones_goal_title": "Milestone goals",
+  "settings_milestones_goal_subtitle": "Set seasonal and personal target stand points.",
+  "settings_milestones_season_goal_title": "Season target (stand points)",
+  "settings_milestones_personal_goal_title": "Personal target (stand points)",
+  "milestone_goal_achieved": "{dogName} reached the {goalTitle}!",
+  "@milestone_goal_achieved": {
+    "placeholders": {
+      "dogName": {
+        "type": "String"
+      },
+      "goalTitle": {
+        "type": "String"
+      }
+    }
+  },
   "settings_haptics_enabled_title": "Haptics for milestones",
   "settings_haptics_enabled_subtitle": "Subtle vibration when milestones are achieved.",
   "settings_restore_in_progress": "Restore in progress… Please wait.",
@@ -1354,6 +1572,10 @@
   "auth_profile_pending_title": "Creating profile…",
   "auth_profile_pending_body":
       "Waiting for the backend document to exist. Tap \"Try again\" to re-check.",
+  "auth_loading_waiting": "Preparing sign-in…",
+  "auth_profile_load_failed_title": "Could not load your profile",
+  "auth_profile_load_failed_body":
+      "Try again in a moment. If the problem continues, close and reopen the app.",
   "auth_profile_timeout_error":
       "Could not find the user profile within a few seconds. Check your network or try again.",
   "settings_backup_failed_unknown": "Unknown error.",
@@ -1394,6 +1616,103 @@
   "settings_feedback_suggest_subtitle": "Send suggestions via email.",
   "settings_feedback_error_open_email": "Couldn't open email.",
   "settings_feedback_error_copy": "Couldn't copy.",
+  "settings_diagnostics_section_title": "Diagnostics",
+  "settings_diagnostics_title": "Advanced diagnostics",
+  "settings_diagnostics_subtitle": "Tools for troubleshooting and support.",
+  "settings_diagnostics_outbox_label": "Outbox",
+  "settings_diagnostics_count_pending": "Pending",
+  "settings_diagnostics_count_inProgress": "In progress",
+  "settings_diagnostics_count_failed": "Failed",
+  "settings_diagnostics_count_sent": "Sent",
+  "settings_diagnostics_action_dog_restore_title": "Refresh dogs",
+  "settings_diagnostics_action_dog_restore_subtitle":
+      "Fetches available dogs from the cloud into local storage.",
+  "settings_diagnostics_action_session_fetch_title": "Check cloud sessions",
+  "settings_diagnostics_action_session_fetch_subtitle":
+      "Fetches sessions for the first dog linked to the cloud.",
+  "settings_diagnostics_action_session_restore_title":
+      "Restore sessions locally",
+  "settings_diagnostics_action_session_restore_subtitle":
+      "Stores cloud sessions locally for the first linked dog.",
+  "settings_diagnostics_action_process_outbox_title": "Run sync queue now",
+  "settings_diagnostics_action_process_outbox_subtitle":
+      "Processes pending sync tasks once.",
+  "settings_diagnostics_action_retry_outbox_title":
+      "Reset failed sync tasks",
+  "settings_diagnostics_action_retry_outbox_subtitle":
+      "Moves failed sync tasks back to the queue for another attempt.",
+  "settings_diagnostics_missing_cloud_dog":
+      "No local dog linked to the cloud was found.",
+  "settings_diagnostics_dog_restore_success": "Refreshed dog data: {count}",
+  "@settings_diagnostics_dog_restore_success": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "settings_diagnostics_dog_restore_failed":
+      "Could not refresh dog data: {error}",
+  "@settings_diagnostics_dog_restore_failed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "settings_diagnostics_session_fetch_success":
+      "Found {count} sessions in the cloud.",
+  "@settings_diagnostics_session_fetch_success": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "settings_diagnostics_session_fetch_failed":
+      "Could not fetch sessions from the cloud: {error}",
+  "@settings_diagnostics_session_fetch_failed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "settings_diagnostics_session_restore_success":
+      "Restored {count} sessions locally.",
+  "@settings_diagnostics_session_restore_success": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "settings_diagnostics_session_restore_failed":
+      "Could not restore sessions locally: {error}",
+  "@settings_diagnostics_session_restore_failed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "settings_diagnostics_outbox_process_success":
+      "The sync queue was processed.",
+  "settings_diagnostics_outbox_process_failed":
+      "Could not process the sync queue: {error}",
+  "@settings_diagnostics_outbox_process_failed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "settings_diagnostics_retry_success": "Reset {count} sync tasks.",
+  "@settings_diagnostics_retry_success": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "settings_diagnostics_retry_failed":
+      "Could not reset sync tasks: {error}",
+  "@settings_diagnostics_retry_failed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "settings_sign_out_button": "Sign out",
+  "settings_sign_out_success": "You have signed out.",
+  "settings_sign_out_failed": "Could not sign out right now.",
+  "settings_sound_on_app_start_title": "Sound on app start",
+  "settings_sound_on_app_start_subtitle": "Play grouse sound when the app starts",
+  "settings_sound_on_milestone_title": "Sound on milestones",
+  "settings_sound_on_milestone_subtitle": "Play sound when you achieve a milestone",
   "milestones_achieved_title": "Achieved milestones",
   "milestones_achieved_empty": "No milestones yet.",
   "milestones_achieved_duration": "Achieved {duration}",
@@ -1511,9 +1830,32 @@
   "subscription_status_active": "Active",
   "subscription_status_inactive": "Not active",
   "subscription_status_unknown": "Unknown",
-  "subscription_subscribe_button": "Subscribe",
+  "subscription_product_title": "Fuglehund Pro",
+  "subscription_description":
+      "Unlock unlimited dogs and unlimited sessions.",
+  "subscription_benefit_unlimited_dogs": "Unlimited dogs",
+  "subscription_benefit_unlimited_sessions": "Unlimited sessions",
+  "subscription_price_unavailable": "Price unavailable",
+  "subscription_subscribe_button": "Upgrade to Pro",
   "subscription_restore_button": "Restore purchases",
   "subscription_manage_button": "Manage / Cancel",
+  "subscription_purchase_success": "Pro is now active.",
+  "subscription_purchase_cancelled": "Purchase was cancelled.",
+  "subscription_restore_success": "Restore has started.",
+  "subscription_limit_dogs_reached":
+      "The free plan is full for dogs. Upgrade to Pro to add more.",
+  "subscription_limit_sessions_reached":
+      "The free plan is full for sessions. Upgrade to Pro to save more.",
+  "subscription_error_load_status":
+      "Could not load subscription status right now.",
+  "subscription_error_purchase_start":
+      "Could not start the purchase right now.",
+  "subscription_error_product_unavailable":
+      "The product is not available in the store right now.",
+  "subscription_error_restore_purchase":
+      "Could not restore purchases right now.",
+  "subscription_error_manage_open":
+      "Could not open the subscription page.",
   "feedback_send_title": "Send feedback",
   "feedback_bug_title": "Report a bug",
   "feedback_copy_diagnostics_title": "Copy diagnostics",

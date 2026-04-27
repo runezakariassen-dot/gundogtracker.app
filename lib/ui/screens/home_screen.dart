@@ -1,16 +1,19 @@
+// ignore_for_file: deprecated_member_use
 // lib/ui/screens/home_screen.dart
 import 'dart:async';
 import 'dart:math';
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:jakthund_app/data/hive_boxes.dart';
 import 'package:jakthund_app/data/repositories/local_active_session_draft_repository.dart';
+import 'package:jakthund_app/domain/dogs/dog_visibility.dart';
 import 'package:jakthund_app/domain/models/active_session_draft.dart';
 import 'package:jakthund_app/domain/repositories/active_session_draft_repository.dart';
+import 'package:jakthund_app/domain/sessions/session_visibility.dart';
 import 'package:jakthund_app/domain/statistics/dog_leaderboard_service.dart';
 import 'package:jakthund_app/domain/milestones/milestone_helpers.dart';
 import 'package:jakthund_app/hunt_session_page.dart';
@@ -19,6 +22,7 @@ import 'package:jakthund_app/ui/text/text_helpers.dart';
 import 'package:jakthund_app/models/dog.dart';
 import 'package:jakthund_app/models/dog_membership.dart';
 import 'package:jakthund_app/models/hunt_session.dart';
+import 'package:jakthund_app/pages/dog_editor_page.dart';
 import 'package:jakthund_app/pages/dog_detail_page.dart';
 import 'package:jakthund_app/pages/settings_page.dart';
 import 'package:jakthund_app/services/hive_lifecycle_service.dart';
@@ -93,7 +97,9 @@ class _HomeScreenState extends State<HomeScreen> {
               valueListenable: _membershipBox.listenable(),
               builder: (context, Box<DogMembership> membershipBox, _) {
                 final dogs = dogBox.values.toList(growable: false);
-                final currentUid = FirebaseAuth.instance.currentUser?.uid;
+                final activeDogs =
+                    dogs.where((dog) => !dog.isDeleted).toList(growable: false);
+                final currentUid = _currentUserIdOrNull();
                 final memberships = currentUid == null
                     ? <DogMembership>[]
                     : membershipBox.values
@@ -101,15 +107,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             membership.userId == currentUid &&
                             membership.status == Status.active)
                         .toList();
+                final visibleDogs = filterVisibleDogs(
+                  dogs: dogs,
+                  memberships: memberships,
+                  currentUserId: currentUid,
+                );
                 final allowedDogKeys =
                     memberships.map((membership) => membership.dogKey).toSet();
-                final visibleDogs = dogs.where((dog) {
-                  final hasMembership = allowedDogKeys.contains(dog.dogKey);
-                  final isOwner = currentUid != null &&
-                      dog.ownerUserId != null &&
-                      dog.ownerUserId == currentUid;
-                  return hasMembership || isOwner;
-                }).toList();
                 final fallbackOwnerCount = currentUid == null
                     ? 0
                     : visibleDogs
@@ -118,13 +122,20 @@ class _HomeScreenState extends State<HomeScreen> {
                             !allowedDogKeys.contains(dog.dogKey))
                         .length;
                 final hasDogs = visibleDogs.isNotEmpty;
-                debugPrint(
-                  '[HomeScreen] visibility uid=$currentUid dogs=${dogs.length} memberships=${memberships.length} visible=${visibleDogs.length}',
+                final visibleSessions = filterVisibleSessions(
+                  sessions: _sessionsBox.values,
+                  dogs: visibleDogs,
                 );
-                if (fallbackOwnerCount > 0) {
+                final hasSessions = visibleSessions.isNotEmpty;
+                if (kDebugMode) {
                   debugPrint(
-                    '[HomeScreen] owner fallback count=$fallbackOwnerCount',
+                    '[TF][UI] home visibility uid=$currentUid dogs=${activeDogs.length} memberships=${memberships.length} visible=${visibleDogs.length}',
                   );
+                  if (fallbackOwnerCount > 0) {
+                    debugPrint(
+                      '[TF][UI] home owner fallback count=$fallbackOwnerCount',
+                    );
+                  }
                 }
 
                 return ListView(
@@ -155,6 +166,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                       ),
                       const SizedBox(height: 16),
+                      if (!hasSessions) ...[
+                        _HomeFirstSessionCard(
+                          onStartPressed: _openFirstSession,
+                        ),
+                        const SizedBox(height: 16),
+                      ],
                     ],
                     _Top10PointsSection(
                       dogs: visibleDogs,
@@ -169,7 +186,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     if (!hasDogs) ...[
                       const SizedBox(height: 16),
-                      const _HomeEmptyStateCardIntroOnly(),
+                      _HomeEmptyStateCardIntroOnly(
+                        onAddDogPressed: _openAddDogEditor,
+                      ),
                     ],
                   ],
                 );
@@ -206,6 +225,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _onDiscardDraft() async {
     await _draftRepository.clear();
+    if (!mounted) return;
     final l10n = AppLocalizations.of(context);
     if (l10n == null) return;
 
@@ -214,13 +234,43 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> _openAddDogEditor() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const DogEditorPage()),
+    );
+  }
+
+  Future<void> _openFirstSession() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const HuntSessionPage(autoStartNow: true),
+      ),
+    );
+  }
+
   Dog? _findDogById(String dogId) {
-    for (final dog in _dogsBox.values) {
-      if (dog.id == dogId || dog.name == dogId || dog.dogKey == dogId) {
-        return dog;
-      }
+    final currentUid = _currentUserIdOrNull();
+    final memberships = _membershipBox.values
+        .where((membership) =>
+            membership.userId == currentUid &&
+            membership.status == Status.active)
+        .toList(growable: false);
+    return findVisibleDogById(
+      dogs: _dogsBox.values,
+      memberships: memberships,
+      currentUserId: currentUid,
+      dogId: dogId,
+    );
+  }
+
+  String? _currentUserIdOrNull() {
+    try {
+      return FirebaseAuth.instance.currentUser?.uid;
+    } catch (_) {
+      return null;
     }
-    return null;
   }
 }
 
@@ -493,7 +543,11 @@ class _DogCarouselCard extends StatelessWidget {
 }
 
 class _HomeEmptyStateCardIntroOnly extends StatelessWidget {
-  const _HomeEmptyStateCardIntroOnly();
+  const _HomeEmptyStateCardIntroOnly({
+    required this.onAddDogPressed,
+  });
+
+  final VoidCallback onAddDogPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -547,7 +601,92 @@ class _HomeEmptyStateCardIntroOnly extends StatelessWidget {
                           theme.colorScheme.onSurface.withValues(alpha: 0.75),
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: onAddDogPressed,
+                      icon: const Icon(Icons.add),
+                      label: Text(l10n.home_addDog_button),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    l10n.home_empty_next_step,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      height: 1.35,
+                      color:
+                          theme.colorScheme.onSurface.withValues(alpha: 0.72),
+                    ),
+                  ),
                 ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeFirstSessionCard extends StatelessWidget {
+  const _HomeFirstSessionCard({
+    required this.onStartPressed,
+  });
+
+  final VoidCallback onStartPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.flag_outlined,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.home_first_session_title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        l10n.home_first_session_body,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          height: 1.35,
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.82),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: onStartPressed,
+                icon: const Icon(Icons.play_arrow_rounded),
+                label: Text(l10n.home_startNewSession),
               ),
             ),
           ],
@@ -706,8 +845,8 @@ class _Top10PointsSection extends StatelessWidget {
                   Text(
                     l10n.home_top10_points_empty,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface
-                          .withValues(alpha: 0.75),
+                      color:
+                          theme.colorScheme.onSurface.withValues(alpha: 0.75),
                     ),
                   )
                 else
@@ -774,8 +913,8 @@ class _Top10PointsSection extends StatelessWidget {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFFCD7F32)
-                                      .withOpacity(0.28),
+                                  color:
+                                      const Color(0xFFCD7F32).withOpacity(0.28),
                                   blurRadius: 10,
                                   spreadRadius: 1,
                                   offset: const Offset(0, 3),
@@ -895,8 +1034,8 @@ class _Top10BirdsSection extends StatelessWidget {
                   Text(
                     l10n.home_top10_birds_empty,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface
-                          .withValues(alpha: 0.75),
+                      color:
+                          theme.colorScheme.onSurface.withValues(alpha: 0.75),
                     ),
                   )
                 else
@@ -963,8 +1102,8 @@ class _Top10BirdsSection extends StatelessWidget {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFFCD7F32)
-                                      .withOpacity(0.28),
+                                  color:
+                                      const Color(0xFFCD7F32).withOpacity(0.28),
                                   blurRadius: 10,
                                   spreadRadius: 1,
                                   offset: const Offset(0, 3),

@@ -27,8 +27,8 @@ class HiveLifecycleService {
   static bool _ready = false;
   static bool get isReady => _ready;
 
-  static final Duration _initTimeout = const Duration(seconds: 20);
-  static final Duration _boxTimeout = const Duration(seconds: 5);
+  static const Duration _initTimeout = Duration(seconds: 20);
+  static const Duration _boxTimeout = Duration(seconds: 5);
 
   static Directory? _hiveDir;
 

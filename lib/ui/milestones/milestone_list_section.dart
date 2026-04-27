@@ -1,3 +1,4 @@
+// ignore_for_file: depend_on_referenced_packages, deprecated_member_use, prefer_const_constructors
 // lib/ui/milestones/milestone_list_section.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -5,6 +6,7 @@ import 'package:jakthund_app/l10n/app_localizations.dart';
 
 import '../../domain/milestones/milestone_models.dart';
 import '../../domain/services/dog_milestone_display_service.dart';
+import '../../widgets/animated_dog_widget.dart';
 import 'milestone_strings.dart';
 
 class MilestoneListSection extends StatelessWidget {
@@ -244,12 +246,17 @@ class _MilestoneIconWithBadge extends StatelessWidget {
 
     final iconColor = theme.colorScheme.onSurface;
     final Widget mainIcon = (assetPath != null)
-        ? Image.asset(
-            assetPath!,
-            width: 36,
-            height: 36,
-            fit: BoxFit.contain,
-          )
+        ? (assetPath == 'assets/icon/stand_dog.png'
+            ? AnimatedDogWidget(
+                width: 36,
+                height: 36,
+              )
+            : Image.asset(
+                assetPath!,
+                width: 36,
+                height: 36,
+                fit: BoxFit.contain,
+              ))
         : useBirdIcon
             ? Image.asset(
                 'assets/icons/bird_rype.png',

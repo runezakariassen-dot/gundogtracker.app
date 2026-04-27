@@ -22,6 +22,7 @@ void main() {
       breed: 'Elghund',
       ownerUserId: 'owner',
       updatedAt: DateTime(2024, 1, 1),
+      deletedAt: DateTime(2024, 1, 2),
     );
 
     final json = dogToJson(dog);
@@ -37,6 +38,7 @@ void main() {
     expect(restored.breed, dog.breed);
     expect(restored.ownerUserId, dog.ownerUserId);
     expect(restored.updatedAt, dog.updatedAt);
+    expect(restored.deletedAt, dog.deletedAt);
   });
 
   test('membership dto roundtrip preserves key fields', () {

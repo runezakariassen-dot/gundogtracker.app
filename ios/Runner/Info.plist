@@ -32,13 +32,15 @@
 		<true/>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>Appen trenger kamera for å ta bilde av hunden (profil) eller legge til bilder i økten.</string>
+	<string>Fuglehund trenger kamera for å ta bilder av hunden din og legge bilder til i økter.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Appen bruker posisjon for å logge treningsøkter og jakt med hunden.</string>
+	<string>Fuglehund trenger posisjonen din for å lagre hvor økter skjer og vise ruten din på kart.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Fuglehund trenger posisjonen din for å lagre hvor økter skjer og vise ruten din på kart.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Appen lagrer valgte bilder/videoer i appens lokale lagring.</string>
+	<string>Fuglehund trenger tilgang for å lagre bilder og videoer du legger til i appen.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Appen trenger tilgang til bildene dine for å velge profilbilde eller legge til media i økten.</string>
+	<string>Fuglehund trenger tilgang til bilder og videoer slik at du kan velge profilbilde og legge media til i økter.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

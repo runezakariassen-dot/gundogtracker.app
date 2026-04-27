@@ -25,7 +25,8 @@ class _AuthGateState extends State<AuthGate> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   AppUser? _profile;
-  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _profileSubscription;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+      _profileSubscription;
   Timer? _profileTimeout;
   String? _profileError;
   bool _isWaitingForProfile = false;
@@ -89,11 +90,9 @@ class _AuthGateState extends State<AuthGate> {
     _cancelProfileTimeout();
     if (!mounted) return;
 
-    final message = error is FirebaseException
-        ? error.message ?? error.code
-        : error.toString();
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
-      _profileError = message;
+      _profileError = l10n.auth_profile_load_failed_body;
       _isWaitingForProfile = false;
     });
   }
@@ -149,14 +148,15 @@ class _AuthGateState extends State<AuthGate> {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, authSnapshot) {
+        final l10n = AppLocalizations.of(context)!;
         if (authSnapshot.connectionState == ConnectionState.waiting) {
-          return const _AuthLoadingScreen(
-              message: 'Venter på autentisering...');
+          return _AuthLoadingScreen(message: l10n.auth_loading_waiting);
         }
 
         if (authSnapshot.hasError) {
           return _AuthErrorScreen(
-            message: authSnapshot.error.toString(),
+            title: l10n.auth_profile_load_failed_title,
+            message: l10n.auth_profile_load_failed_body,
             onRetry: () => setState(() {}),
           );
         }
@@ -176,7 +176,9 @@ class _AuthGateState extends State<AuthGate> {
         }
 
         if ((_lastUser?.uid != user.uid) ||
-            (!_isWaitingForProfile && _profile == null && _profileError == null)) {
+            (!_isWaitingForProfile &&
+                _profile == null &&
+                _profileError == null)) {
           _scheduleProfileLoad(user);
         }
 
@@ -186,6 +188,7 @@ class _AuthGateState extends State<AuthGate> {
 
         if (_profileError != null) {
           return _AuthErrorScreen(
+            title: l10n.auth_profile_load_failed_title,
             message: _profileError!,
             onRetry: _refreshProfile,
           );
@@ -226,10 +229,12 @@ class _AuthLoadingScreen extends StatelessWidget {
 
 class _AuthErrorScreen extends StatelessWidget {
   const _AuthErrorScreen({
+    required this.title,
     required this.message,
     required this.onRetry,
   });
 
+  final String title;
   final String message;
   final VoidCallback onRetry;
 
@@ -252,7 +257,7 @@ class _AuthErrorScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Kunne ikke laste brukerprofil',
+                title,
                 style: theme.textTheme.titleMedium,
                 textAlign: TextAlign.center,
               ),

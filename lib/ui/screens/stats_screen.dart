@@ -1,3 +1,5 @@
+// ignore_for_file: depend_on_referenced_packages
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -32,7 +34,9 @@ class _StatsScreenState extends State<StatsScreen> {
   }
 
   void _computeTrend() {
-    final sessions = _sessionsBox.values.toList(growable: false);
+    final sessions = _sessionsBox.values
+        .where((session) => !session.isDeleted)
+        .toList(growable: false);
     final result = _buildTrendResult(sessions);
     setState(() {
       _trendResult = result;
@@ -152,7 +156,9 @@ class _StatsScreenState extends State<StatsScreen> {
         return DateFormat('d. MMM', 'nb_NO').format(point.start);
       case _Bucket.weekly:
         final week = _weekNumberDigits(point.start);
-        return week.isEmpty ? 'Uke ${DateFormat('w', 'nb_NO').format(point.start)}' : 'Uke $week';
+        return week.isEmpty
+            ? 'Uke ${DateFormat('w', 'nb_NO').format(point.start)}'
+            : 'Uke $week';
       case _Bucket.monthly:
         return DateFormat.MMM('nb_NO').format(point.start);
     }

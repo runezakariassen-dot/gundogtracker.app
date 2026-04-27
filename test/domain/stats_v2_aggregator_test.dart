@@ -11,6 +11,7 @@ HuntSession _makeSession({
   int secondaryPoints = 0,
   int flushes = 0,
   int birdsShotCount = 0,
+  DateTime? deletedAt,
 }) {
   return HuntSession(
     dogId: dogId,
@@ -23,6 +24,8 @@ HuntSession _makeSession({
     notes: '',
     secondaryPoints: secondaryPoints,
     birdsShotCount: birdsShotCount,
+    updatedAt: deletedAt ?? dateTime,
+    deletedAt: deletedAt,
   );
 }
 
@@ -54,7 +57,8 @@ void main() {
 
       final result = StatsV2Aggregator.aggregate(
         sessions: sessions,
-        query: const StatsV2Query(periodType: StatsV2PeriodType.year, year: 2024),
+        query:
+            const StatsV2Query(periodType: StatsV2PeriodType.year, year: 2024),
       );
 
       expect(result.sessionsCount, 2);
@@ -212,6 +216,43 @@ void main() {
       expect(result.activeMinutes, 31);
       expect(result.byYear.length, 1);
       expect(result.byYear.single.year, 2024);
+    });
+
+    test('deleted sessions do not count in stats v2', () {
+      final sessions = [
+        _makeSession(
+          dogId: 'dog-a',
+          dateTime: DateTime(2024, 2, 1),
+          durationMinutes: 40,
+          birdsSeen: 2,
+          points: 5,
+        ),
+        _makeSession(
+          dogId: 'dog-a',
+          dateTime: DateTime(2024, 2, 2),
+          durationMinutes: 80,
+          birdsSeen: 6,
+          points: 10,
+          secondaryPoints: 2,
+          flushes: 3,
+          birdsShotCount: 1,
+          deletedAt: DateTime(2024, 2, 3),
+        ),
+      ];
+
+      final result = StatsV2Aggregator.aggregate(
+        sessions: sessions,
+        query:
+            const StatsV2Query(periodType: StatsV2PeriodType.year, year: 2024),
+      );
+
+      expect(result.sessionsCount, 1);
+      expect(result.activeMinutes, 40);
+      expect(result.points, 5);
+      expect(result.secondaryPoints, 0);
+      expect(result.flushes, 0);
+      expect(result.birdContacts, 2);
+      expect(result.birdsDown, 0);
     });
   });
 }

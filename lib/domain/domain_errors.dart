@@ -5,6 +5,7 @@ enum ShareError {
   inviteRevoked,
   inviteInactive,
   alreadyHasAccess,
+  alreadyInvited,
   invalidRole,
   invalidEmail,
 }

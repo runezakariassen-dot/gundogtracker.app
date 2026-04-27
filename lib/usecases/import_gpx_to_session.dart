@@ -15,7 +15,7 @@ class ImportGpxToSession {
   }) async {
     final points = _parsePoints(gpxXml);
     if (points.length < 2) {
-      throw FormatException('GPX må inneholde minst to punkter');
+      throw const FormatException('GPX må inneholde minst to punkter');
     }
 
     await _sessionRepository.replaceTrackForSession(

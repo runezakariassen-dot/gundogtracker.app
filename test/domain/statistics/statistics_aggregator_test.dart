@@ -127,5 +127,39 @@ void main() {
       expect(res.firstSessionDate, DateTime(2025, 1, 1, 10, 0));
       expect(res.lastSessionDate, DateTime(2025, 1, 1, 10, 0));
     });
+
+    test('deleted sessions do not count in aggregates', () {
+      final visible = HuntSession(
+        dogId: 'dog1',
+        dateTime: DateTime(2025, 1, 1, 10, 0),
+        location: 'Egersund',
+        durationMinutes: 30,
+        birdsSeen: 2,
+        points: 1,
+        flushes: 0,
+        notes: 'visible',
+      );
+
+      final deleted = HuntSession(
+        dogId: 'dog1',
+        dateTime: DateTime(2025, 1, 2, 10, 0),
+        location: 'Egersund',
+        durationMinutes: 90,
+        birdsSeen: 5,
+        points: 4,
+        flushes: 3,
+        notes: 'deleted',
+        updatedAt: DateTime(2025, 1, 2, 10, 0),
+        deletedAt: DateTime(2025, 1, 2, 10, 0),
+      );
+
+      final res = StatisticsAggregator.aggregate([visible, deleted]);
+
+      expect(res.totalSessions, 1);
+      expect(res.totalActiveTime, const Duration(minutes: 30));
+      expect(res.totalBirdContacts, 2);
+      expect(res.totalPoints, 1);
+      expect(res.totalFlushes, 0);
+    });
   });
 }

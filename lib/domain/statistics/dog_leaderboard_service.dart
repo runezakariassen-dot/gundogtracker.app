@@ -21,6 +21,9 @@ class DogLeaderboardService {
   ) {
     final totals = <String, _DogPointsAggregate>{};
     for (final session in sessions) {
+      if (session.isDeleted) {
+        continue;
+      }
       final aggregate =
           totals.putIfAbsent(session.dogId, () => _DogPointsAggregate());
       aggregate.totalPoints += session.points;
@@ -30,7 +33,7 @@ class DogLeaderboardService {
       }
     }
 
-    final entries = dogs.map((dog) {
+    final entries = dogs.where((dog) => !dog.isDeleted).map((dog) {
       final aggregate = totals[dog.id];
       return DogLeaderboardEntry(
         dog: dog,

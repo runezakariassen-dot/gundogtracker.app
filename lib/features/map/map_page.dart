@@ -1,3 +1,5 @@
+// ignore_for_file: depend_on_referenced_packages
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -106,11 +108,11 @@ class _MapPageState extends State<MapPage> {
       _mapController.move(_trackPoints.first, 15);
     } else {
       _mapController.fitCamera(
-          CameraFit.bounds(
-            bounds: bounds,
-            padding: const EdgeInsets.all(40),
-          ),
-        );
+        CameraFit.bounds(
+          bounds: bounds,
+          padding: const EdgeInsets.all(40),
+        ),
+      );
     }
     _didFit = true;
   }
@@ -320,20 +322,21 @@ class _MapPageState extends State<MapPage> {
         var detail = _detailOptions[1];
         return StatefulBuilder(
           builder: (context, setState) {
+            final l10n = AppLocalizations.of(context)!;
             final estimate = _estimateWorkload(
               area: area,
               detail: detail,
             );
             final tooLarge = estimate != null && estimate > 20000;
             return AlertDialog(
-              title: const Text('Last ned kart'),
+              title: Text(l10n.map_download_title),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Align(
+                    Align(
                       alignment: Alignment.centerLeft,
-                      child: Text('Område'),
+                      child: Text(l10n.map_download_area_label),
                     ),
                     const SizedBox(height: 8),
                     ..._areaOptions.map(
@@ -391,7 +394,7 @@ class _MapPageState extends State<MapPage> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Avbryt'),
+                  child: Text(l10n.map_download_cancel),
                 ),
                 TextButton(
                   onPressed: tooLarge
@@ -400,7 +403,7 @@ class _MapPageState extends State<MapPage> {
                             context,
                             _DownloadSelection(area: area, detail: detail),
                           ),
-                  child: const Text('Start nedlasting'),
+                  child: Text(l10n.map_download_start),
                 ),
               ],
             );
@@ -413,6 +416,7 @@ class _MapPageState extends State<MapPage> {
   }
 
   Future<void> _showOfflineRegionsSheet() async {
+    final l10n = AppLocalizations.of(context)!;
     _loadOfflineRegions();
     await showModalBottomSheet<void>(
       context: context,
@@ -423,10 +427,10 @@ class _MapPageState extends State<MapPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Nedlastede kart'),
+              Text(l10n.map_downloaded_maps_title),
               const SizedBox(height: 12),
               if (_offlineRegions.isEmpty)
-                const Text('Ingen nedlastede kart ennå.')
+                Text(l10n.map_downloaded_maps_empty)
               else
                 Flexible(
                   child: ListView.separated(

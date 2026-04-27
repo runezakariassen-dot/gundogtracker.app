@@ -45,4 +45,19 @@ void main() {
     final updated2 = store.getOrCreate('dog-1');
     expect(updated2.lastPushedAt, pushedAt);
   });
+
+  test('stores and reads global last successful pull cursor', () async {
+    final store = SyncStateStore(box: syncBox);
+    final cursor = DateTime.utc(2024, 1, 3, 12);
+
+    expect(store.getLastSuccessfulPullAt(), isNull);
+
+    await store.setLastSuccessfulPullAt(cursor);
+
+    expect(store.getLastSuccessfulPullAt(), cursor);
+    expect(
+      store.getOrCreate(SyncStateStore.globalPullCursorKey).lastPulledAt,
+      cursor,
+    );
+  });
 }

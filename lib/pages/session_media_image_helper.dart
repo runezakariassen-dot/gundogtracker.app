@@ -11,9 +11,13 @@ Future<void> openSessionImage({
   required String storedPath,
   String? displayName,
   String? watermarkDogTitle,
-  String? watermarkDogName,
+  String? watermarkDogOfficialName,
+  String? watermarkDogNickname,
   bool? watermarkShowTitle,
-  bool? watermarkShowName,
+  bool? watermarkShowOfficialName,
+  bool? watermarkShowNickname,
+  bool? watermarkUseDarkText,
+  String? dogId,
 }) async {
   final l10n = AppLocalizations.of(context)!;
   final validation = MediaStorage.resolveAndValidateMedia(storedPath);
@@ -41,9 +45,13 @@ Future<void> openSessionImage({
         imagePath: resolved,
         title: name,
         watermarkDogTitle: watermarkDogTitle,
-        watermarkDogName: watermarkDogName,
+        watermarkDogOfficialName: watermarkDogOfficialName,
+        watermarkDogNickname: watermarkDogNickname,
         watermarkShowTitle: watermarkShowTitle,
-        watermarkShowName: watermarkShowName,
+        watermarkShowOfficialName: watermarkShowOfficialName,
+        watermarkShowNickname: watermarkShowNickname,
+        watermarkUseDarkText: watermarkUseDarkText,
+        dogId: dogId,
       ),
     ),
   );

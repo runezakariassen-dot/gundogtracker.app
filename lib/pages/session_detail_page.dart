@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: depend_on_referenced_packages, use_build_context_synchronously
 
 import 'dart:async';
 import 'dart:convert';
@@ -9,7 +9,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -17,11 +16,14 @@ import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
 
 import 'package:jakthund_app/data/local/local_hunt_session_repository.dart';
+import 'package:jakthund_app/data/local/sync_outbox_service.dart';
 import 'package:jakthund_app/data/repositories/local_active_session_draft_repository.dart';
+import 'package:jakthund_app/domain/dogs/dog_visibility.dart';
 import 'package:jakthund_app/domain/milestones/milestone_evaluator.dart';
 import 'package:jakthund_app/domain/milestones/milestone_service.dart';
 import 'package:jakthund_app/domain/models/active_session_draft.dart';
 import 'package:jakthund_app/domain/repositories/dog_milestone_state_repository.dart';
+import 'package:jakthund_app/domain/sessions/session_visibility.dart';
 import 'package:jakthund_app/domain/services/active_session_autosave_service.dart';
 import 'package:jakthund_app/features/session/active_session_controller.dart';
 import 'package:jakthund_app/models/dog.dart';
@@ -38,6 +40,9 @@ import 'package:jakthund_app/services/gpx_importer.dart';
 import 'package:jakthund_app/pages/session_media_image_helper.dart';
 import 'package:jakthund_app/pages/session_media_video_helper.dart';
 import 'package:jakthund_app/services/media_storage.dart';
+import 'package:jakthund_app/services/cloud/firestore_session_sync_service.dart';
+import 'package:jakthund_app/services/cloud/sync_status_service.dart';
+import 'package:jakthund_app/ui/components/sync_indicator.dart';
 import 'package:jakthund_app/ui/components/meta_chip.dart';
 import 'package:jakthund_app/ui/milestones/milestone_celebration_presenter.dart';
 import 'package:jakthund_app/ui/text/text_helpers.dart';
@@ -83,6 +88,8 @@ class _SessionDetailPageState extends State<SessionDetailPage>
     with WidgetsBindingObserver {
   final TrackRepository _trackRepository = TrackRepository();
   final SessionRepository _sessionRepository = SessionRepository();
+  final SyncOutboxService _syncOutboxService = SyncOutboxService();
+  final SyncStatusService _syncStatusService = SyncStatusService();
   late final LocalHuntSessionRepository _huntSessionRepository;
   late final DogMilestoneStateRepository _dogMilestoneStateRepository;
   late final MilestoneService _milestoneService;
@@ -137,7 +144,7 @@ class _SessionDetailPageState extends State<SessionDetailPage>
 
   // --- UI guards / loading states ---
   bool _isSavingSession = false;
-  bool _isStartingGps = false;
+  final bool _isStartingGps = false;
   bool _isStoppingGps = false;
   bool _isExportingGpx = false;
 
@@ -203,7 +210,7 @@ class _SessionDetailPageState extends State<SessionDetailPage>
           ..addAll(session.mediaPaths);
 
         String? matchedDogId;
-        for (final d in _dogsBox.values) {
+        for (final d in _activeDogs()) {
           if (d.id == session.dogId || d.name == session.dogId) {
             matchedDogId = d.id;
             break;
@@ -223,8 +230,9 @@ class _SessionDetailPageState extends State<SessionDetailPage>
       }
     }
 
-    if (_selectedDogId == null && _dogsBox.isNotEmpty) {
-      _selectedDogId = _dogsBox.values.first.id;
+    final activeDogs = _activeDogs();
+    if (_selectedDogId == null && activeDogs.isNotEmpty) {
+      _selectedDogId = activeDogs.first.id;
     }
 
     if (!_isEditMode && widget.initialDraft == null && widget.autoStartNow) {
@@ -370,7 +378,7 @@ class _SessionDetailPageState extends State<SessionDetailPage>
   Future<void> _showDogPickerSheet() async {
     if (_anyBusy) return;
 
-    final dogs = _dogsBox.values.toList();
+    final dogs = _activeDogs();
     final dogLabelResolver = DogLabelResolver(dogs);
 
     if (dogs.isEmpty) {
@@ -419,11 +427,18 @@ class _SessionDetailPageState extends State<SessionDetailPage>
 
   Dog? _dogById(String? dogId) {
     if (dogId == null) return null;
-    for (final dog in _dogsBox.values) {
+    for (final dog in _activeDogs()) {
       if (dog.id == dogId) return dog;
     }
     return null;
   }
+
+  List<Dog> _activeDogs() => filterActiveDogs(_dogsBox.values);
+
+  List<HuntSession> _visibleSessions() => filterVisibleSessions(
+        sessions: _sessionsBox.values,
+        dogs: _activeDogs(),
+      );
 
   Dog? get _selectedDog => _dogById(_selectedDogId);
 
@@ -1478,9 +1493,7 @@ class _SessionDetailPageState extends State<SessionDetailPage>
                 leading: const Icon(Icons.delete),
                 title: Text(l10n.session_detail_session_menu_delete),
                 onTap: () async {
-                  final key = session.trackKey;
-                  if (key != null) await _tracksBox.delete(key);
-                  await _sessionsBox.delete(sessionKey);
+                  await _deleteSessionWithSync(sessionKey, session);
                   if (mounted) setState(() {});
                   Navigator.pop(ctx);
                 },
@@ -1490,6 +1503,67 @@ class _SessionDetailPageState extends State<SessionDetailPage>
         );
       },
     );
+  }
+
+  Future<void> _deleteSessionWithSync(
+    int sessionKey,
+    HuntSession session,
+  ) async {
+    final deletedAt = DateTime.now().toUtc();
+    final tombstone = session.copyWith(
+      updatedAt: deletedAt,
+      deletedAt: deletedAt,
+    );
+
+    await _syncOutboxService.enqueueDeleteSession(
+      sessionKey.toString(),
+      tombstone,
+      deletedAt: deletedAt,
+    );
+    await FirestoreSessionSyncService.instance.tombstoneSessionBestEffort(
+      sessionId: sessionKey.toString(),
+      session: tombstone,
+    );
+
+    final key = session.trackKey;
+    if (key != null) {
+      await _tracksBox.delete(key);
+    }
+    await _sessionsBox.delete(sessionKey);
+  }
+
+  Widget _buildSessionSyncIndicator(
+    String sessionId, {
+    double size = 18,
+  }) {
+    return StreamBuilder<SyncStatus>(
+      stream: _syncStatusService.watchSessionStatus(sessionId),
+      initialData: _syncStatusService.statusForSession(sessionId),
+      builder: (context, snapshot) {
+        return SyncIndicator(
+          status: snapshot.data ?? SyncStatus.synced,
+          size: size,
+        );
+      },
+    );
+  }
+
+  List<Widget> _buildAppBarSyncActions(int? sessionKey) {
+    if (sessionKey == null) {
+      return const [];
+    }
+    final sessionId = sessionKey.toString();
+    return [
+      Padding(
+        padding: const EdgeInsetsDirectional.only(end: 16),
+        child: Center(
+          child: _buildSessionSyncIndicator(
+            sessionId,
+            size: 20,
+          ),
+        ),
+      ),
+    ];
   }
 
   List<Widget> _buildDetailView(
@@ -1516,7 +1590,7 @@ class _SessionDetailPageState extends State<SessionDetailPage>
         decoration: BoxDecoration(
           color: Theme.of(context)
               .colorScheme
-              .surfaceVariant
+              .surfaceContainerHighest
               .withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(12),
         ),
@@ -1577,7 +1651,8 @@ class _SessionDetailPageState extends State<SessionDetailPage>
                 fit: BoxFit.cover,
               );
     return InkWell(
-      onTap: exists && resolvedPath != null ? () => _handleMediaTap(path) : null,
+      onTap:
+          exists && resolvedPath != null ? () => _handleMediaTap(path) : null,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: Container(
@@ -1636,9 +1711,7 @@ class _SessionDetailPageState extends State<SessionDetailPage>
             ),
           ),
           IconButton(
-            onPressed: _anyBusy
-                ? null
-                : () => _deleteSessionMediaAt(index),
+            onPressed: _anyBusy ? null : () => _deleteSessionMediaAt(index),
             icon: const Icon(Icons.close),
           ),
         ],
@@ -1687,9 +1760,13 @@ class _SessionDetailPageState extends State<SessionDetailPage>
       storedPath: path,
       displayName: p.basename(path),
       watermarkDogTitle: currentDog?.title,
-      watermarkDogName: currentDog?.displayName,
+      watermarkDogOfficialName: currentDog?.name,
+      watermarkDogNickname: currentDog?.nickname,
       watermarkShowTitle: currentDog?.watermarkShowTitle,
-      watermarkShowName: currentDog?.watermarkShowName,
+      watermarkShowOfficialName: currentDog?.watermarkShowOfficialName,
+      watermarkShowNickname: currentDog?.watermarkShowNickname,
+      watermarkUseDarkText: currentDog?.watermarkUseDarkText,
+      dogId: currentDog?.id,
     );
   }
 
@@ -1847,20 +1924,50 @@ class _SessionDetailPageState extends State<SessionDetailPage>
         (widget.showNewSessionSection || _isEditMode) && !_detailMode;
     final showTracking = showForm && !_isEditMode;
     final detailSessionKey = _detailMode ? widget.editSessionKey : null;
-    final sessions = _sessionsBox.values.toList().cast<HuntSession>();
-    final latestSession = sessions.isEmpty
+    final dogs = _activeDogs();
+    final sessions = _visibleSessions();
+    final activeDogIds = dogs.map((dog) => dog.id).toSet();
+    if (detailSessionKey != null) {
+      final detailSession = _sessionsBox.get(detailSessionKey);
+      final detailDog =
+          detailSession == null ? null : _dogById(detailSession.dogId);
+      final detailSessionDogId = detailSession?.dogId;
+      if (!isSessionVisibleInUi(session: detailSession, dog: detailDog) ||
+          detailSessionDogId == null ||
+          !activeDogIds.contains(detailSessionDogId)) {
+        if (kDebugMode) {
+          debugPrint(
+            '[UI][DETAIL] deleted entity fallback: session $detailSessionKey',
+          );
+        }
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(widget.pageTitle ?? l10n.session_detail_title_main),
+          ),
+          body: const Center(
+            child: Text('Fant ikke økt'),
+          ),
+        );
+      }
+    }
+    final sessionEntries = _sessionsBox
+        .toMap()
+        .entries
+        .where((entry) =>
+            !entry.value.isDeleted && activeDogIds.contains(entry.value.dogId))
+        .map(
+          (entry) => MapEntry(
+            entry.key as int,
+            entry.value,
+          ),
+        )
+        .toList(growable: false);
+    final latestSessionEntry = sessionEntries.isEmpty
         ? null
-        : (List<HuntSession>.from(sessions)
-              ..sort((a, b) => b.dateTime.compareTo(a.dateTime)))
+        : (List<MapEntry<int, HuntSession>>.from(sessionEntries)
+              ..sort((a, b) => b.value.dateTime.compareTo(a.value.dateTime)))
             .first;
-
-    final sessionKeys = _sessionsBox.keys.cast<int>().toList();
-    final sessionEntries = List<MapEntry<int, HuntSession>>.generate(
-      sessions.length,
-      (i) => MapEntry(sessionKeys[i], sessions[i]),
-    );
-
-    final dogs = _dogsBox.values.toList();
+    final latestSession = latestSessionEntry?.value;
     final dogLabelResolver = DogLabelResolver(dogs);
 
     final filteredEntries = _sessionDogFilterId == null
@@ -1885,9 +1992,9 @@ class _SessionDetailPageState extends State<SessionDetailPage>
         widget.showNewSessionSection &&
         !widget.showSessionList &&
         !_isEditMode) {
-      final dogLabelStyle =
-          const TextStyle(fontSize: 16, fontWeight: FontWeight.w600);
-      final lastInfoStyle = const TextStyle(fontSize: 14);
+      const dogLabelStyle =
+          TextStyle(fontSize: 16, fontWeight: FontWeight.w600);
+      const lastInfoStyle = TextStyle(fontSize: 14);
 
       return Scaffold(
         appBar: AppBar(
@@ -1959,9 +2066,8 @@ class _SessionDetailPageState extends State<SessionDetailPage>
                             onPressed: _anyBusy
                                 ? null
                                 : () {
-                                    final idx = sessions.indexOf(latestSession);
-                                    if (idx == -1) return;
-                                    final key = _sessionsBox.keyAt(idx);
+                                    final key = latestSessionEntry?.key;
+                                    if (key == null) return;
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
@@ -2064,6 +2170,7 @@ class _SessionDetailPageState extends State<SessionDetailPage>
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.pageTitle ?? l10n.session_detail_title_main),
+        actions: _buildAppBarSyncActions(detailSessionKey),
       ),
       body: ListView(
         padding: EdgeInsets.fromLTRB(
@@ -2079,15 +2186,35 @@ class _SessionDetailPageState extends State<SessionDetailPage>
                   _sessionsBox.listenable(keys: [detailSessionKey]),
               builder: (context, box, _) {
                 final session = box.get(detailSessionKey);
-                if (session == null) return const SizedBox.shrink();
+                final detailSession = session;
+                if (!isSessionVisibleInUi(
+                  session: detailSession,
+                  dog: detailSession == null
+                      ? null
+                      : _dogById(detailSession.dogId),
+                )) {
+                  if (kDebugMode) {
+                    debugPrint(
+                      '[UI][DETAIL] deleted entity fallback: session $detailSessionKey',
+                    );
+                  }
+                  return const Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Text('Fant ikke økt'),
+                    ),
+                  );
+                }
+                final visibleSession = detailSession!;
                 if (kDebugMode) {
                   debugPrint(
-                    '[MEDIA] render session id=$detailSessionKey mediaCount=${session.mediaPaths.length}',
+                    '[MEDIA] render session id=$detailSessionKey mediaCount=${visibleSession.mediaPaths.length}',
                   );
                 }
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: _buildDetailView(session, detailSessionKey, l10n),
+                  children:
+                      _buildDetailView(visibleSession, detailSessionKey, l10n),
                 );
               },
             ),
@@ -2527,6 +2654,13 @@ class _SessionDetailPageState extends State<SessionDetailPage>
                                           ),
                                       ],
                                     ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsetsDirectional.only(
+                                      end: 8,
+                                    ),
+                                    child:
+                                        _buildSessionSyncIndicator(sessionId),
                                   ),
                                   IconButton(
                                     onPressed: _anyBusy

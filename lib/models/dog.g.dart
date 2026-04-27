@@ -1,3 +1,4 @@
+// ignore_for_file: deprecated_member_use_from_same_package
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
 part of 'dog.dart';
@@ -34,23 +35,27 @@ class DogAdapter extends TypeAdapter<Dog> {
           ? []
           : (fields[11] as List?)?.cast<AchievedMilestone>(),
       sex: fields[12] == null ? DogSex.male : fields[12] as DogSex?,
-      watermarkShowTitle:
-          fields[20] == null ? true : fields[20] as bool,
-      watermarkShowName:
-          fields[21] == null ? true : fields[21] as bool,
       deceasedAt: fields[13] as DateTime?,
       memorialNote: fields[14] as String?,
       profileHeroTextAnchor:
           fields[15] == null ? 'bottomLeft' : fields[15] as String,
       profileHeroTextScale: fields[16] == null ? 1.0 : fields[16] as double,
       nickname: fields[17] as String?,
+      watermarkShowTitle: fields[20] == null ? true : fields[20] as bool,
+      watermarkShowName: fields[21] == null ? true : fields[21] as bool,
+      watermarkShowOfficialName: fields[22] == null ? true : fields[22] as bool,
+      watermarkShowNickname: fields[23] == null ? true : fields[23] as bool,
+      watermarkUseDarkText: fields[24] == null ? false : fields[24] as bool,
+      cloudId: fields[25] as String?,
+      cloudOwnerUid: fields[26] as String?,
+      deletedAt: fields[27] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Dog obj) {
     writer
-      ..writeByte(22)
+      ..writeByte(28)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -94,7 +99,19 @@ class DogAdapter extends TypeAdapter<Dog> {
       ..writeByte(20)
       ..write(obj.watermarkShowTitle)
       ..writeByte(21)
-      ..write(obj.watermarkShowName);
+      ..write(obj.watermarkShowName)
+      ..writeByte(22)
+      ..write(obj.watermarkShowOfficialName)
+      ..writeByte(23)
+      ..write(obj.watermarkShowNickname)
+      ..writeByte(24)
+      ..write(obj.watermarkUseDarkText)
+      ..writeByte(25)
+      ..write(obj.cloudId)
+      ..writeByte(26)
+      ..write(obj.cloudOwnerUid)
+      ..writeByte(27)
+      ..write(obj.deletedAt);
   }
 
   @override

@@ -15,15 +15,15 @@ void main() {
 
   late Directory tempDir;
   late Box<OutboxEntry> outboxBox;
-  bool _outboxAdapterRegistered = false;
+  bool outboxAdapterRegistered = false;
 
   setUp(() async {
     tempDir =
         await Directory.systemTemp.createTemp('jakthund_membership_outbox_');
     Hive.init(tempDir.path);
-    if (!_outboxAdapterRegistered) {
+    if (!outboxAdapterRegistered) {
       Hive.registerAdapter(OutboxEntryAdapter());
-      _outboxAdapterRegistered = true;
+      outboxAdapterRegistered = true;
     }
     outboxBox = await Hive.openBox<OutboxEntry>(syncOutboxBoxName);
     await outboxBox.clear();

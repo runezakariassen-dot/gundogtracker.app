@@ -16,10 +16,11 @@ class HuntSessionAdapter extends TypeAdapter<HuntSession> {
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
+    final dateTime = fields[1] as DateTime;
     return HuntSession(
       dogId: fields[0] as String,
       dogKey: fields[13] as String?,
-      dateTime: fields[1] as DateTime,
+      dateTime: dateTime,
       location: fields[2] as String,
       durationMinutes: fields[3] as int,
       birdsSeen: fields[4] as int,
@@ -35,13 +36,15 @@ class HuntSessionAdapter extends TypeAdapter<HuntSession> {
       sessionType: fields[15] as SessionType?,
       birdsShotCount: fields[16] as int?,
       birdsShotSpecies: fields[17] as String?,
+      updatedAt: fields[18] as DateTime? ?? dateTime,
+      deletedAt: fields[19] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, HuntSession obj) {
     writer
-      ..writeByte(18)
+      ..writeByte(20)
       ..writeByte(0)
       ..write(obj.dogId)
       ..writeByte(13)
@@ -77,7 +80,11 @@ class HuntSessionAdapter extends TypeAdapter<HuntSession> {
       ..writeByte(16)
       ..write(obj.birdsShotCount)
       ..writeByte(17)
-      ..write(obj.birdsShotSpecies);
+      ..write(obj.birdsShotSpecies)
+      ..writeByte(18)
+      ..write(obj.updatedAt)
+      ..writeByte(19)
+      ..write(obj.deletedAt);
   }
 
   @override

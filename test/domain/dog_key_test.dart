@@ -76,6 +76,39 @@ void main() {
     );
   });
 
+  test('updateDog persists profile metadata without changing identity',
+      () async {
+    final repo = _InMemoryDogRepository();
+    final service = DogService(
+      dogRepository: repo,
+      membershipRepository: _InMemoryMembershipRepository(),
+    );
+
+    final created = await service.createDog(
+      regNrInput: 'NO124/45',
+      name: 'Birk',
+    );
+
+    final updated = await service.updateDog(
+      created.copyWith(
+        imagePath: 'dogs/photos/dog-1.jpg',
+        pedigreeUrl: 'https://example.com/pedigree',
+        breed: 'Engelsk setter',
+        sex: DogSex.female,
+      ),
+    );
+
+    final stored = await repo.getDog(updated.dogKey);
+    expect(stored, isNotNull);
+    expect(updated.id, created.id);
+    expect(updated.dogKey, created.dogKey);
+    expect(updated.updatedAt.isAfter(created.updatedAt), isTrue);
+    expect(stored!.imagePath, 'dogs/photos/dog-1.jpg');
+    expect(stored.pedigreeUrl, 'https://example.com/pedigree');
+    expect(stored.breed, 'Engelsk setter');
+    expect(stored.sex, DogSex.female);
+  });
+
   test('initDomainLayer backfills missing dogKey', () async {
     final dogs = await Hive.openBox<Dog>(dogsBoxName);
     await dogs.put(

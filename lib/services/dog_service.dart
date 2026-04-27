@@ -21,6 +21,17 @@ class DogService {
   final DogRepository _dogRepository;
   final DogMembershipRepository _membershipRepository;
 
+  Future<Dog> saveDog(Dog dog) async {
+    await _dogRepository.upsertDog(dog);
+    return dog;
+  }
+
+  Future<Dog> updateDog(Dog dog) async {
+    final updated = dog.copyWith(updatedAt: DateTime.now());
+    await _dogRepository.upsertDog(updated);
+    return updated;
+  }
+
   Future<Dog> createDog({
     required String regNrInput,
     required String name,
@@ -32,7 +43,7 @@ class DogService {
     final regNrDisplay = regNrInput.trim().toUpperCase();
     final dogKey = normalizeRegNr(regNrDisplay);
     if (!validateRegNr(dogKey)) {
-      throw FormatException('Ugyldig reg.nr');
+      throw const FormatException('Ugyldig reg.nr');
     }
 
     final exists = await _dogRepository.getDog(dogKey) != null;
@@ -53,7 +64,7 @@ class DogService {
       updatedAt: DateTime.now(),
     );
 
-    await _dogRepository.upsertDog(dog);
+    await saveDog(dog);
 
     final membership = DogMembership(
       dogKey: dogKey,

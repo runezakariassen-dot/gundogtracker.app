@@ -80,6 +80,9 @@ class StatsV2Aggregator {
     final perYear = <int, _Totals>{};
 
     for (final session in sessions) {
+      if (session.isDeleted) {
+        continue;
+      }
       if (query.dogId != null && session.dogId != query.dogId) {
         continue;
       }
@@ -150,7 +153,8 @@ _DateRange _buildDateRange(StatsV2Query query) {
     case StatsV2PeriodType.year:
       final year = query.year;
       if (year == null) {
-        throw ArgumentError('StatsV2Query.year is required for periodType=year');
+        throw ArgumentError(
+            'StatsV2Query.year is required for periodType=year');
       }
 
       return _DateRange(
@@ -161,7 +165,8 @@ _DateRange _buildDateRange(StatsV2Query query) {
       final year = query.year;
       final season = query.season;
       if (year == null || season == null) {
-        throw ArgumentError('StatsV2Query.year and season are required for periodType=season');
+        throw ArgumentError(
+            'StatsV2Query.year and season are required for periodType=season');
       }
 
       return _seasonRange(year, season);
@@ -169,7 +174,8 @@ _DateRange _buildDateRange(StatsV2Query query) {
       final from = query.from;
       final to = query.to;
       if (from == null || to == null) {
-        throw ArgumentError('StatsV2Query.from and to are required for periodType=custom');
+        throw ArgumentError(
+            'StatsV2Query.from and to are required for periodType=custom');
       }
 
       final start = DateTime(from.year, from.month, from.day);
@@ -206,7 +212,8 @@ _DateRange _seasonRange(int year, StatsV2Season season) {
 }
 
 DateTime _endOfDay(DateTime value) {
-  final nextDay = DateTime(value.year, value.month, value.day).add(const Duration(days: 1));
+  final nextDay =
+      DateTime(value.year, value.month, value.day).add(const Duration(days: 1));
   return nextDay.subtract(_oneMicrosecond);
 }
 

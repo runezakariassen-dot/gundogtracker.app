@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:jakthund_app/l10n/app_localizations.dart';
 
 Future<AppLocalizations> _loadNbLocalizations() async {
-  final delegate = AppLocalizations.delegate;
+  const delegate = AppLocalizations.delegate;
   const locale = Locale('nb');
   final localizations = await delegate.load(locale);
   return localizations;

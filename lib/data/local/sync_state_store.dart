@@ -4,6 +4,8 @@ import '../../data/hive_boxes.dart';
 import '../../models/sync_state.dart';
 
 class SyncStateStore {
+  static const String globalPullCursorKey = '__global_pull_cursor__';
+
   SyncStateStore({Box<SyncState>? box}) : _box = box ?? syncStateBox();
 
   final Box<SyncState> _box;
@@ -31,5 +33,16 @@ class SyncStateStore {
   Future<void> setLastServerTime(String dogId, DateTime t) async {
     final state = getOrCreate(dogId).copyWith(lastServerTime: t);
     await _box.put(dogId, state);
+  }
+
+  DateTime? getLastSuccessfulPullAt() {
+    return _box.get(globalPullCursorKey)?.lastPulledAt;
+  }
+
+  Future<void> setLastSuccessfulPullAt(DateTime t) async {
+    final state = getOrCreate(
+      globalPullCursorKey,
+    ).copyWith(lastPulledAt: t.toUtc());
+    await _box.put(globalPullCursorKey, state);
   }
 }

@@ -67,6 +67,8 @@ class _AcceptSharePageState extends State<AcceptSharePage> {
         return l10n.share_error_invite_inactive;
       case ShareError.alreadyHasAccess:
         return l10n.share_error_already_has_access;
+      case ShareError.alreadyInvited:
+        return l10n.share_error_already_invited;
       case ShareError.invalidRole:
         return l10n.share_error_invalid_role;
       case ShareError.invalidEmail:

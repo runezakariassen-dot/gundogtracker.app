@@ -17,7 +17,7 @@ final Map<String, MilestoneDef> _milestoneDefByKey = _buildMilestoneLookup();
 
 Map<String, MilestoneDef> _buildMilestoneLookup() {
   final result = <String, MilestoneDef>{};
-  final dynamic list = catalog.milestoneCatalog;
+  const dynamic list = catalog.milestoneCatalog;
   if (list is! Iterable) return result;
 
   for (final cfg in list) {

@@ -23,7 +23,7 @@ void main() {
   late Box<SyncTask> syncTasksBox;
   late Box<dynamic> settingsBox;
 
-  void _registerAdapter<T>(TypeAdapter<T> adapter) {
+  void registerAdapter<T>(TypeAdapter<T> adapter) {
     if (!Hive.isAdapterRegistered(adapter.typeId)) {
       Hive.registerAdapter<T>(adapter);
     }
@@ -33,14 +33,14 @@ void main() {
     tempDir = await Directory.systemTemp.createTemp('jakthund_owner_');
     Hive.init(tempDir.path);
 
-    _registerAdapter(DogAdapter());
-    _registerAdapter(DogSexAdapter());
-    _registerAdapter(DogMembershipAdapter());
-    _registerAdapter(RoleAdapter());
-    _registerAdapter(StatusAdapter());
-    _registerAdapter(OwnershipTransferAdapter());
-    _registerAdapter(SyncTaskAdapter());
-    _registerAdapter<SyncStatus>(SyncStatusAdapter());
+    registerAdapter(DogAdapter());
+    registerAdapter(DogSexAdapter());
+    registerAdapter(DogMembershipAdapter());
+    registerAdapter(RoleAdapter());
+    registerAdapter(StatusAdapter());
+    registerAdapter(OwnershipTransferAdapter());
+    registerAdapter(SyncTaskAdapter());
+    registerAdapter<SyncStatus>(SyncStatusAdapter());
 
     dogsBox = await Hive.openBox<Dog>(dogsBoxName);
     membershipsBox = await Hive.openBox<DogMembership>(dogMembershipsBoxName);

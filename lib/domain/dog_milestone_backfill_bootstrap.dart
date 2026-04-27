@@ -13,7 +13,7 @@ Future<void> ensureDogMilestonesBackfilled({
   required DogMilestoneStateRepository stateRepository,
   Box<HuntSession>? huntsessionsBox,
 }) async {
-  final dogList = dogs.toList(growable: false);
+  final dogList = dogs.where((dog) => !dog.isDeleted).toList(growable: false);
   debugPrint('[MILESTONE] Backfill start dogs=${dogList.length}');
 
   final box = huntsessionsBox ?? sessionsBox();
@@ -69,8 +69,8 @@ Future<bool> _needsRepairRun(
     if (hasAchievements) {
       continue;
     }
-    final hasSessions =
-        huntsessionsBox.values.any((session) => session.dogId == dog.id);
+    final hasSessions = huntsessionsBox.values
+        .any((session) => session.dogId == dog.id && !session.isDeleted);
     if (hasSessions) {
       return true;
     }

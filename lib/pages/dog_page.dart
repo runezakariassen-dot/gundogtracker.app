@@ -1,22 +1,26 @@
+// ignore_for_file: avoid_print
 // lib/pages/dog_page.dart
 import 'dart:math';
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:jakthund_app/l10n/app_localizations.dart';
 
 import 'package:jakthund_app/data/hive_boxes.dart';
+import 'package:jakthund_app/domain/dogs/dog_visibility.dart';
 import 'package:jakthund_app/models/dog.dart';
 import 'package:jakthund_app/pages/dog_detail_page.dart';
 import 'package:jakthund_app/pages/dog_editor_page.dart';
 import 'package:jakthund_app/pages/settings_page.dart';
 import 'package:jakthund_app/pages/invitations_page.dart';
+import 'package:jakthund_app/domain/subscription/subscription_service.dart';
 import 'package:jakthund_app/services/hive_lifecycle_service.dart';
 import 'package:jakthund_app/utils/dog_image_path_resolver.dart';
 import 'package:jakthund_app/models/dog_membership.dart';
+import 'package:jakthund_app/ui/subscription/pro_upgrade_sheet.dart';
 
 class DogPage extends StatefulWidget {
   const DogPage({super.key});
@@ -83,7 +87,9 @@ class _DogPageState extends State<DogPage> {
               valueListenable: _membershipBox.listenable(),
               builder: (context, Box<DogMembership> membershipBox, _) {
                 final dogs = dogBox.values.toList();
-                final currentUid = FirebaseAuth.instance.currentUser?.uid;
+                final activeDogs =
+                    dogs.where((dog) => !dog.isDeleted).toList(growable: false);
+                final currentUid = _currentUserIdOrNull();
                 final memberships = currentUid == null
                     ? <DogMembership>[]
                     : membershipBox.values
@@ -91,15 +97,13 @@ class _DogPageState extends State<DogPage> {
                             membership.userId == currentUid &&
                             membership.status == Status.active)
                         .toList();
+                final visibleDogs = filterVisibleDogs(
+                  dogs: dogs,
+                  memberships: memberships,
+                  currentUserId: currentUid,
+                );
                 final allowedDogKeys =
                     memberships.map((membership) => membership.dogKey).toSet();
-                final visibleDogs = dogs.where((dog) {
-                  final hasMembership = allowedDogKeys.contains(dog.dogKey);
-                  final isOwner = currentUid != null &&
-                      dog.ownerUserId != null &&
-                      dog.ownerUserId == currentUid;
-                  return hasMembership || isOwner;
-                }).toList();
                 final fallbackOwnerCount = currentUid == null
                     ? 0
                     : visibleDogs
@@ -107,13 +111,15 @@ class _DogPageState extends State<DogPage> {
                             dog.ownerUserId == currentUid &&
                             !allowedDogKeys.contains(dog.dogKey))
                         .length;
-                debugPrint(
-                  '[DogPage] visibility uid=$currentUid dogs=${dogs.length} memberships=${memberships.length} visible=${visibleDogs.length}',
-                );
-                if (fallbackOwnerCount > 0) {
+                if (kDebugMode) {
                   debugPrint(
-                    '[DogPage] owner fallback count=$fallbackOwnerCount',
+                    '[TF][UI] dog page visibility uid=$currentUid dogs=${activeDogs.length} memberships=${memberships.length} visible=${visibleDogs.length}',
                   );
+                  if (fallbackOwnerCount > 0) {
+                    debugPrint(
+                      '[TF][UI] dog page owner fallback count=$fallbackOwnerCount',
+                    );
+                  }
                 }
 
                 return ListView(
@@ -121,7 +127,7 @@ class _DogPageState extends State<DogPage> {
                   children: [
                     _wisdomCard(context, wisdomText, wisdomIcon),
                     const SizedBox(height: 16),
-                    if (dogs.isEmpty) ...[
+                    if (activeDogs.isEmpty) ...[
                       _emptyState(context, l10n),
                     ] else if (visibleDogs.isEmpty) ...[
                       _filteredEmptyState(context, l10n),
@@ -286,6 +292,14 @@ class _DogPageState extends State<DogPage> {
     );
   }
 
+  String? _currentUserIdOrNull() {
+    try {
+      return FirebaseAuth.instance.currentUser?.uid;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Widget _wisdomCard(BuildContext context, String text, IconData icon) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
@@ -416,6 +430,33 @@ class _DogPageState extends State<DogPage> {
   }
 
   void _onAddDogPressed() {
+    final currentUid = _currentUserIdOrNull();
+    final memberships = currentUid == null
+        ? <DogMembership>[]
+        : _membershipBox.values
+            .where((membership) =>
+                membership.userId == currentUid &&
+                membership.status == Status.active)
+            .toList(growable: false);
+    final dogLimitSnapshot = buildDogLimitCountSnapshot(
+      dogs: _dogsBox.values,
+      memberships: memberships,
+      currentUserId: currentUid,
+    );
+    final countedDogCount = dogLimitSnapshot.countedDogs.length;
+    final limitReached = !SubscriptionService.instance.canCreateDog(
+      currentDogCount: countedDogCount,
+    );
+    print('[SUBSCRIPTION][DOG_LIMIT] counted dogs: $countedDogCount');
+    print(
+      '[SUBSCRIPTION][DOG_LIMIT] visible dogs: ${dogLimitSnapshot.visibleDogs.length}',
+    );
+    print('[SUBSCRIPTION][DOG_LIMIT] limit reached: $limitReached');
+    if (limitReached) {
+      showProUpgradeSheet(context);
+      return;
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const DogEditorPage()),

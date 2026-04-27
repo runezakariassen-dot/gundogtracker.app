@@ -95,13 +95,17 @@ class LocalHuntSessionRepository implements HuntSessionRepository {
 
   @override
   Future<HuntSession?> getSession(String sessionId) async {
-    return _box.get(sessionId);
+    final session = _box.get(sessionId);
+    if (session == null || session.isDeleted) {
+      return null;
+    }
+    return session;
   }
 
   @override
   Future<List<HuntSession>> listSessionsForDog(String dogId) async {
     return _box.values
-        .where((session) => session.dogId == dogId)
+        .where((session) => session.dogId == dogId && !session.isDeleted)
         .toList(growable: false);
   }
 

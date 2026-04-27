@@ -38,6 +38,13 @@ const String hapticsEnabledKey = 'hapticsEnabled';
 const String themeSeasonOverrideKey = 'themeSeasonOverride';
 const String preferredLocaleCodeKey = 'preferredLocaleCode';
 const String dogMilestoneStateMigrationKey = 'dogMilestoneStateMigrationDone';
+const String soundOnAppStartKey = 'soundOnAppStart';
+const String soundOnMilestoneKey = 'soundOnMilestone';
+const String milestoneSeasonGoalPointsKey = 'milestoneSeasonGoalPoints';
+const String milestonePersonalGoalPointsKey = 'milestonePersonalGoalPoints';
+const String milestoneSeasonGoalAchievedKey = 'milestoneSeasonGoalAchieved';
+const String milestonePersonalGoalAchievedKey = 'milestonePersonalGoalAchieved';
+const String subscriptionIsProKey = 'subscriptionIsPro';
 
 Box<Dog> dogsBox() => HiveLifecycleService.getBox<Dog>(dogsBoxName);
 Box<HuntSession> sessionsBox() =>

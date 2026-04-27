@@ -13,7 +13,9 @@ import 'statistics_result.dart';
 /// - formatBucketLabel(): label-tekst for perioden (uke/måned)
 class StatisticsAggregator {
   static StatisticsResult aggregate(List<HuntSession> sessions) {
-    if (sessions.isEmpty) return StatisticsResult.empty();
+    final visibleSessions =
+        sessions.where((session) => !session.isDeleted).toList(growable: false);
+    if (visibleSessions.isEmpty) return StatisticsResult.empty();
 
     var totalMinutes = 0;
     var totalBirds = 0;
@@ -23,7 +25,7 @@ class StatisticsAggregator {
     DateTime? first;
     DateTime? last;
 
-    for (final s in sessions) {
+    for (final s in visibleSessions) {
       totalMinutes += s.durationMinutes;
       totalBirds += s.birdsSeen;
       totalPoints += s.points + s.secondaryPoints;
@@ -39,7 +41,7 @@ class StatisticsAggregator {
     }
 
     return StatisticsResult(
-      totalSessions: sessions.length,
+      totalSessions: visibleSessions.length,
       totalActiveTime: Duration(minutes: totalMinutes),
       totalBirdContacts: totalBirds,
       totalPoints: totalPoints,
@@ -71,6 +73,7 @@ class StatisticsAggregator {
 
     final byDog = <String, List<HuntSession>>{};
     for (final s in sessions) {
+      if (s.isDeleted) continue;
       if (s.dogId.isEmpty) continue;
       byDog.putIfAbsent(s.dogId, () => <HuntSession>[]).add(s);
     }
@@ -111,6 +114,7 @@ class StatisticsAggregator {
     final buckets = <DateTime, _BucketAcc>{};
 
     for (final s in sessions) {
+      if (s.isDeleted) continue;
       final dt = s.dateTime;
 
       final key = (granularity == TimeSeriesGranularity.month)

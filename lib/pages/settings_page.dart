@@ -1,3 +1,5 @@
+// ignore_for_file: control_flow_in_finally, deprecated_member_use, use_build_context_synchronously
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -11,13 +13,17 @@ import 'package:share_plus/share_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../config/community_links.dart';
-import '../data/hive_boxes.dart';
+import 'package:jakthund_app/data/hive_boxes.dart';
 import '../domain/services/backup_export_service.dart';
 import '../domain/services/backup_restore_service.dart';
 import '../models/dog.dart';
 import '../models/gps_track.dart';
 import '../models/hunt_session.dart';
 import '../models/track.dart';
+import '../services/cloud/firestore_dog_sync_service.dart';
+import '../services/cloud/firestore_session_sync_service.dart';
+import '../services/cloud/sync_outbox_processor.dart';
+import '../data/local/sync_outbox_service.dart';
 import '../services/dog_photo_storage.dart';
 import '../services/hive_lifecycle_service.dart';
 import '../ui/settings/feedback/feedback_service.dart';
@@ -34,8 +40,21 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  static const Key _diagnosticsSectionKey = Key('settings_diagnostics_section');
+  static const Key _diagnosticsExpandKey = Key('settings_diagnostics_expand');
+  static const Key _debugDogRestoreKey = Key('settings_debug_dog_restore');
+  static const Key _debugSessionFetchKey = Key('settings_debug_session_fetch');
+  static const Key _debugSessionRestoreKey =
+      Key('settings_debug_session_restore');
+  static const Key _debugProcessOutboxKey =
+      Key('settings_debug_process_outbox');
+  static const Key _debugRetryFailedOutboxKey =
+      Key('settings_debug_retry_failed_outbox');
+
   String? _versionText;
   final FeedbackService _feedbackService = FeedbackService();
+  final SyncOutboxService _syncOutboxService =
+      SyncOutboxService(enableAutoSync: false);
 
   // Backup
   final BackupExportService _backupService = const BackupExportService();
@@ -53,26 +72,369 @@ class _SettingsPageState extends State<SettingsPage> {
   late final Box<GpsTrack> _gpsTracksBox;
   late final Box<String> _birdSpeciesBox;
 
+  Future<void> _triggerDebugDogRestore() async {
+    if (!kDebugMode) return;
+    final l10n = AppLocalizations.of(context)!;
+    // ignore: avoid_print
+    print('[UI][DOG] debug restore triggered');
+    try {
+      final inserted =
+          await FirestoreDogSyncService.instance.restoreAccessibleDogsToHive();
+      // ignore: avoid_print
+      print('[UI][DOG] debug restore completed: inserted=$inserted');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content:
+                Text(l10n.settings_diagnostics_dog_restore_success(inserted))),
+      );
+    } catch (e) {
+      // ignore: avoid_print
+      print('[UI][DOG] debug restore failed: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.settings_diagnostics_dog_restore_failed('$e')),
+        ),
+      );
+    }
+  }
+
+  Future<void> _triggerDebugSessionFetch() async {
+    if (!kDebugMode) return;
+    final l10n = AppLocalizations.of(context)!;
+
+    final dogCloudId = _firstLocalDogCloudId();
+
+    if (dogCloudId == null) {
+      // ignore: avoid_print
+      print('[UI][SESSION] manual fetch skipped, no local dog with cloudId');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.settings_diagnostics_missing_cloud_dog)),
+      );
+      return;
+    }
+
+    // ignore: avoid_print
+    print('[UI][SESSION] manual fetch triggered for dog: $dogCloudId');
+    try {
+      final sessions = await FirestoreSessionSyncService.instance
+          .fetchSessionsForDogAsModels(dogCloudId);
+      // ignore: avoid_print
+      print('[UI][SESSION] manual fetch completed count: ${sessions.length}');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            l10n.settings_diagnostics_session_fetch_success(sessions.length),
+          ),
+        ),
+      );
+    } catch (e) {
+      // ignore: avoid_print
+      print('[UI][SESSION] manual fetch failed: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.settings_diagnostics_session_fetch_failed('$e')),
+        ),
+      );
+    }
+  }
+
+  Future<void> _triggerDebugSessionRestore() async {
+    if (!kDebugMode) return;
+    final l10n = AppLocalizations.of(context)!;
+
+    final dogCloudId = _firstLocalDogCloudId();
+
+    if (dogCloudId == null) {
+      // ignore: avoid_print
+      print('[UI][SESSION] manual restore skipped, no local dog with cloudId');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.settings_diagnostics_missing_cloud_dog)),
+      );
+      return;
+    }
+
+    // ignore: avoid_print
+    print('[UI][SESSION] manual restore triggered for dog: $dogCloudId');
+    try {
+      final inserted = await FirestoreSessionSyncService.instance
+          .restoreSessionsForDogToHive(dogCloudId);
+      // ignore: avoid_print
+      print('[UI][SESSION] manual restore completed inserted: $inserted');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            l10n.settings_diagnostics_session_restore_success(inserted),
+          ),
+        ),
+      );
+    } catch (e) {
+      // ignore: avoid_print
+      print('[UI][SESSION] manual restore failed: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            l10n.settings_diagnostics_session_restore_failed('$e'),
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _triggerDebugProcessOutbox() async {
+    if (!kDebugMode) return;
+    final l10n = AppLocalizations.of(context)!;
+    // ignore: avoid_print
+    print('[UI][SYNC] manual outbox processing triggered');
+    try {
+      await SyncOutboxProcessor().runOnce();
+      // ignore: avoid_print
+      print('[UI][SYNC] manual outbox processing completed');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.settings_diagnostics_outbox_process_success),
+        ),
+      );
+    } catch (e) {
+      // ignore: avoid_print
+      print('[UI][SYNC] manual outbox processing failed: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.settings_diagnostics_outbox_process_failed('$e')),
+        ),
+      );
+    }
+  }
+
+  Future<void> _triggerDebugRetryFailedOutbox() async {
+    if (!kDebugMode) return;
+    final l10n = AppLocalizations.of(context)!;
+    // ignore: avoid_print
+    print('[UI][SYNC] manual outbox retry reset triggered');
+    try {
+      final resetCount = await SyncOutboxService().resetFailedTasksForRetry();
+      // ignore: avoid_print
+      print(
+          '[UI][SYNC] manual outbox retry reset completed count: $resetCount');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.settings_diagnostics_retry_success(resetCount)),
+        ),
+      );
+    } catch (e) {
+      // ignore: avoid_print
+      print('[UI][SYNC] manual outbox retry reset failed: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.settings_diagnostics_retry_failed('$e')),
+        ),
+      );
+    }
+  }
+
+  String? _firstLocalDogCloudId() {
+    for (final dog in _dogsBox.values) {
+      final cloudId = dog.cloudId;
+      if (cloudId != null && cloudId.isNotEmpty) {
+        return cloudId;
+      }
+    }
+    return null;
+  }
+
+  User? _currentUserOrNull() {
+    try {
+      return FirebaseAuth.instance.currentUser;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Widget _buildDebugActionTile({
+    Key? tileKey,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      key: tileKey,
+      leading: Icon(icon),
+      title: Text(title),
+      subtitle: Text(subtitle),
+      onTap: onTap,
+    );
+  }
+
+  Widget _buildCloudDebugSummary() {
+    final l10n = AppLocalizations.of(context)!;
+    return StreamBuilder<SyncOutboxTaskCounts>(
+      stream: _syncOutboxService.watchTaskCounts(),
+      initialData: _syncOutboxService.taskCounts(),
+      builder: (context, snapshot) {
+        final counts = snapshot.data ?? const SyncOutboxTaskCounts();
+        final colorScheme = Theme.of(context).colorScheme;
+        final textTheme = Theme.of(context).textTheme;
+
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _DebugCountItem(
+                    label: l10n.settings_diagnostics_count_pending,
+                    value: counts.pending,
+                    color: colorScheme.outline,
+                  ),
+                ),
+                Expanded(
+                  child: _DebugCountItem(
+                    label: l10n.settings_diagnostics_count_inProgress,
+                    value: counts.inProgress,
+                    color: colorScheme.primary,
+                  ),
+                ),
+                Expanded(
+                  child: _DebugCountItem(
+                    label: l10n.settings_diagnostics_count_failed,
+                    value: counts.failed,
+                    color: colorScheme.error,
+                  ),
+                ),
+                Expanded(
+                  child: _DebugCountItem(
+                    label: l10n.settings_diagnostics_count_sent,
+                    value: counts.sent,
+                    color: Colors.green,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  l10n.settings_diagnostics_outbox_label,
+                  style: textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDiagnosticsSection(TextStyle sectionStyle) {
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      key: _diagnosticsSectionKey,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l10n.settings_diagnostics_section_title, style: sectionStyle),
+        const SizedBox(height: 8),
+        Card(
+          child: ExpansionTile(
+            key: _diagnosticsExpandKey,
+            title: Text(l10n.settings_diagnostics_title),
+            subtitle: Text(l10n.settings_diagnostics_subtitle),
+            leading: const Icon(Icons.developer_mode_outlined),
+            childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildCloudDebugSummary(),
+              const SizedBox(height: 8),
+              Card(
+                margin: EdgeInsets.zero,
+                child: Column(
+                  children: [
+                    _buildDebugActionTile(
+                      tileKey: _debugDogRestoreKey,
+                      icon: Icons.cloud_download_outlined,
+                      title: l10n.settings_diagnostics_action_dog_restore_title,
+                      subtitle:
+                          l10n.settings_diagnostics_action_dog_restore_subtitle,
+                      onTap: _triggerDebugDogRestore,
+                    ),
+                    const Divider(height: 1),
+                    _buildDebugActionTile(
+                      tileKey: _debugSessionFetchKey,
+                      icon: Icons.cloud_sync_outlined,
+                      title:
+                          l10n.settings_diagnostics_action_session_fetch_title,
+                      subtitle: l10n
+                          .settings_diagnostics_action_session_fetch_subtitle,
+                      onTap: _triggerDebugSessionFetch,
+                    ),
+                    const Divider(height: 1),
+                    _buildDebugActionTile(
+                      tileKey: _debugSessionRestoreKey,
+                      icon: Icons.restore_outlined,
+                      title: l10n
+                          .settings_diagnostics_action_session_restore_title,
+                      subtitle: l10n
+                          .settings_diagnostics_action_session_restore_subtitle,
+                      onTap: _triggerDebugSessionRestore,
+                    ),
+                    const Divider(height: 1),
+                    _buildDebugActionTile(
+                      tileKey: _debugProcessOutboxKey,
+                      icon: Icons.sync_outlined,
+                      title:
+                          l10n.settings_diagnostics_action_process_outbox_title,
+                      subtitle: l10n
+                          .settings_diagnostics_action_process_outbox_subtitle,
+                      onTap: _triggerDebugProcessOutbox,
+                    ),
+                    const Divider(height: 1),
+                    _buildDebugActionTile(
+                      tileKey: _debugRetryFailedOutboxKey,
+                      icon: Icons.refresh_outlined,
+                      title:
+                          l10n.settings_diagnostics_action_retry_outbox_title,
+                      subtitle: l10n
+                          .settings_diagnostics_action_retry_outbox_subtitle,
+                      onTap: _triggerDebugRetryFailedOutbox,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Future<void> _handleSignOut() async {
     if (_isSigningOut) return;
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _isSigningOut = true);
 
     try {
       await FirebaseAuth.instance.signOut();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Du er logget ut')),
+        SnackBar(content: Text(l10n.settings_sign_out_success)),
       );
       if (Navigator.of(context).canPop()) {
         Navigator.of(context).pop();
       }
     } catch (error) {
+      if (kDebugMode) {
+        debugPrint('[UI][SETTINGS] sign out failed: $error');
+      }
       if (!mounted) return;
-      final message = error.toString();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content:
-                Text(message.isNotEmpty ? message : 'Kunne ikke logge ut')),
+        SnackBar(content: Text(l10n.settings_sign_out_failed)),
       );
     } finally {
       if (!mounted) return;
@@ -133,9 +495,9 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _loadVersion() async {
     try {
       final info = await PackageInfo.fromPlatform();
+      if (!mounted) return;
       final base = 'v${info.version}';
       final build = kDebugMode ? ' (build ${info.buildNumber})' : '';
-      if (!mounted) return;
       setState(() {
         _versionText = '$base$build';
       });
@@ -389,6 +751,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 milestonesEnabledKey,
                 hapticsEnabledKey,
                 themeSeasonOverrideKey,
+                soundOnAppStartKey,
+                soundOnMilestoneKey,
               ],
             ),
             builder: (context, Box<dynamic> box, _) {
@@ -412,7 +776,7 @@ class _SettingsPageState extends State<SettingsPage> {
               final preferredLocaleCode =
                   box.get(preferredLocaleCodeKey) as String?;
 
-              final currentUser = FirebaseAuth.instance.currentUser;
+              final currentUser = _currentUserOrNull();
               final userEmail = currentUser?.email;
               final hasEmailProvider = currentUser?.providerData
                       .any((provider) => provider.providerId == 'password') ??
@@ -557,6 +921,44 @@ class _SettingsPageState extends State<SettingsPage> {
                     value: hapticsEnabled,
                     onChanged: (value) => box.put(hapticsEnabledKey, value),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                  SwitchListTile(
+                    title: Text(l10n.settings_sound_on_app_start_title),
+                    subtitle: Text(l10n.settings_sound_on_app_start_subtitle),
+                    value: (box.get(soundOnAppStartKey) as bool?) ?? false,
+                    onChanged: (value) => box.put(soundOnAppStartKey, value),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                  SwitchListTile(
+                    title: Text(l10n.settings_sound_on_milestone_title),
+                    subtitle: Text(l10n.settings_sound_on_milestone_subtitle),
+                    value: (box.get(soundOnMilestoneKey) as bool?) ?? false,
+                    onChanged: (value) => box.put(soundOnMilestoneKey, value),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    l10n.settings_milestones_goal_title,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  _MilestoneGoalSlider(
+                    label: l10n.settings_milestones_season_goal_title,
+                    value: (box.get(milestoneSeasonGoalPointsKey) as int?) ?? 0,
+                    min: 0,
+                    max: 2000,
+                    onChanged: (value) =>
+                        box.put(milestoneSeasonGoalPointsKey, value),
+                  ),
+                  const SizedBox(height: 8),
+                  _MilestoneGoalSlider(
+                    label: l10n.settings_milestones_personal_goal_title,
+                    value:
+                        (box.get(milestonePersonalGoalPointsKey) as int?) ?? 0,
+                    min: 0,
+                    max: 2000,
+                    onChanged: (value) =>
+                        box.put(milestonePersonalGoalPointsKey, value),
                   ),
 
                   const SizedBox(height: 24),
@@ -730,7 +1132,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   FilledButton.icon(
                     onPressed: _isSigningOut ? null : _handleSignOut,
                     icon: const Icon(Icons.logout),
-                    label: const Text('Logg ut'),
+                    label: Text(l10n.settings_sign_out_button),
                     style: FilledButton.styleFrom(
                       minimumSize: const Size.fromHeight(48),
                     ),
@@ -809,6 +1211,10 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                     ),
                   ],
+                  if (kDebugMode) ...[
+                    const SizedBox(height: 24),
+                    _buildDiagnosticsSection(sectionStyle),
+                  ],
                 ],
               );
             },
@@ -847,6 +1253,81 @@ class _SettingsRestorePendingView extends StatelessWidget {
   }
 }
 
+class _MilestoneGoalSlider extends StatefulWidget {
+  const _MilestoneGoalSlider({
+    required this.label,
+    required this.value,
+    required this.min,
+    required this.max,
+    required this.onChanged,
+  });
+
+  final String label;
+  final int value;
+  final int min;
+  final int max;
+  final ValueChanged<int> onChanged;
+
+  @override
+  State<_MilestoneGoalSlider> createState() => _MilestoneGoalSliderState();
+}
+
+class _MilestoneGoalSliderState extends State<_MilestoneGoalSlider> {
+  late int _value;
+
+  @override
+  void initState() {
+    super.initState();
+    _value = widget.value;
+  }
+
+  @override
+  void didUpdateWidget(covariant _MilestoneGoalSlider oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value) {
+      _value = widget.value;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(widget.label, style: theme.textTheme.bodyMedium),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            Expanded(
+              child: Slider(
+                value: _value.toDouble(),
+                min: widget.min.toDouble(),
+                max: widget.max.toDouble(),
+                divisions: (widget.max - widget.min) ~/ 10,
+                label: '$_value',
+                onChanged: (double newValue) {
+                  setState(() => _value = newValue.round());
+                  widget.onChanged(_value);
+                },
+              ),
+            ),
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 60,
+              child: Text(
+                '$_value',
+                textAlign: TextAlign.right,
+                style: theme.textTheme.bodyLarge,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
 class _ThemeTile extends StatelessWidget {
   const _ThemeTile({
     required this.label,
@@ -879,6 +1360,42 @@ class _ThemeTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: theme.colorScheme.onSurfaceVariant),
       ),
+    );
+  }
+}
+
+class _DebugCountItem extends StatelessWidget {
+  const _DebugCountItem({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final int value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$value',
+          style: textTheme.titleMedium?.copyWith(
+            color: color,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: textTheme.bodySmall,
+        ),
+      ],
     );
   }
 }

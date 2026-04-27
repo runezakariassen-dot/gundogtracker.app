@@ -1,6 +1,8 @@
+import '../../data/hive_boxes.dart';
 import '../../domain/repositories/dog_milestone_state_repository.dart';
 import '../../domain/repositories/hunt_session_repository.dart';
 import '../../models/session_type.dart';
+import '../../services/hive_lifecycle_service.dart';
 import 'dog_stats.dart';
 import 'milestone_catalog.dart';
 import 'milestone_evaluator.dart';
@@ -101,8 +103,46 @@ class MilestoneService {
     return resultIds;
   }
 
+  /// Evaluates milestone goals and returns which ones are newly achieved.
+  /// This should be called after evaluateForDog to check if goals are reached.
+  Future<List<String>> evaluateGoalsForDog(
+    String dogId, {
+    required DateTime sessionDateTime,
+  }) async {
+    final stats = await _calculateStats(dogId);
+    final settingsBox =
+        HiveLifecycleService.getBox<dynamic>(appSettingsBoxName);
+
+    final seasonGoal =
+        (settingsBox.get(milestoneSeasonGoalPointsKey) as int?) ?? 0;
+    final personalGoal =
+        (settingsBox.get(milestonePersonalGoalPointsKey) as int?) ?? 0;
+    final seasonAchieved =
+        (settingsBox.get(milestoneSeasonGoalAchievedKey) as bool?) ?? false;
+    final personalAchieved =
+        (settingsBox.get(milestonePersonalGoalAchievedKey) as bool?) ?? false;
+
+    final newlyAchieved = <String>[];
+
+    if (seasonGoal > 0 && !seasonAchieved && stats.totalPoints >= seasonGoal) {
+      newlyAchieved.add('season_goal');
+      await settingsBox.put(milestoneSeasonGoalAchievedKey, true);
+    }
+
+    if (personalGoal > 0 &&
+        !personalAchieved &&
+        stats.totalPoints >= personalGoal) {
+      newlyAchieved.add('personal_goal');
+      await settingsBox.put(milestonePersonalGoalAchievedKey, true);
+    }
+
+    return newlyAchieved;
+  }
+
   Future<DogStats> _calculateStats(String dogId) async {
-    final sessions = await _sessionRepository.listSessionsForDog(dogId);
+    final sessions = (await _sessionRepository.listSessionsForDog(dogId))
+        .where((session) => !session.isDeleted)
+        .toList(growable: false);
     if (sessions.isEmpty) {
       return const DogStats(
         totalSessions: 0,

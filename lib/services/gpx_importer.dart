@@ -1,4 +1,3 @@
-// lib/services/gpx_importer.dart
 import 'package:flutter/foundation.dart';
 import 'package:xml/xml.dart';
 
@@ -29,41 +28,33 @@ class GpxImporter {
       final root = document.rootElement;
       final childNames = root.children
           .whereType<XmlElement>()
-          .map((e) => e.name.local)
+          .map((element) => element.name.local)
           .toSet()
           .join(', ');
       logGpx('GPX child elements: [$childNames]');
     }
 
-    // Namespace-robust: match alltid på name.local
-    // Prioritet: trkpt -> rtept -> wpt
     final trkpts = _findPoints(document, 'trkpt');
     final rtepts = _findPoints(document, 'rtept');
     final wpts = _findPoints(document, 'wpt');
-
     final totalPoints = trkpts.length + rtepts.length + wpts.length;
+    final elements = _selectPointElements(
+      trkpts: trkpts,
+      rtepts: rtepts,
+      wpts: wpts,
+    );
 
-    // Tester forventer at namespace-case med 1 punkt ikke kaster.
-    // Vi kaster derfor kun hvis det er 0 punkter totalt.
     if (totalPoints == 0) {
-      throw FormatException(
+      throw const FormatException(
         'Fant for få spor-punkter i GPX-filen. Eksporter et lagret spor (track) fra enheten.',
       );
     }
 
-    // Én waypoint alene = typisk ikke et spor (behold tydelig feilmelding her).
-    // Men én trkpt/rtept (inkl namespace-test) skal parse OK.
     if (trkpts.isEmpty && rtepts.isEmpty && wpts.length == 1) {
-      throw FormatException(
+      throw const FormatException(
         'GPX-filen inneholder kun et punkt (waypoint), ikke et spor. På Garmin: Track Manager → Lagre spor → Eksporter/Del GPX.',
       );
     }
-
-    final elements = trkpts.isNotEmpty
-        ? trkpts
-        : rtepts.isNotEmpty
-            ? rtepts
-            : wpts;
 
     if (kDebugMode) {
       logGpx(
@@ -108,7 +99,6 @@ class GpxImporter {
       }
 
       final parsedTime = timeText != null ? DateTime.tryParse(timeText) : null;
-
       if (parsedTime == null && timeText != null && kDebugMode) {
         logGpx('GPX parse: invalid time format: $timeText');
       }
@@ -126,10 +116,8 @@ class GpxImporter {
       throw const FormatException('No track points found in GPX');
     }
 
-    // Fyll inn tid dersom <time> mangler:
-    // bruk første med tid, ellers "nå", og øk 1 sekund per punkt.
     final firstWithTime = rawPoints.firstWhere(
-      (p) => p.timeUtc != null,
+      (point) => point.timeUtc != null,
       orElse: () => rawPoints.first,
     );
     final baseTime = firstWithTime.timeUtc ?? DateTime.now().toUtc();
@@ -151,22 +139,42 @@ class GpxImporter {
   }
 
   static String? _extractTime(XmlElement element) {
-    // Namespace-robust: match child.name.local == 'time'
-    for (final child in element.children.whereType<XmlElement>()) {
-      if (child.name.local == 'time') {
-        final value = child.innerText.trim();
-        if (value.isNotEmpty) return value;
-      }
-    }
-    return null;
+    return _findFirstChildText(element, 'time');
   }
 
   static List<XmlElement> _findPoints(XmlDocument doc, String localName) {
-    // Namespace-robust: match element.name.local == localName
     return doc.descendants
         .whereType<XmlElement>()
         .where((element) => element.name.local == localName)
         .toList();
+  }
+
+  static List<XmlElement> _selectPointElements({
+    required List<XmlElement> trkpts,
+    required List<XmlElement> rtepts,
+    required List<XmlElement> wpts,
+  }) {
+    if (trkpts.isNotEmpty) {
+      return trkpts;
+    }
+    if (rtepts.isNotEmpty) {
+      return rtepts;
+    }
+    return wpts;
+  }
+
+  static String? _findFirstChildText(XmlElement element, String localName) {
+    for (final child in element.children.whereType<XmlElement>()) {
+      if (child.name.local != localName) {
+        continue;
+      }
+
+      final value = child.innerText.trim();
+      if (value.isNotEmpty) {
+        return value;
+      }
+    }
+    return null;
   }
 }
 

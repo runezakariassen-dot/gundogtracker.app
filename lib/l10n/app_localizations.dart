@@ -64,7 +64,8 @@ import 'app_localizations_sv.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale)
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -72,7 +73,8 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -84,7 +86,8 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
     delegate,
     GlobalMaterialLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,
@@ -102,8 +105,20 @@ abstract class AppLocalizations {
   /// No description provided for @appName.
   ///
   /// In en, this message translates to:
-  /// **'Pointing dog'**
+  /// **'Fuglehund'**
   String get appName;
+
+  /// No description provided for @app_store_identity_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline hunting log for pointing dogs'**
+  String get app_store_identity_subtitle;
+
+  /// No description provided for @app_store_identity_short_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Log sessions, track progress, and build your dog\'s history – even offline.'**
+  String get app_store_identity_short_description;
 
   /// No description provided for @common_ok.
   ///
@@ -198,7 +213,7 @@ abstract class AppLocalizations {
   /// Displayed when the user lacks rights to perform the requested action.
   ///
   /// In en, this message translates to:
-  /// **'You don\'t have permission to do that.'**
+  /// **'You don\'t have access to this action.'**
   String get common_no_permission;
 
   /// No description provided for @common_retry.
@@ -284,6 +299,282 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Statistics'**
   String get statistics;
+
+  /// No description provided for @advanced_statistics.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced statistics'**
+  String get advanced_statistics;
+
+  /// No description provided for @advanced_statistics_overview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get advanced_statistics_overview;
+
+  /// No description provided for @advanced_statistics_progress.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get advanced_statistics_progress;
+
+  /// No description provided for @advanced_statistics_season.
+  ///
+  /// In en, this message translates to:
+  /// **'Season'**
+  String get advanced_statistics_season;
+
+  /// No description provided for @advanced_statistics_comparison.
+  ///
+  /// In en, this message translates to:
+  /// **'Comparison'**
+  String get advanced_statistics_comparison;
+
+  /// No description provided for @advanced_statistics_export.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get advanced_statistics_export;
+
+  /// No description provided for @advanced_statistics_no_progress_data.
+  ///
+  /// In en, this message translates to:
+  /// **'No progress data available'**
+  String get advanced_statistics_no_progress_data;
+
+  /// No description provided for @advanced_statistics_no_season_data.
+  ///
+  /// In en, this message translates to:
+  /// **'No seasonal data available'**
+  String get advanced_statistics_no_season_data;
+
+  /// No description provided for @advanced_statistics_need_two_dogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Need at least 2 dogs to compare'**
+  String get advanced_statistics_need_two_dogs;
+
+  /// No description provided for @advanced_statistics_exporting.
+  ///
+  /// In en, this message translates to:
+  /// **'Exporting...'**
+  String get advanced_statistics_exporting;
+
+  /// No description provided for @advanced_statistics_export_stats.
+  ///
+  /// In en, this message translates to:
+  /// **'Export statistics'**
+  String get advanced_statistics_export_stats;
+
+  /// No description provided for @advanced_statistics_export_sessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Export sessions'**
+  String get advanced_statistics_export_sessions;
+
+  /// No description provided for @advanced_statistics_generate_text_report.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate text report'**
+  String get advanced_statistics_generate_text_report;
+
+  /// No description provided for @advanced_statistics_key_metrics_for.
+  ///
+  /// In en, this message translates to:
+  /// **'Key metrics for {dogName}'**
+  String advanced_statistics_key_metrics_for(Object dogName);
+
+  /// No description provided for @advanced_statistics_stand_rate_per_hour.
+  ///
+  /// In en, this message translates to:
+  /// **'Stand-rate per hour'**
+  String get advanced_statistics_stand_rate_per_hour;
+
+  /// No description provided for @advanced_statistics_bird_contacts_per_session.
+  ///
+  /// In en, this message translates to:
+  /// **'Bird contacts per session'**
+  String get advanced_statistics_bird_contacts_per_session;
+
+  /// No description provided for @advanced_statistics_average_flushes_per_session.
+  ///
+  /// In en, this message translates to:
+  /// **'Average flushes per session'**
+  String get advanced_statistics_average_flushes_per_session;
+
+  /// No description provided for @advanced_statistics_success_rate.
+  ///
+  /// In en, this message translates to:
+  /// **'Success rate'**
+  String get advanced_statistics_success_rate;
+
+  /// No description provided for @advanced_statistics_totals.
+  ///
+  /// In en, this message translates to:
+  /// **'Totals'**
+  String get advanced_statistics_totals;
+
+  /// No description provided for @advanced_statistics_sessions_total.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions total'**
+  String get advanced_statistics_sessions_total;
+
+  /// No description provided for @advanced_statistics_active_time.
+  ///
+  /// In en, this message translates to:
+  /// **'Active time'**
+  String get advanced_statistics_active_time;
+
+  /// No description provided for @advanced_statistics_total_points.
+  ///
+  /// In en, this message translates to:
+  /// **'Total points'**
+  String get advanced_statistics_total_points;
+
+  /// No description provided for @advanced_statistics_total_flushes.
+  ///
+  /// In en, this message translates to:
+  /// **'Total flushes'**
+  String get advanced_statistics_total_flushes;
+
+  /// No description provided for @advanced_statistics_bird_contacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Bird contacts'**
+  String get advanced_statistics_bird_contacts;
+
+  /// No description provided for @advanced_statistics_birds_shot.
+  ///
+  /// In en, this message translates to:
+  /// **'Birds shot'**
+  String get advanced_statistics_birds_shot;
+
+  /// No description provided for @advanced_statistics_progress_over_time.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress over time - {dogName}'**
+  String advanced_statistics_progress_over_time(Object dogName);
+
+  /// No description provided for @advanced_statistics_average_points_per_session_over_time.
+  ///
+  /// In en, this message translates to:
+  /// **'Average points per session over time'**
+  String get advanced_statistics_average_points_per_session_over_time;
+
+  /// No description provided for @advanced_statistics_trend_analysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Trend analysis'**
+  String get advanced_statistics_trend_analysis;
+
+  /// No description provided for @advanced_statistics_improvement.
+  ///
+  /// In en, this message translates to:
+  /// **'Improvement!'**
+  String get advanced_statistics_improvement;
+
+  /// No description provided for @advanced_statistics_declining.
+  ///
+  /// In en, this message translates to:
+  /// **'Declining'**
+  String get advanced_statistics_declining;
+
+  /// No description provided for @advanced_statistics_stable.
+  ///
+  /// In en, this message translates to:
+  /// **'Stable'**
+  String get advanced_statistics_stable;
+
+  /// No description provided for @advanced_statistics_seasonal_analysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Seasonal analysis - {dogName}'**
+  String advanced_statistics_seasonal_analysis(Object dogName);
+
+  /// No description provided for @advanced_statistics_sessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions'**
+  String get advanced_statistics_sessions;
+
+  /// No description provided for @advanced_statistics_points.
+  ///
+  /// In en, this message translates to:
+  /// **'Points'**
+  String get advanced_statistics_points;
+
+  /// No description provided for @advanced_statistics_points_per_hour.
+  ///
+  /// In en, this message translates to:
+  /// **'Points per hour'**
+  String get advanced_statistics_points_per_hour;
+
+  /// No description provided for @advanced_statistics_dog_comparison.
+  ///
+  /// In en, this message translates to:
+  /// **'Dog comparison'**
+  String get advanced_statistics_dog_comparison;
+
+  /// No description provided for @advanced_statistics_success_rate_percent.
+  ///
+  /// In en, this message translates to:
+  /// **'Success rate (%)'**
+  String get advanced_statistics_success_rate_percent;
+
+  /// No description provided for @advanced_statistics_export_reports.
+  ///
+  /// In en, this message translates to:
+  /// **'Export reports'**
+  String get advanced_statistics_export_reports;
+
+  /// No description provided for @advanced_statistics_export_statistics_csv.
+  ///
+  /// In en, this message translates to:
+  /// **'Export statistics as CSV'**
+  String get advanced_statistics_export_statistics_csv;
+
+  /// No description provided for @advanced_statistics_contains_comparison_all_dogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Contains comparison of all dogs with key figures.'**
+  String get advanced_statistics_contains_comparison_all_dogs;
+
+  /// No description provided for @advanced_statistics_export_sessions_csv.
+  ///
+  /// In en, this message translates to:
+  /// **'Export all session data as CSV'**
+  String get advanced_statistics_export_sessions_csv;
+
+  /// No description provided for @advanced_statistics_sessions_csv_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed overview of all hunt sessions with all fields.'**
+  String get advanced_statistics_sessions_csv_description;
+
+  /// No description provided for @advanced_statistics_generate_text_report_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate a text summary of all statistics.'**
+  String get advanced_statistics_generate_text_report_description;
+
+  /// No description provided for @advanced_statistics_export_session_data.
+  ///
+  /// In en, this message translates to:
+  /// **'Export session data'**
+  String get advanced_statistics_export_session_data;
+
+  /// No description provided for @advanced_statistics_text_report_for.
+  ///
+  /// In en, this message translates to:
+  /// **'Text report for {dogName}'**
+  String advanced_statistics_text_report_for(Object dogName);
+
+  /// No description provided for @advanced_statistics_generate_readable_text_report.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate a readable text report with all statistics.'**
+  String get advanced_statistics_generate_readable_text_report;
 
   /// Week number label.
   ///
@@ -500,6 +791,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Do you want to delete the dog? This can\'t be undone.'**
   String get dog_editor_delete_dog_body;
+
+  /// No description provided for @dog_editor_discard_changes_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard changes?'**
+  String get dog_editor_discard_changes_title;
+
+  /// No description provided for @dog_editor_discard_changes_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Your changes haven\'t been saved yet.'**
+  String get dog_editor_discard_changes_body;
+
+  /// No description provided for @dog_editor_discard_changes_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get dog_editor_discard_changes_confirm;
+
+  /// No description provided for @dog_editor_intro_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your dog'**
+  String get dog_editor_intro_title;
+
+  /// No description provided for @dog_editor_intro_body.
+  ///
+  /// In en, this message translates to:
+  /// **'You can start simple now. A name is enough to get going, and you can fill in more details later.'**
+  String get dog_editor_intro_body;
 
   /// No description provided for @dog_editor_button_cancel.
   ///
@@ -1047,6 +1368,12 @@ abstract class AppLocalizations {
   /// **'You already have access.'**
   String get share_error_already_has_access;
 
+  /// No description provided for @share_error_already_invited.
+  ///
+  /// In en, this message translates to:
+  /// **'This email has already been invited.'**
+  String get share_error_already_invited;
+
   /// No description provided for @share_error_invalid_role.
   ///
   /// In en, this message translates to:
@@ -1227,16 +1554,10 @@ abstract class AppLocalizations {
   /// **'Show name'**
   String get dog_detail_watermark_toggle_name;
 
-  /// No description provided for @dog_detail_watermark_toggle_min_one.
-  ///
-  /// In en, this message translates to:
-  /// **'At least one of name/title must be on.'**
-  String get dog_detail_watermark_toggle_min_one;
-
   /// No description provided for @dog_detail_watermark_share_button.
   ///
   /// In en, this message translates to:
-  /// **'Share profile photo'**
+  /// **'Share image'**
   String get dog_detail_watermark_share_button;
 
   /// No description provided for @dog_detail_watermark_share_subject.
@@ -1250,6 +1571,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Shared via GundogTracker'**
   String get dog_detail_watermark_share_message;
+
+  /// No description provided for @session_image_viewer_watermark_toggle_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Show title'**
+  String get session_image_viewer_watermark_toggle_title;
+
+  /// No description provided for @session_image_viewer_watermark_toggle_official_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Show official name'**
+  String get session_image_viewer_watermark_toggle_official_name;
+
+  /// No description provided for @session_image_viewer_watermark_toggle_nickname.
+  ///
+  /// In en, this message translates to:
+  /// **'Show nickname'**
+  String get session_image_viewer_watermark_toggle_nickname;
+
+  /// No description provided for @session_image_viewer_watermark_color_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Text color'**
+  String get session_image_viewer_watermark_color_title;
+
+  /// No description provided for @session_image_viewer_watermark_color_light.
+  ///
+  /// In en, this message translates to:
+  /// **'White'**
+  String get session_image_viewer_watermark_color_light;
+
+  /// No description provided for @session_image_viewer_watermark_color_dark.
+  ///
+  /// In en, this message translates to:
+  /// **'Black'**
+  String get session_image_viewer_watermark_color_dark;
+
+  /// No description provided for @session_image_viewer_watermark_presets_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Presets'**
+  String get session_image_viewer_watermark_presets_title;
+
+  /// No description provided for @session_image_viewer_watermark_preset_discreet.
+  ///
+  /// In en, this message translates to:
+  /// **'Discreet'**
+  String get session_image_viewer_watermark_preset_discreet;
+
+  /// No description provided for @session_image_viewer_watermark_preset_clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get session_image_viewer_watermark_preset_clear;
+
+  /// No description provided for @session_image_viewer_watermark_preset_contrast.
+  ///
+  /// In en, this message translates to:
+  /// **'Contrast'**
+  String get session_image_viewer_watermark_preset_contrast;
+
+  /// No description provided for @dog_detail_watermark_share_missing_photo.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not find an image to share.'**
+  String get dog_detail_watermark_share_missing_photo;
+
+  /// No description provided for @dog_detail_watermark_share_error.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to share the image.'**
+  String get dog_detail_watermark_share_error;
 
   /// No description provided for @dog_detail_label_death_date.
   ///
@@ -1375,7 +1768,8 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{name} was {years} {months} {days} old'**
-  String dog_detail_farewell_age_sentence(Object name, Object years, Object months, Object days);
+  String dog_detail_farewell_age_sentence(
+      Object name, Object years, Object months, Object days);
 
   /// No description provided for @dog_detail_next_milestones_title.
   ///
@@ -1503,6 +1897,36 @@ abstract class AppLocalizations {
   /// **'Hunting history you actually use – season after season, area by area.'**
   String get home_empty_bullet_history;
 
+  /// Label for the add dog action on the home screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Add dog'**
+  String get home_addDog_button;
+
+  /// No description provided for @home_empty_next_step.
+  ///
+  /// In en, this message translates to:
+  /// **'Start by adding your dog. Then when you\'re ready, log your first session and build your history from day one.'**
+  String get home_empty_next_step;
+
+  /// No description provided for @home_first_session_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready for your first session?'**
+  String get home_first_session_title;
+
+  /// No description provided for @home_first_session_body.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve got your dog registered. Next step is to log your first session – that\'s where your history and stats begin.'**
+  String get home_first_session_body;
+
+  /// Note that the app works offline shown in the empty home state.
+  ///
+  /// In en, this message translates to:
+  /// **'You can use the app completely offline. All data is stored locally on your phone.'**
+  String get home_empty_offline_note;
+
   /// Title shown when filtered dog list is empty.
   ///
   /// In en, this message translates to:
@@ -1520,18 +1944,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open invitations'**
   String get home_visible_empty_button;
-
-  /// Label for the add dog action on the home screen.
-  ///
-  /// In en, this message translates to:
-  /// **'Add dog'**
-  String get home_addDog_button;
-
-  /// Note that the app works offline shown in the empty home state.
-  ///
-  /// In en, this message translates to:
-  /// **'You can use the app completely offline. All data is stored locally on your phone.'**
-  String get home_empty_offline_note;
 
   /// No description provided for @home_noDogsRegistered.
   ///
@@ -1568,6 +1980,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Points: {count}'**
   String home_top10_points_pointsLabel(int count);
+
+  /// No description provided for @standsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Points'**
+  String get standsLabel;
+
+  /// No description provided for @standsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{0 points} one{1 point} other{{count} points}}'**
+  String standsCount(num count);
 
   /// Unit label for top10 points.
   ///
@@ -1683,6 +2107,108 @@ abstract class AppLocalizations {
   /// **'Do you want to delete this downloaded map?'**
   String get map_page_dialog_delete_downloaded_map_body;
 
+  /// No description provided for @map_download_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Download map'**
+  String get map_download_title;
+
+  /// No description provided for @map_download_area_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Area'**
+  String get map_download_area_label;
+
+  /// No description provided for @map_download_cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get map_download_cancel;
+
+  /// No description provided for @map_download_start.
+  ///
+  /// In en, this message translates to:
+  /// **'Start download'**
+  String get map_download_start;
+
+  /// No description provided for @map_downloaded_maps_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded maps'**
+  String get map_downloaded_maps_title;
+
+  /// No description provided for @map_downloaded_maps_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No downloaded maps yet.'**
+  String get map_downloaded_maps_empty;
+
+  /// No description provided for @map_delete_offline_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete offline map'**
+  String get map_delete_offline_title;
+
+  /// No description provided for @map_delete_offline_body.
+  ///
+  /// In en, this message translates to:
+  /// **'This deletes downloaded map tiles for the selected style.'**
+  String get map_delete_offline_body;
+
+  /// No description provided for @map_delete_offline_cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get map_delete_offline_cancel;
+
+  /// No description provided for @map_delete_offline_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get map_delete_offline_confirm;
+
+  /// No description provided for @map_downloading_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading map'**
+  String get map_downloading_title;
+
+  /// No description provided for @map_downloading_cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get map_downloading_cancel;
+
+  /// No description provided for @map_go_to.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to'**
+  String get map_go_to;
+
+  /// No description provided for @map_delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get map_delete;
+
+  /// No description provided for @map_delete_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete map'**
+  String get map_delete_title;
+
+  /// No description provided for @map_tracks.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracks'**
+  String get map_tracks;
+
+  /// No description provided for @map_me.
+  ///
+  /// In en, this message translates to:
+  /// **'Me'**
+  String get map_me;
+
   /// No description provided for @hunt_session_snackbar_export_ready_opening_share.
   ///
   /// In en, this message translates to:
@@ -1736,6 +2262,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No dogs registered.'**
   String get session_form_no_dogs_registered;
+
+  /// No description provided for @session_form_no_dogs_help.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a dog first, then you can start your first session.'**
+  String get session_form_no_dogs_help;
 
   /// No description provided for @session_summary_sessions_label.
   ///
@@ -2505,6 +3037,18 @@ abstract class AppLocalizations {
   /// **' (build {buildNumber})'**
   String session_detail_version_build(String buildNumber);
 
+  /// No description provided for @settings_version_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
+  String settings_version_label(Object version);
+
+  /// No description provided for @settings_version_build.
+  ///
+  /// In en, this message translates to:
+  /// **' (build {buildNumber})'**
+  String settings_version_build(Object buildNumber);
+
   /// No description provided for @session_detail_snackbar_changes_saved.
   ///
   /// In en, this message translates to:
@@ -2593,7 +3137,8 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Time: {durationMinutes} min, Birds: {birds}, Points: {stand}, Secondary: {secondaryPoints}, Flushes: {flushes}'**
-  String session_detail_saved_session_summary(int durationMinutes, int birds, int stand, int secondaryPoints, int flushes);
+  String session_detail_saved_session_summary(int durationMinutes, int birds,
+      int stand, int secondaryPoints, int flushes);
 
   /// No description provided for @session_detail_button_exporting.
   ///
@@ -2947,7 +3492,8 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{minutes}m {seconds}s'**
-  String session_detail_helper_duration_minutes_seconds(int minutes, int seconds);
+  String session_detail_helper_duration_minutes_seconds(
+      int minutes, int seconds);
 
   /// Formatted duration when only seconds exist.
   ///
@@ -3205,7 +3751,8 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{month} {year}: Points {stand}, Flushes {flush}'**
-  String stats_stand_flush_tooltip(String month, int year, String stand, String flush);
+  String stats_stand_flush_tooltip(
+      String month, int year, String stand, String flush);
 
   /// No description provided for @stats_info_points_flushes_title.
   ///
@@ -3368,6 +3915,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Settings'**
   String get home_settings_button_label;
+
+  /// No description provided for @home_sessions_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No sessions yet'**
+  String get home_sessions_empty;
+
+  /// No description provided for @home_openSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get home_openSession;
+
+  /// No description provided for @home_select_dog.
+  ///
+  /// In en, this message translates to:
+  /// **'Select dog'**
+  String get home_select_dog;
+
+  /// No description provided for @home_no_sessions_yet.
+  ///
+  /// In en, this message translates to:
+  /// **'No sessions yet'**
+  String get home_no_sessions_yet;
 
   /// No description provided for @home_no_dogs_title.
   ///
@@ -3945,18 +4516,6 @@ abstract class AppLocalizations {
   /// **'Your most important signal is your body language.'**
   String get wisdom_090;
 
-  /// No description provided for @standsLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Points'**
-  String get standsLabel;
-
-  /// No description provided for @standsCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =0{0 points} one{1 point} other{{count} points}}'**
-  String standsCount(num count);
-
   /// No description provided for @settings_title.
   ///
   /// In en, this message translates to:
@@ -4137,6 +4696,120 @@ abstract class AppLocalizations {
   /// **'Check your inbox. If the email doesn\'t show up, check Spam/Junk.'**
   String get forgot_password_check_spam_hint;
 
+  /// No description provided for @signup_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get signup_title;
+
+  /// No description provided for @signup_intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Create an account with email and password to get started.'**
+  String get signup_intro;
+
+  /// No description provided for @signup_email_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get signup_email_label;
+
+  /// No description provided for @signup_password_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get signup_password_label;
+
+  /// No description provided for @signup_password_repeat_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat password'**
+  String get signup_password_repeat_label;
+
+  /// No description provided for @signup_create_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get signup_create_button;
+
+  /// No description provided for @signup_success.
+  ///
+  /// In en, this message translates to:
+  /// **'Account created.'**
+  String get signup_success;
+
+  /// No description provided for @signup_error_email_in_use.
+  ///
+  /// In en, this message translates to:
+  /// **'This email address is already in use.'**
+  String get signup_error_email_in_use;
+
+  /// No description provided for @signup_error_invalid_email.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email address.'**
+  String get signup_error_invalid_email;
+
+  /// No description provided for @signup_error_weak_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 6 characters.'**
+  String get signup_error_weak_password;
+
+  /// No description provided for @signup_error_operation_not_allowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Account creation is not available right now.'**
+  String get signup_error_operation_not_allowed;
+
+  /// No description provided for @signup_error_network.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try again.'**
+  String get signup_error_network;
+
+  /// No description provided for @signup_error_generic.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create account right now.'**
+  String get signup_error_generic;
+
+  /// No description provided for @signup_validation_email_missing.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an email address.'**
+  String get signup_validation_email_missing;
+
+  /// No description provided for @signup_validation_email_invalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email address.'**
+  String get signup_validation_email_invalid;
+
+  /// No description provided for @signup_validation_password_missing.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a password.'**
+  String get signup_validation_password_missing;
+
+  /// No description provided for @signup_validation_password_short.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 6 characters.'**
+  String get signup_validation_password_short;
+
+  /// No description provided for @signup_validation_password_repeat_missing.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat the password.'**
+  String get signup_validation_password_repeat_missing;
+
+  /// No description provided for @signup_validation_password_mismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match.'**
+  String get signup_validation_password_mismatch;
+
   /// No description provided for @settings_backup_import_success.
   ///
   /// In en, this message translates to:
@@ -4208,6 +4881,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show small moments when your dog reaches important steps.'**
   String get settings_milestones_enabled_subtitle;
+
+  /// No description provided for @settings_milestones_goal_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Milestone goals'**
+  String get settings_milestones_goal_title;
+
+  /// No description provided for @settings_milestones_goal_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set seasonal and personal target stand points.'**
+  String get settings_milestones_goal_subtitle;
+
+  /// No description provided for @settings_milestones_season_goal_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Season target (stand points)'**
+  String get settings_milestones_season_goal_title;
+
+  /// No description provided for @settings_milestones_personal_goal_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal target (stand points)'**
+  String get settings_milestones_personal_goal_title;
+
+  /// No description provided for @milestone_goal_achieved.
+  ///
+  /// In en, this message translates to:
+  /// **'{dogName} reached the {goalTitle}!'**
+  String milestone_goal_achieved(String dogName, String goalTitle);
 
   /// No description provided for @settings_haptics_enabled_title.
   ///
@@ -4346,6 +5049,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Waiting for the backend document to exist. Tap \"Try again\" to re-check.'**
   String get auth_profile_pending_body;
+
+  /// No description provided for @auth_loading_waiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing sign-in…'**
+  String get auth_loading_waiting;
+
+  /// No description provided for @auth_profile_load_failed_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your profile'**
+  String get auth_profile_load_failed_title;
+
+  /// No description provided for @auth_profile_load_failed_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again in a moment. If the problem continues, close and reopen the app.'**
+  String get auth_profile_load_failed_body;
 
   /// No description provided for @auth_profile_timeout_error.
   ///
@@ -4515,6 +5236,222 @@ abstract class AppLocalizations {
   /// **'Couldn\'t copy.'**
   String get settings_feedback_error_copy;
 
+  /// No description provided for @settings_diagnostics_section_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagnostics'**
+  String get settings_diagnostics_section_title;
+
+  /// No description provided for @settings_diagnostics_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced diagnostics'**
+  String get settings_diagnostics_title;
+
+  /// No description provided for @settings_diagnostics_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tools for troubleshooting and support.'**
+  String get settings_diagnostics_subtitle;
+
+  /// No description provided for @settings_diagnostics_outbox_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Outbox'**
+  String get settings_diagnostics_outbox_label;
+
+  /// No description provided for @settings_diagnostics_count_pending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get settings_diagnostics_count_pending;
+
+  /// No description provided for @settings_diagnostics_count_inProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get settings_diagnostics_count_inProgress;
+
+  /// No description provided for @settings_diagnostics_count_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get settings_diagnostics_count_failed;
+
+  /// No description provided for @settings_diagnostics_count_sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get settings_diagnostics_count_sent;
+
+  /// No description provided for @settings_diagnostics_action_dog_restore_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh dogs'**
+  String get settings_diagnostics_action_dog_restore_title;
+
+  /// No description provided for @settings_diagnostics_action_dog_restore_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetches available dogs from the cloud into local storage.'**
+  String get settings_diagnostics_action_dog_restore_subtitle;
+
+  /// No description provided for @settings_diagnostics_action_session_fetch_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Check cloud sessions'**
+  String get settings_diagnostics_action_session_fetch_title;
+
+  /// No description provided for @settings_diagnostics_action_session_fetch_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetches sessions for the first dog linked to the cloud.'**
+  String get settings_diagnostics_action_session_fetch_subtitle;
+
+  /// No description provided for @settings_diagnostics_action_session_restore_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore sessions locally'**
+  String get settings_diagnostics_action_session_restore_title;
+
+  /// No description provided for @settings_diagnostics_action_session_restore_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stores cloud sessions locally for the first linked dog.'**
+  String get settings_diagnostics_action_session_restore_subtitle;
+
+  /// No description provided for @settings_diagnostics_action_process_outbox_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Run sync queue now'**
+  String get settings_diagnostics_action_process_outbox_title;
+
+  /// No description provided for @settings_diagnostics_action_process_outbox_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Processes pending sync tasks once.'**
+  String get settings_diagnostics_action_process_outbox_subtitle;
+
+  /// No description provided for @settings_diagnostics_action_retry_outbox_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset failed sync tasks'**
+  String get settings_diagnostics_action_retry_outbox_title;
+
+  /// No description provided for @settings_diagnostics_action_retry_outbox_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Moves failed sync tasks back to the queue for another attempt.'**
+  String get settings_diagnostics_action_retry_outbox_subtitle;
+
+  /// No description provided for @settings_diagnostics_missing_cloud_dog.
+  ///
+  /// In en, this message translates to:
+  /// **'No local dog linked to the cloud was found.'**
+  String get settings_diagnostics_missing_cloud_dog;
+
+  /// No description provided for @settings_diagnostics_dog_restore_success.
+  ///
+  /// In en, this message translates to:
+  /// **'Refreshed dog data: {count}'**
+  String settings_diagnostics_dog_restore_success(Object count);
+
+  /// No description provided for @settings_diagnostics_dog_restore_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not refresh dog data: {error}'**
+  String settings_diagnostics_dog_restore_failed(Object error);
+
+  /// No description provided for @settings_diagnostics_session_fetch_success.
+  ///
+  /// In en, this message translates to:
+  /// **'Found {count} sessions in the cloud.'**
+  String settings_diagnostics_session_fetch_success(Object count);
+
+  /// No description provided for @settings_diagnostics_session_fetch_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not fetch sessions from the cloud: {error}'**
+  String settings_diagnostics_session_fetch_failed(Object error);
+
+  /// No description provided for @settings_diagnostics_session_restore_success.
+  ///
+  /// In en, this message translates to:
+  /// **'Restored {count} sessions locally.'**
+  String settings_diagnostics_session_restore_success(Object count);
+
+  /// No description provided for @settings_diagnostics_session_restore_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not restore sessions locally: {error}'**
+  String settings_diagnostics_session_restore_failed(Object error);
+
+  /// No description provided for @settings_diagnostics_outbox_process_success.
+  ///
+  /// In en, this message translates to:
+  /// **'The sync queue was processed.'**
+  String get settings_diagnostics_outbox_process_success;
+
+  /// No description provided for @settings_diagnostics_outbox_process_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not process the sync queue: {error}'**
+  String settings_diagnostics_outbox_process_failed(Object error);
+
+  /// No description provided for @settings_diagnostics_retry_success.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset {count} sync tasks.'**
+  String settings_diagnostics_retry_success(Object count);
+
+  /// No description provided for @settings_diagnostics_retry_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reset sync tasks: {error}'**
+  String settings_diagnostics_retry_failed(Object error);
+
+  /// No description provided for @settings_sign_out_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get settings_sign_out_button;
+
+  /// No description provided for @settings_sign_out_success.
+  ///
+  /// In en, this message translates to:
+  /// **'You have signed out.'**
+  String get settings_sign_out_success;
+
+  /// No description provided for @settings_sign_out_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not sign out right now.'**
+  String get settings_sign_out_failed;
+
+  /// No description provided for @settings_sound_on_app_start_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound on app start'**
+  String get settings_sound_on_app_start_title;
+
+  /// No description provided for @settings_sound_on_app_start_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Play grouse sound when the app starts'**
+  String get settings_sound_on_app_start_subtitle;
+
+  /// No description provided for @settings_sound_on_milestone_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound on milestones'**
+  String get settings_sound_on_milestone_title;
+
+  /// No description provided for @settings_sound_on_milestone_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Play sound when you achieve a milestone'**
+  String get settings_sound_on_milestone_subtitle;
+
   /// No description provided for @milestones_achieved_title.
   ///
   /// In en, this message translates to:
@@ -4639,7 +5576,8 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{dog} achieved “{milestone}” on {date}{age}'**
-  String milestone_achieved_sentence(Object dog, Object milestone, Object date, Object age);
+  String milestone_achieved_sentence(
+      Object dog, Object milestone, Object date, Object age);
 
   /// No description provided for @milestone_bird_threshold_label.
   ///
@@ -4695,10 +5633,40 @@ abstract class AppLocalizations {
   /// **'Unknown'**
   String get subscription_status_unknown;
 
+  /// No description provided for @subscription_product_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuglehund Pro'**
+  String get subscription_product_title;
+
+  /// No description provided for @subscription_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock unlimited dogs and unlimited sessions.'**
+  String get subscription_description;
+
+  /// No description provided for @subscription_benefit_unlimited_dogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited dogs'**
+  String get subscription_benefit_unlimited_dogs;
+
+  /// No description provided for @subscription_benefit_unlimited_sessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited sessions'**
+  String get subscription_benefit_unlimited_sessions;
+
+  /// No description provided for @subscription_price_unavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Price unavailable'**
+  String get subscription_price_unavailable;
+
   /// No description provided for @subscription_subscribe_button.
   ///
   /// In en, this message translates to:
-  /// **'Subscribe'**
+  /// **'Upgrade to Pro'**
   String get subscription_subscribe_button;
 
   /// No description provided for @subscription_restore_button.
@@ -4712,6 +5680,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manage / Cancel'**
   String get subscription_manage_button;
+
+  /// No description provided for @subscription_purchase_success.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro is now active.'**
+  String get subscription_purchase_success;
+
+  /// No description provided for @subscription_purchase_cancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase was cancelled.'**
+  String get subscription_purchase_cancelled;
+
+  /// No description provided for @subscription_restore_success.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore has started.'**
+  String get subscription_restore_success;
+
+  /// No description provided for @subscription_limit_dogs_reached.
+  ///
+  /// In en, this message translates to:
+  /// **'The free plan is full for dogs. Upgrade to Pro to add more.'**
+  String get subscription_limit_dogs_reached;
+
+  /// No description provided for @subscription_limit_sessions_reached.
+  ///
+  /// In en, this message translates to:
+  /// **'The free plan is full for sessions. Upgrade to Pro to save more.'**
+  String get subscription_limit_sessions_reached;
+
+  /// No description provided for @subscription_error_load_status.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load subscription status right now.'**
+  String get subscription_error_load_status;
+
+  /// No description provided for @subscription_error_purchase_start.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start the purchase right now.'**
+  String get subscription_error_purchase_start;
+
+  /// No description provided for @subscription_error_product_unavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The product is not available in the store right now.'**
+  String get subscription_error_product_unavailable;
+
+  /// No description provided for @subscription_error_restore_purchase.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not restore purchases right now.'**
+  String get subscription_error_restore_purchase;
+
+  /// No description provided for @subscription_error_manage_open.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the subscription page.'**
+  String get subscription_error_manage_open;
 
   /// No description provided for @feedback_send_title.
   ///
@@ -4912,7 +5940,8 @@ abstract class AppLocalizations {
   String birdsDownCount(num count);
 }
 
-class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -4921,27 +5950,29 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
   }
 
   @override
-  bool isSupported(Locale locale) => <String>['da', 'en', 'nb', 'sv'].contains(locale.languageCode);
+  bool isSupported(Locale locale) =>
+      <String>['da', 'en', 'nb', 'sv'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
-
-
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'da': return AppLocalizationsDa();
-    case 'en': return AppLocalizationsEn();
-    case 'nb': return AppLocalizationsNb();
-    case 'sv': return AppLocalizationsSv();
+    case 'da':
+      return AppLocalizationsDa();
+    case 'en':
+      return AppLocalizationsEn();
+    case 'nb':
+      return AppLocalizationsNb();
+    case 'sv':
+      return AppLocalizationsSv();
   }
 
   throw FlutterError(
-    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-    'an issue with the localizations generation tool. Please file an issue '
-    'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.'
-  );
+      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+      'an issue with the localizations generation tool. Please file an issue '
+      'on GitHub with a reproducible sample app and the gen-l10n configuration '
+      'that was used.');
 }

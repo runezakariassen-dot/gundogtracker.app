@@ -51,6 +51,15 @@ class SharingService {
       throw ShareException(ShareError.invalidEmail);
     }
 
+    // Check for existing active invitations to the same email for this dog
+    final existingInvites = await _inviteRepository.getInvitesForDog(dogKey);
+    final hasActiveInvite = existingInvites.any((invite) =>
+        invite.recipientEmail == normalizedEmail &&
+        invite.status == Status.pending);
+    if (hasActiveInvite) {
+      throw ShareException(ShareError.alreadyInvited);
+    }
+
     final token = await _generateUniqueToken();
     final now = _now();
     final invite = ShareInvitation(

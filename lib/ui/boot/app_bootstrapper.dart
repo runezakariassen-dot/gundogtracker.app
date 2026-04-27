@@ -1,11 +1,14 @@
-import 'package:flutter/foundation.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../../data/hive_boxes.dart';
 import '../../l10n/app_localizations.dart';
+import '../../services/cloud/auto_sync_coordinator.dart';
+import '../../services/cloud/sync_foreground_monitor.dart';
 import '../../services/hive_lifecycle_service.dart';
+import '../../services/audio_service.dart';
 
 import '../app_shell.dart';
 import '../auth/login_screen.dart';
@@ -60,7 +63,7 @@ class AppBootstrapper extends StatelessWidget {
   }
 }
 
-class FuglehundApp extends StatelessWidget {
+class FuglehundApp extends StatefulWidget {
   const FuglehundApp({
     super.key,
     required this.localeController,
@@ -68,26 +71,78 @@ class FuglehundApp extends StatelessWidget {
 
   final LocaleController localeController;
 
+  @override
+  State<FuglehundApp> createState() => _FuglehundAppState();
+}
+
+class _FuglehundAppState extends State<FuglehundApp>
+    with WidgetsBindingObserver {
   static bool _firstFrameLogged = false;
+  late final SyncForegroundMonitor _syncForegroundMonitor;
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _syncForegroundMonitor = SyncForegroundMonitor();
+    _syncForegroundMonitor.start();
+    // Spill av startup-lyd hvis aktivert
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_firstFrameLogged) {
         _firstFrameLogged = true;
         debugPrint('[UI] first frame rendered');
+
+        final settingsBox =
+            HiveLifecycleService.getBox<dynamic>(appSettingsBoxName);
+        final soundEnabled =
+            (settingsBox.get(soundOnAppStartKey) as bool?) ?? false;
+        if (soundEnabled) {
+          AudioService().playStartupSound();
+        }
       }
     });
+  }
 
-    final settingsBox = HiveLifecycleService.getBox<dynamic>(appSettingsBoxName);
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    unawaited(_syncForegroundMonitor.stop());
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _syncForegroundMonitor.start();
+      unawaited(AutoSyncCoordinator.instance.runOnResumed());
+      return;
+    }
+
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      unawaited(_syncForegroundMonitor.stop());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settingsBox =
+        HiveLifecycleService.getBox<dynamic>(appSettingsBoxName);
 
     return AnimatedBuilder(
-      animation: localeController,
+      animation: widget.localeController,
       builder: (context, _) {
         return ValueListenableBuilder(
-          valueListenable: settingsBox.listenable(),
+          valueListenable: settingsBox.listenable(
+            keys: const [
+              'themeMode',
+              themeSeasonOverrideKey,
+            ],
+          ),
           builder: (context, Box<dynamic> box, _) {
-            final mode = box.get('themeMode') ?? 'dark';
+            final mode = box.get('themeMode') ?? 'light';
 
             final themeMode = switch (mode) {
               'light' => ThemeMode.light,
@@ -105,7 +160,7 @@ class FuglehundApp extends StatelessWidget {
               theme: buildSeasonTheme(season),
               darkTheme: AppTheme.dark(),
               themeMode: themeMode,
-              locale: localeController.locale,
+              locale: widget.localeController.locale,
               supportedLocales: AppLocalizations.supportedLocales,
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               home: AuthGate(

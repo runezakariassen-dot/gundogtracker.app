@@ -36,8 +36,8 @@ class _InvitationsPageState extends State<InvitationsPage> {
     return ValueListenableBuilder(
       valueListenable: _shareBox.listenable(),
       builder: (context, Box<ShareInvitation> box, _) {
-        final email = FirebaseAuth.instance.currentUser?.email;
-        final currentEmail = email == null ? null : email.trim().toLowerCase();
+        final currentEmail =
+            FirebaseAuth.instance.currentUser?.email?.trim().toLowerCase();
         final invites = currentEmail == null
             ? <ShareInvitation>[]
             : box.values
@@ -61,7 +61,7 @@ class _InvitationsPageState extends State<InvitationsPage> {
                   itemBuilder: (context, index) {
                     final invite = invites[index];
                     final dog = _dogsBox.get(invite.dogKey);
-                    final trimmedName = dog == null ? null : dog.name.trim();
+                    final trimmedName = dog?.name.trim();
                     final dogName = (trimmedName?.isNotEmpty ?? false)
                         ? trimmedName!
                         : l10n.dog_unnamed;
@@ -167,6 +167,8 @@ class _InvitationsPageState extends State<InvitationsPage> {
         return l10n.share_error_invite_inactive;
       case ShareError.alreadyHasAccess:
         return l10n.share_error_already_has_access;
+      case ShareError.alreadyInvited:
+        return l10n.share_error_already_invited;
       case ShareError.invalidRole:
         return l10n.share_error_invalid_role;
       case ShareError.invalidEmail:

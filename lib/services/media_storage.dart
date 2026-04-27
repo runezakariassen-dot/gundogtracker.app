@@ -184,7 +184,7 @@ class MediaStorage {
     final extension = p.extension(sourcePath);
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final randomSegment = _random.nextInt(100000);
-    return '${timestamp}_${randomSegment}$extension';
+    return '${timestamp}_$randomSegment$extension';
   }
 
   static String _sanitizeStoredPath(String storedPath) {

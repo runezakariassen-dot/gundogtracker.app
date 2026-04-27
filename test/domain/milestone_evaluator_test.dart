@@ -18,14 +18,14 @@ void main() {
 
   test('evaluateMilestones awards new defs for sessions points', () {
     final results = evaluateMilestones(
-      stats: DogStats(
+      stats: const DogStats(
         totalSessions: 10,
         totalPoints: 0,
         totalFlushes: 0,
         totalActiveSeconds: 0,
         totalBirdsShot: 0,
       ),
-      achievedIds: {MilestoneId.stands1},
+      achievedIds: const {MilestoneId.stands1},
     ).map((def) => def.id);
 
     expect(results, contains(MilestoneId.sessions10));

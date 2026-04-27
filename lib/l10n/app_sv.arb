@@ -1,6 +1,9 @@
 {
   "@@locale": "sv",
   "appName": "Fuglehund",
+  "app_store_identity_subtitle": "Offline jaktlogg för stående fågelhundar",
+  "app_store_identity_short_description":
+      "Logga pass, följ utvecklingen och bygg historik för din hund – även offline.",
   "common_ok": "OK",
   "common_close": "Stäng",
   "common_done": "Klart",
@@ -15,7 +18,7 @@
   "common_no": "Nej",
   "common_invalid_link": "Ogiltig länk",
   "common_could_not_open_link": "Kunde inte öppna länken",
-  "common_no_permission": "Du har inte behörighet till det här.",
+  "common_no_permission": "Du har inte åtkomst till den här åtgärden.",
   "@common_no_permission": {
     "description": "Visas när användaren saknar behörighet att utföra en åtgärd."
   },
@@ -158,6 +161,9 @@
   "dog_editor_deleting": "Raderar…",
   "dog_editor_delete_dog_title": "Radera hund",
   "dog_editor_delete_dog_body": "Vill du radera hunden? Det går inte att ångra.",
+  "dog_editor_discard_changes_title": "Förkasta ändringar?",
+  "dog_editor_discard_changes_body": "Dina ändringar är inte sparade ännu.",
+  "dog_editor_discard_changes_confirm": "Förkasta",
   "dog_editor_button_cancel": "Avbryt",
   "dog_editor_button_delete": "Radera",
   "dog_editor_new_breed_title": "Ny ras",
@@ -348,6 +354,7 @@
   "share_error_invite_revoked": "Inbjudan har återkallats.",
   "share_error_invite_inactive": "Inbjudan är inte aktiv.",
   "share_error_already_has_access": "Du har redan åtkomst.",
+  "share_error_already_invited": "Denna e-post har redan bjudits in.",
   "share_error_invalid_role": "Ogiltig roll.",
   "share_error_invalid_email": "Ogiltig e-postadress.",
   "share_error_dog_not_found_title": "Hund hittades inte",
@@ -394,11 +401,21 @@
       "Vattenstämpel krävs när du delar hundbilder.",
   "dog_detail_watermark_toggle_title": "Visa titel",
   "dog_detail_watermark_toggle_name": "Visa namn",
-  "dog_detail_watermark_toggle_min_one":
-      "Minst ett av namn/titel måste vara på.",
-  "dog_detail_watermark_share_button": "Dela profilbild",
+  "dog_detail_watermark_share_button": "Dela bild",
   "dog_detail_watermark_share_subject": "Bild från GundogTracker",
   "dog_detail_watermark_share_message": "Delad via GundogTracker",
+  "session_image_viewer_watermark_toggle_title": "Visa titel",
+  "session_image_viewer_watermark_toggle_official_name": "Visa officiellt namn",
+  "session_image_viewer_watermark_toggle_nickname": "Visa smeknamn",
+  "session_image_viewer_watermark_color_title": "Textfärg",
+  "session_image_viewer_watermark_color_light": "Vit",
+  "session_image_viewer_watermark_color_dark": "Svart",
+  "session_image_viewer_watermark_presets_title": "Förval",
+  "session_image_viewer_watermark_preset_discreet": "Diskret",
+  "session_image_viewer_watermark_preset_clear": "Tydlig",
+  "session_image_viewer_watermark_preset_contrast": "Kontrast",
+  "dog_detail_watermark_share_missing_photo": "Kunde inte hitta en bild att dela.",
+  "dog_detail_watermark_share_error": "Kunde inte dela bilden.",
   "dog_detail_label_death_date": "Dödsdatum",
   "dog_detail_button_edit": "Ändra",
   "dog_detail_button_register_death": "Registrera",
@@ -423,6 +440,8 @@
   "home_empty_bullet_training": "Bättre träning och jakt – se vad som faktiskt ger utdelning.",
   "home_empty_bullet_history": "Jakthistorik du faktiskt använder – säsong för säsong, område för område.",
   "home_empty_offline_note": "Du kan använda appen helt offline. All data sparas lokalt på din telefon.",
+  "home_first_session_title": "Redo för ditt första pass?",
+  "home_first_session_body": "Du har registrerat din hund. Nästa steg är att logga ett pass – då börjar din historik och statistik växa.",
   "home_visible_empty_title": "Inga hundar tillgängliga",
   "home_visible_empty_body": "Det här kontot har inga hundar ännu. Kolla inbjudningar eller be någon dela en hund med dig.",
   "home_visible_empty_button": "Öppna inbjudningar",
@@ -436,6 +455,10 @@
   "home_endActiveSessionConfirmTitle": "Avsluta aktiv session?",
   "home_endActiveSessionConfirmSubtitle": "Allt går förlorat om du avslutar. Är du säker?",
   "home_open_settings_tooltip": "Inställningar",
+  "home_sessions_empty": "Inga övningar ännu",
+  "home_openSession": "Öppna",
+  "home_select_dog": "Välj hund",
+  "home_no_sessions_yet": "Inga pass ännu",
   "home_primaryActionSubtitle": "Anteckningar först. Använd + i fälten.",
   "home_top10_points_title": "Topp 10 – Stand",
   "top10Title": "Topp 10",
@@ -747,6 +770,18 @@
       }
     }
   },
+  "settings_version_label": "Version {version}",
+  "@settings_version_label": {
+    "placeholders": {
+      "version": {}
+    }
+  },
+  "settings_version_build": " (build {buildNumber})",
+  "@settings_version_build": {
+    "placeholders": {
+      "buildNumber": {}
+    }
+  },
   "session_detail_snackbar_changes_saved": "Ändringar sparade",
   "session_detail_snackbar_session_saved": "Pass sparat",
   "session_detail_snackbar_saved_with_imported_gpx":
@@ -901,6 +936,23 @@
   "map_page_snackbar_no_tracks_to_focus": "Inga spår att fokusera på",
   "map_page_dialog_delete_downloaded_map_body":
       "Vill du ta bort den här nedladdade kartan?",
+  "map_download_title": "Ladda ned karta",
+  "map_download_area_label": "Område",
+  "map_download_cancel": "Avbryt",
+  "map_download_start": "Starta nedladdning",
+  "map_downloaded_maps_title": "Nedladdade kartor",
+  "map_downloaded_maps_empty": "Inga nedladdade kartor än.",
+  "map_delete_offline_title": "Ta bort offline-karta",
+  "map_delete_offline_body": "Detta tar bort nedladdade kartpaneler för vald stil.",
+  "map_delete_offline_cancel": "Avbryt",
+  "map_delete_offline_confirm": "Ta bort",
+  "map_downloading_title": "Laddar ned karta",
+  "map_downloading_cancel": "Avbryt",
+  "map_go_to": "Gå till",
+  "map_delete": "Ta bort",
+  "map_delete_title": "Ta bort karta",
+  "map_tracks": "Spår",
+  "map_me": "Mig",
   "hunt_session_snackbar_export_ready_opening_share":
       "Export klar, öppnar delning …",
   "hunt_session_snackbar_gpx_export_failed_see_log":
@@ -1498,6 +1550,10 @@
   "settings_feedback_suggest_subtitle": "Skicka förslag via e-post.",
   "settings_feedback_error_open_email": "Kunde inte öppna e-post.",
   "settings_feedback_error_copy": "Kunde inte kopiera.",
+  "settings_sound_on_app_start_title": "Ljud vid uppstart",
+  "settings_sound_on_app_start_subtitle": "Spela upp ripa-ljud när appen startar",
+  "settings_sound_on_milestone_title": "Ljud vid milstolpar",
+  "settings_sound_on_milestone_subtitle": "Spela ljud när du uppnår en milstolpe",
   "settings_section_subscription": "Prenumeration",
   "settings_section_language": "Språk",
   "settings_section_community": "Community",
@@ -1559,6 +1615,101 @@
   "settings_feedback_send_subtitle": "Öppnar e-post med appinfo.",
   "settings_feedback_bug_subtitle": "Öppnar e-post med felmall.",
   "settings_feedback_copy_subtitle": "Kopierar app- och enhetsinfo.",
+  "settings_diagnostics_section_title": "Diagnostik",
+  "settings_diagnostics_title": "Avancerad diagnostik",
+  "settings_diagnostics_subtitle": "Verktyg för felsökning och support.",
+  "settings_diagnostics_outbox_label": "Outbox",
+  "settings_diagnostics_count_pending": "Väntar",
+  "settings_diagnostics_count_inProgress": "Pågår",
+  "settings_diagnostics_count_failed": "Misslyckad",
+  "settings_diagnostics_count_sent": "Skickad",
+  "settings_diagnostics_action_dog_restore_title": "Hämta hundar igen",
+  "settings_diagnostics_action_dog_restore_subtitle":
+      "Hämtar tillgängliga hundar från molnet till lokal lagring.",
+  "settings_diagnostics_action_session_fetch_title": "Kontrollera pass i molnet",
+  "settings_diagnostics_action_session_fetch_subtitle":
+      "Hämtar pass för den första hunden som är kopplad till molnet.",
+  "settings_diagnostics_action_session_restore_title":
+      "Lägg tillbaka pass lokalt",
+  "settings_diagnostics_action_session_restore_subtitle":
+      "Sparar pass från molnet lokalt för den första anslutna hunden.",
+  "settings_diagnostics_action_process_outbox_title": "Kör synkkön nu",
+  "settings_diagnostics_action_process_outbox_subtitle":
+      "Bearbetar väntande synkjobb en gång.",
+  "settings_diagnostics_action_retry_outbox_title":
+      "Återställ misslyckade synkjobb",
+  "settings_diagnostics_action_retry_outbox_subtitle":
+      "Lägger tillbaka misslyckade synkjobb i kön för ett nytt försök.",
+  "settings_diagnostics_missing_cloud_dog":
+      "Hittade ingen lokal hund som är kopplad till molnet.",
+  "settings_diagnostics_dog_restore_success":
+      "Hunddata hämtades igen: {count}",
+  "@settings_diagnostics_dog_restore_success": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "settings_diagnostics_dog_restore_failed":
+      "Kunde inte hämta hunddata igen: {error}",
+  "@settings_diagnostics_dog_restore_failed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "settings_diagnostics_session_fetch_success":
+      "Hittade {count} pass i molnet.",
+  "@settings_diagnostics_session_fetch_success": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "settings_diagnostics_session_fetch_failed":
+      "Kunde inte hämta pass från molnet: {error}",
+  "@settings_diagnostics_session_fetch_failed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "settings_diagnostics_session_restore_success":
+      "Lade tillbaka {count} pass lokalt.",
+  "@settings_diagnostics_session_restore_success": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "settings_diagnostics_session_restore_failed":
+      "Kunde inte lägga tillbaka pass lokalt: {error}",
+  "@settings_diagnostics_session_restore_failed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "settings_diagnostics_outbox_process_success":
+      "Synkkön bearbetades.",
+  "settings_diagnostics_outbox_process_failed":
+      "Kunde inte bearbeta synkkön: {error}",
+  "@settings_diagnostics_outbox_process_failed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "settings_diagnostics_retry_success":
+      "Återställde {count} synkjobb.",
+  "@settings_diagnostics_retry_success": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "settings_diagnostics_retry_failed":
+      "Kunde inte återställa synkjobb: {error}",
+  "@settings_diagnostics_retry_failed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "settings_sign_out_button": "Logga ut",
+  "settings_sign_out_success": "Du är utloggad.",
+  "settings_sign_out_failed": "Det gick inte att logga ut just nu.",
   "settings_change_password_title": "Ändra lösenord",
   "settings_change_password_current_password": "Nuvarande lösenord",
   "settings_change_password_new_password": "Nytt lösenord",
@@ -1592,6 +1743,21 @@
   "settings_language_en": "English",
   "settings_milestones_enabled_title": "Milstolpar",
   "settings_milestones_enabled_subtitle": "Visa små ögonblick när hunden når viktiga steg.",
+  "settings_milestones_goal_title": "Milstolpsmål",
+  "settings_milestones_goal_subtitle": "Ställ in säsongs- och personliga mål för standpoäng.",
+  "settings_milestones_season_goal_title": "Säsongsmål (standpoäng)",
+  "settings_milestones_personal_goal_title": "Personligt mål (standpoäng)",
+  "milestone_goal_achieved": "{dogName} nådde {goalTitle}!",
+  "@milestone_goal_achieved": {
+    "placeholders": {
+      "dogName": {
+        "type": "String"
+      },
+      "goalTitle": {
+        "type": "String"
+      }
+    }
+  },
   "settings_haptics_enabled_title": "Vibration vid milstolpar",
   "settings_haptics_enabled_subtitle": "Diskret vibration när milstolpar uppnås.",
   "milestones_achieved_title": "Uppnådda milstolpar",
@@ -1711,9 +1877,32 @@
   "subscription_status_active": "Aktiv",
   "subscription_status_inactive": "Inte aktiv",
   "subscription_status_unknown": "Okänd",
-  "subscription_subscribe_button": "Teckna prenumeration",
+  "subscription_product_title": "Fuglehund Pro",
+  "subscription_description":
+      "Lås upp obegränsat antal hundar och obegränsat antal pass.",
+  "subscription_benefit_unlimited_dogs": "Obegränsat antal hundar",
+  "subscription_benefit_unlimited_sessions": "Obegränsat antal pass",
+  "subscription_price_unavailable": "Pris ej tillgängligt",
+  "subscription_subscribe_button": "Uppgradera till Pro",
   "subscription_restore_button": "Återställ köp",
   "subscription_manage_button": "Hantera / Avsluta",
+  "subscription_purchase_success": "Pro är nu aktivt.",
+  "subscription_purchase_cancelled": "Köpet avbröts.",
+  "subscription_restore_success": "Återställning har startat.",
+  "subscription_limit_dogs_reached":
+      "Gratisversionen är full för hundar. Uppgradera till Pro för att lägga till fler.",
+  "subscription_limit_sessions_reached":
+      "Gratisversionen är full för pass. Uppgradera till Pro för att spara fler.",
+  "subscription_error_load_status":
+      "Kunde inte hämta prenumerationsstatus just nu.",
+  "subscription_error_purchase_start":
+      "Kunde inte starta köpet just nu.",
+  "subscription_error_product_unavailable":
+      "Produktet är inte tillgängligt i butiken just nu.",
+  "subscription_error_restore_purchase":
+      "Kunde inte återställa köp just nu.",
+  "subscription_error_manage_open":
+      "Kunde inte öppna prenumerationssidan.",
   "feedback_send_title": "Skicka feedback",
   "feedback_bug_title": "Rapportera ett fel",
   "feedback_copy_diagnostics_title": "Kopiera diagnostik",
@@ -1752,6 +1941,41 @@
   "auth_profile_pending_title": "Skapar profil…",
   "auth_profile_pending_body":
       "Vi väntar på att backend-dokumentet ska bli klart. Tryck på \"Försök igen\" för att kontrollera igen.",
+  "auth_loading_waiting": "Förbereder inloggning…",
+  "auth_profile_load_failed_title": "Kunde inte ladda din profil",
+  "auth_profile_load_failed_body":
+      "Försök igen om en liten stund. Om problemet fortsätter kan du stänga och öppna appen igen.",
   "auth_profile_timeout_error":
-      "Kunde inte hitta användarprofilen inom några sekunder. Kontrollera nätverket eller försök igen."
+      "Kunde inte hitta användarprofilen inom några sekunder. Kontrollera nätverket eller försök igen.",
+  "signup_title": "Skapa konto",
+  "signup_intro":
+      "Skapa ett konto med e-post och lösenord för att komma igång.",
+  "signup_email_label": "E-post",
+  "signup_password_label": "Lösenord",
+  "signup_password_repeat_label": "Upprepa lösenord",
+  "signup_create_button": "Skapa konto",
+  "signup_success": "Kontot är skapat.",
+  "signup_error_email_in_use":
+      "Den här e-postadressen används redan.",
+  "signup_error_invalid_email":
+      "Ange en giltig e-postadress.",
+  "signup_error_weak_password":
+      "Lösenordet måste vara minst 6 tecken.",
+  "signup_error_operation_not_allowed":
+      "Det går inte att skapa konto just nu.",
+  "signup_error_network": "Kontrollera internet och försök igen.",
+  "signup_error_generic": "Kunde inte skapa konto just nu.",
+  "signup_validation_email_missing": "Ange e-post.",
+  "signup_validation_email_invalid": "Ange en giltig e-post.",
+  "signup_validation_password_missing": "Ange lösenord.",
+  "signup_validation_password_short":
+      "Lösenordet måste vara minst 6 tecken.",
+  "signup_validation_password_repeat_missing":
+      "Upprepa lösenordet.",
+  "signup_validation_password_mismatch":
+      "Lösenorden matchar inte.",
+  "dog_editor_intro_title": "Lägg till din hund",
+  "dog_editor_intro_body": "Du kan börja enkelt nu. Ett namn räcker för att komma igång, och fler detaljer kan läggas till senare.",
+  "home_empty_next_step": "Börja med att lägga till din hund. Sedan kan du logga det första passet när ni är redo.",
+  "session_form_no_dogs_help": "Lägg till en hund först, så kan du starta ditt första pass."
 }

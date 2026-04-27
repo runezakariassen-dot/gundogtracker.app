@@ -1,30 +1,31 @@
-import 'package:uuid/uuid.dart';
+import 'package:flutter/foundation.dart';
 
-import '../../data/dto/dog_dto.dart';
 import '../../data/hive_boxes.dart';
-import '../../domain/repositories/sync_queue_repository.dart';
 import '../../domain/repositories/dog_repository.dart';
 import '../../models/dog.dart';
-import '../../models/sync_task.dart';
-import 'local_sync_queue_repository.dart';
+import 'sync_outbox_service.dart';
 
 class LocalDogRepository implements DogRepository {
-  LocalDogRepository({SyncQueueRepository? syncQueueRepository})
-      : _syncQueueRepository =
-            syncQueueRepository ?? LocalSyncQueueRepository();
+  LocalDogRepository({SyncOutboxService? syncOutboxService})
+      : _syncOutboxService = syncOutboxService ?? SyncOutboxService();
 
-  final SyncQueueRepository _syncQueueRepository;
-  final Uuid _uuid = const Uuid();
+  final SyncOutboxService _syncOutboxService;
 
   @override
   Future<List<Dog>> getMyDogs() async {
-    return dogsBox().values.toList();
+    return dogsBox()
+        .values
+        .where((dog) => !dog.isDeleted)
+        .toList(growable: false);
   }
 
   @override
   Future<Dog?> getDog(String dogKey) async {
     for (final entry in dogsBox().toMap().entries) {
       if (entry.value.dogKey == dogKey) {
+        if (entry.value.isDeleted) {
+          return null;
+        }
         return entry.value;
       }
     }
@@ -33,16 +34,24 @@ class LocalDogRepository implements DogRepository {
 
   @override
   Future<void> upsertDog(Dog dog) async {
+    debugPrint('[LOCAL][DOG] upsertDog called for ${dog.name} (${dog.id})');
     final box = dogsBox();
+    for (final entry in box.toMap().entries) {
+      if (entry.value.id == dog.id) {
+        await box.put(entry.key, dog);
+        await _syncOutboxService.enqueueUpsertDog(dog);
+        return;
+      }
+    }
     for (final entry in box.toMap().entries) {
       if (entry.value.dogKey == dog.dogKey) {
         await box.put(entry.key, dog);
-        await _enqueueSyncTask(dog);
+        await _syncOutboxService.enqueueUpsertDog(dog);
         return;
       }
     }
     await box.add(dog);
-    await _enqueueSyncTask(dog);
+    await _syncOutboxService.enqueueUpsertDog(dog);
   }
 
   @override
@@ -50,21 +59,22 @@ class LocalDogRepository implements DogRepository {
     final box = dogsBox();
     for (final entry in box.toMap().entries) {
       if (entry.value.dogKey == dogKey) {
-        await box.delete(entry.key);
+        if (entry.value.isDeleted) {
+          return;
+        }
+        final deletedAt = DateTime.now().toUtc();
+        final deletedDog = entry.value.copyWith(
+          updatedAt: deletedAt,
+          deletedAt: deletedAt,
+        );
+        await box.put(entry.key, deletedDog);
+        debugPrint('[SYNC][DELETE] enqueue dog delete: ${deletedDog.id}');
+        await _syncOutboxService.enqueueDeleteDog(
+          deletedDog,
+          deletedAt: deletedAt,
+        );
         return;
       }
     }
-  }
-
-  Future<void> _enqueueSyncTask(Dog dog) async {
-    final task = SyncTask(
-      taskId: _uuid.v4(),
-      entityType: 'dog',
-      entityId: dog.dogKey,
-      payload: dogToJson(dog),
-      status: SyncStatus.pending,
-      createdAt: DateTime.now(),
-    );
-    await _syncQueueRepository.addTask(task);
   }
 }

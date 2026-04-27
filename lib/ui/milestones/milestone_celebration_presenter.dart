@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:jakthund_app/data/hive_boxes.dart';
 import 'package:jakthund_app/l10n/app_localizations.dart';
@@ -7,15 +9,14 @@ import 'package:jakthund_app/services/hive_lifecycle_service.dart';
 import '../../domain/milestones/milestone_catalog.dart';
 import '../../domain/milestones/milestone_id.dart';
 import '../../domain/milestones/milestone_models.dart';
+import '../../pages/dog_detail_page.dart';
 import '../app_shell.dart';
 import '../text/text_helpers.dart';
 import 'milestone_celebration_overlay.dart';
-import '../../pages/dog_detail_page.dart';
 
 String milestoneTitle(BuildContext context, MilestoneDef def) {
   final l10n = AppLocalizations.of(context)!;
 
-  // Century-format: points_100, points_200 ...
   if (isCenturyMilestoneId(def.id)) {
     final points = _pointsFromId(def.id) ?? 0;
     return l10n.milestone_century_points_title(points);
@@ -97,13 +98,17 @@ String milestoneSubtitleText(
 }
 
 int? _pointsFromId(String id) {
-  if (!id.startsWith('points_')) return null;
+  if (!id.startsWith('points_')) {
+    return null;
+  }
   return int.tryParse(id.substring('points_'.length));
 }
 
 int? _thresholdFromId(String id) {
   final parts = id.split('_');
-  if (parts.isEmpty) return null;
+  if (parts.isEmpty) {
+    return null;
+  }
   return int.tryParse(parts.last);
 }
 
@@ -112,6 +117,17 @@ bool _isSessionsId(String id) => id.startsWith('sessions_');
 bool _isStandId(String id) => id.startsWith('stands_');
 
 bool _isBirdId(String id) => id.startsWith('birds_felled_');
+
+void _logMilestoneInfo(String message) {
+  debugPrint('[MILESTONE][INFO] $message');
+}
+
+const Key _milestoneInfoCloseButtonKey = Key('milestone_info_close_button');
+
+enum _MilestoneInfoDismissReason {
+  auto,
+  manual,
+}
 
 class MilestoneCelebrationPresenter {
   MilestoneCelebrationPresenter();
@@ -125,6 +141,39 @@ class MilestoneCelebrationPresenter {
     );
   }
 
+  static ScaffoldFeatureController<SnackBar, SnackBarClosedReason>
+      showMilestoneInfoSnackBar({
+    required BuildContext context,
+    required Widget leading,
+    required String title,
+    required String summary,
+    String? actionLabel,
+    VoidCallback? onAction,
+    Duration autoDismissDuration = const Duration(seconds: 5),
+  }) {
+    final messenger = ScaffoldMessenger.of(context);
+    late final ScaffoldFeatureController<SnackBar, SnackBarClosedReason>
+        controller;
+
+    controller = messenger.showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(days: 1),
+        content: _MilestoneInfoSnackContent(
+          leading: leading,
+          title: title,
+          summary: summary,
+          actionLabel: actionLabel,
+          autoDismissDuration: autoDismissDuration,
+          onDismiss: () => controller.close(),
+          onAction: onAction,
+        ),
+      ),
+    );
+
+    return controller;
+  }
+
   final Set<String> _shownMilestoneIds = {};
 
   Future<bool> show(
@@ -134,14 +183,16 @@ class MilestoneCelebrationPresenter {
     required DateTime achievedAt,
     bool hapticsEnabled = true,
   }) async {
-    if (newIds.isEmpty) return false;
+    if (newIds.isEmpty) {
+      return false;
+    }
 
-    // Unngå duplikat-visning
     final unseenIds =
         newIds.where((id) => !_shownMilestoneIds.contains(id)).toList();
-    if (unseenIds.isEmpty) return false;
+    if (unseenIds.isEmpty) {
+      return false;
+    }
 
-    // Capture stable states BEFORE await
     final NavigatorState rootNavigator =
         Navigator.of(context, rootNavigator: true);
     final BuildContext rootContext = rootNavigator.context;
@@ -151,38 +202,53 @@ class MilestoneCelebrationPresenter {
     final BuildContext tabContext = tabNavigator.context;
 
     final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
-
-    // Capture strings BEFORE await (context kan bli deaktivert)
     final l10n = AppLocalizations.of(context)!;
     final viewAllLabel = l10n.milestone_sheet_button_viewAll;
 
-    // Kun "kjente" defs (ingen fallback som kan kræsje på konstruktør)
-        final defs = <MilestoneDef>[];
-        for (final id in unseenIds) {
-          final def = milestoneDefById(id);
-          if (def != null) defs.add(def);
+    final defs = <MilestoneDef>[];
+    final goalIds = <String>[];
+    for (final id in unseenIds) {
+      if (id == 'season_goal' || id == 'personal_goal') {
+        goalIds.add(id);
+      } else {
+        final def = milestoneDefById(id);
+        if (def != null) {
+          defs.add(def);
         }
+      }
+    }
 
-    // Marker alt som vist (også ukjente) for å unngå spam-loop
     _shownMilestoneIds.addAll(unseenIds);
 
-    if (defs.isEmpty) {
-      // Ukjente milepæler: ingen overlay, men ikke feile appen.
+    if (defs.isEmpty && goalIds.isEmpty) {
       return false;
     }
 
-    final titles = defs
-        .map((def) => milestoneTitle(rootContext, def))
-        .where((t) => t.isNotEmpty)
-        .toList();
+    final titles = <String>[];
+    titles.addAll(
+      defs
+          .map((def) => milestoneTitle(rootContext, def))
+          .where((title) => title.isNotEmpty),
+    );
 
-    if (titles.isEmpty) return false;
+    for (final goalId in goalIds) {
+      if (goalId == 'season_goal') {
+        titles.add(l10n.settings_milestones_season_goal_title);
+      } else if (goalId == 'personal_goal') {
+        titles.add(l10n.settings_milestones_personal_goal_title);
+      }
+    }
+
+    if (titles.isEmpty) {
+      return false;
+    }
 
     final summary = _buildSummary(dog, titles, l10n);
 
-    // Vis overlays med rootContext (stabilt)
     for (final def in defs) {
-      if (!rootContext.mounted) break;
+      if (!rootContext.mounted) {
+        break;
+      }
       await showMilestoneCelebrationOverlay(
         context: rootContext,
         def: def,
@@ -191,7 +257,37 @@ class MilestoneCelebrationPresenter {
       );
     }
 
-    if (!rootContext.mounted) return true;
+    for (final goalId in goalIds) {
+      if (!rootContext.mounted) {
+        break;
+      }
+      final goalTitle = goalId == 'season_goal'
+          ? l10n.settings_milestones_season_goal_title
+          : l10n.settings_milestones_personal_goal_title;
+      messenger.showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          content: Row(
+            children: [
+              const Icon(Icons.emoji_events, color: Colors.amber),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n.milestone_goal_achieved(dog.name, goalTitle),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+    }
+
+    if (!rootContext.mounted) {
+      return true;
+    }
 
     final iconWidget = _buildMilestoneIcon(
       context: rootContext,
@@ -199,35 +295,17 @@ class MilestoneCelebrationPresenter {
       size: 24,
     );
 
-    messenger.showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        content: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            iconWidget,
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(l10n.milestone_snackbar_new_title),
-                  Text(summary),
-                ],
-              ),
-            ),
-          ],
-        ),
-        action: SnackBarAction(
-          label: viewAllLabel,
-          onPressed: () => _navigateToDogDetail(
-            tabContext: tabContext,
-            messenger: messenger,
-            dog: dog,
-            l10n: l10n,
-          ),
-        ),
+    showMilestoneInfoSnackBar(
+      context: rootContext,
+      leading: iconWidget,
+      title: l10n.milestone_snackbar_new_title,
+      summary: summary,
+      actionLabel: viewAllLabel,
+      onAction: () => _navigateToDogDetail(
+        tabContext: tabContext,
+        messenger: messenger,
+        dog: dog,
+        l10n: l10n,
       ),
     );
 
@@ -267,19 +345,15 @@ class MilestoneCelebrationPresenter {
         return;
       }
 
-      // ✅ Lås inn non-null type, så analyzer blir glad.
-      final Dog resolvedDog = storedDog;
-
+      final resolvedDog = storedDog;
       messenger.hideCurrentSnackBar();
 
-      // ✅ Primær: Naviger via AppShell, slik at bottom nav alltid er med.
       final shellState = AppShell.of(tabContext);
       if (shellState != null) {
         shellState.openDogDetails(resolvedDog);
         return;
       }
 
-      // Fallback (bør sjelden trigges): push i samme tab-context.
       Navigator.of(tabContext).push(
         MaterialPageRoute(
           builder: (_) => DogDetailPage(dog: resolvedDog),
@@ -296,7 +370,9 @@ class MilestoneCelebrationPresenter {
     AppLocalizations l10n,
   ) {
     final dogName = dog.name;
-    if (titles.length == 1) return '$dogName: ${titles.first}';
+    if (titles.length == 1) {
+      return '$dogName: ${titles.first}';
+    }
     if (titles.length == 2) {
       return '$dogName: ${titles[0]} ${conjunctionAndL10n(l10n)} ${titles[1]}';
     }
@@ -341,5 +417,153 @@ class MilestoneCelebrationPresenter {
         return Icons.flight_takeoff;
     }
     return Icons.bookmark_border;
+  }
+}
+
+class _MilestoneInfoSnackContent extends StatefulWidget {
+  const _MilestoneInfoSnackContent({
+    required this.leading,
+    required this.title,
+    required this.summary,
+    required this.onDismiss,
+    required this.autoDismissDuration,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final Widget leading;
+  final String title;
+  final String summary;
+  final String? actionLabel;
+  final VoidCallback onDismiss;
+  final VoidCallback? onAction;
+  final Duration autoDismissDuration;
+
+  @override
+  State<_MilestoneInfoSnackContent> createState() =>
+      _MilestoneInfoSnackContentState();
+}
+
+class _MilestoneInfoSnackContentState
+    extends State<_MilestoneInfoSnackContent> {
+  Timer? _timer;
+  bool _isClosed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _logMilestoneInfo('shown');
+    _logMilestoneInfo(
+      'auto dismiss scheduled ${widget.autoDismissDuration.inSeconds}s',
+    );
+    _timer = Timer(widget.autoDismissDuration, () {
+      _logMilestoneInfo('auto dismiss fired');
+      _safeDismiss(_MilestoneInfoDismissReason.auto);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _safeDismiss(_MilestoneInfoDismissReason reason) {
+    if (_isClosed) {
+      _logMilestoneInfo('dismiss skipped already closed');
+      return;
+    }
+
+    _isClosed = true;
+    _timer?.cancel();
+    _timer = null;
+
+    if (reason == _MilestoneInfoDismissReason.manual) {
+      _logMilestoneInfo('manual dismiss');
+    }
+
+    widget.onDismiss();
+  }
+
+  void _handleManualDismiss() {
+    _safeDismiss(_MilestoneInfoDismissReason.manual);
+  }
+
+  void _handleAction() {
+    _safeDismiss(_MilestoneInfoDismissReason.manual);
+    widget.onAction?.call();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final actionLabel = widget.actionLabel;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: widget.leading,
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.title,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    key: _milestoneInfoCloseButtonKey,
+                    behavior: HitTestBehavior.opaque,
+                    onTap: _handleManualDismiss,
+                    child: const SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                widget.summary,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: Colors.white,
+                ),
+              ),
+              if (actionLabel != null) ...[
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: _handleAction,
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(0, 0),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    foregroundColor: theme.colorScheme.inversePrimary,
+                  ),
+                  child: Text(actionLabel),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }

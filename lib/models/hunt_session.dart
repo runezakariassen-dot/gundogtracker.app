@@ -7,6 +7,8 @@ part 'hunt_session.g.dart';
 
 @HiveType(typeId: 1)
 class HuntSession extends HiveObject implements JsonEncodable {
+  static const Object _noValue = Object();
+
   @HiveField(0)
   final String dogId;
 
@@ -61,11 +63,24 @@ class HuntSession extends HiveObject implements JsonEncodable {
   @HiveField(17)
   final String? birdsShotSpecies;
 
+  @HiveField(18)
+  final DateTime updatedAt;
+
+  @HiveField(19)
+  final DateTime? deletedAt;
+
+  static String normalizeLocation(String? value) {
+    if (value == null) {
+      return '';
+    }
+    return value.trim();
+  }
+
   HuntSession({
     required this.dogId,
     this.dogKey,
     required this.dateTime,
-    required this.location,
+    required String location,
     required this.durationMinutes,
     required this.birdsSeen,
     required this.points,
@@ -80,11 +95,15 @@ class HuntSession extends HiveObject implements JsonEncodable {
     SessionType? sessionType,
     int? birdsShotCount,
     this.birdsShotSpecies,
-  })  : birdSpecies = birdSpecies ?? const [],
+    DateTime? updatedAt,
+    this.deletedAt,
+  })  : location = normalizeLocation(location),
+        birdSpecies = birdSpecies ?? const [],
         mediaPaths = mediaPaths ?? const [],
         secondaryPoints = secondaryPoints ?? 0,
         sessionType = sessionType ?? SessionType.training,
-        birdsShotCount = birdsShotCount ?? 0;
+        birdsShotCount = birdsShotCount ?? 0,
+        updatedAt = updatedAt ?? DateTime.now();
 
   HuntSession copyWith({
     String? dogId,
@@ -105,6 +124,8 @@ class HuntSession extends HiveObject implements JsonEncodable {
     SessionType? sessionType,
     int? birdsShotCount,
     String? birdsShotSpecies,
+    DateTime? updatedAt,
+    Object? deletedAt = _noValue,
   }) {
     return HuntSession(
       dogId: dogId ?? this.dogId,
@@ -125,6 +146,10 @@ class HuntSession extends HiveObject implements JsonEncodable {
       sessionType: sessionType ?? this.sessionType,
       birdsShotCount: birdsShotCount ?? this.birdsShotCount,
       birdsShotSpecies: birdsShotSpecies ?? this.birdsShotSpecies,
+      updatedAt: updatedAt ?? DateTime.now(),
+      deletedAt: identical(deletedAt, _noValue)
+          ? this.deletedAt
+          : deletedAt as DateTime?,
     );
   }
 
@@ -149,6 +174,10 @@ class HuntSession extends HiveObject implements JsonEncodable {
       'sessionType': sessionType.name,
       'birdsShotCount': birdsShotCount,
       'birdsShotSpecies': birdsShotSpecies,
+      'updatedAt': updatedAt.toIso8601String(),
+      'deletedAt': deletedAt?.toIso8601String(),
     };
   }
+
+  bool get isDeleted => deletedAt != null;
 }

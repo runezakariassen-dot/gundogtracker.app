@@ -1,2 +1,8 @@
-const String monthlyProductId = '<YOUR_MONTHLY_PRODUCT_ID>';
-const String yearlyProductId = '<YOUR_YEARLY_PRODUCT_ID>';
+const String monthlyProductId = 'gundogtracker.pro.monthly';
+
+const Set<String> subscriptionProductIds = {
+  monthlyProductId,
+};
+
+const int freeDogLimit = 4;
+const int freeSessionLimit = 25;
