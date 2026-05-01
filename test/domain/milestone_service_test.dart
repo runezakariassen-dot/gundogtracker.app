@@ -134,6 +134,7 @@ class _FakeHuntSessionRepository implements HuntSessionRepository {
     int flushes = 0,
     String notes = '',
     int secondaryPoints = 0,
+    int tomstandCount = 0,
     List<String>? birdSpecies,
     List<String>? mediaPaths,
     String? createdByUserId,
@@ -151,6 +152,7 @@ class _FakeHuntSessionRepository implements HuntSessionRepository {
     int? flushes,
     String? notes,
     int? secondaryPoints,
+    int? tomstandCount,
     List<String>? birdSpecies,
     List<String>? mediaPaths,
   }) async {

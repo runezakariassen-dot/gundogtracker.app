@@ -84,6 +84,25 @@ double _haversine(GpsPoint a, GpsPoint b) {
 
 double _toRadians(double degrees) => degrees * math.pi / 180;
 
+@visibleForTesting
+bool canAddMediaInSessionContext({
+  required bool hasMediaAccess,
+  required bool isEditMode,
+  required String? editingSessionDogId,
+  required String? selectedDogId,
+}) {
+  if (hasMediaAccess) {
+    return true;
+  }
+  if (!isEditMode) {
+    return false;
+  }
+  if (editingSessionDogId == null || selectedDogId == null) {
+    return false;
+  }
+  return editingSessionDogId == selectedDogId;
+}
+
 String _formatDuration(Duration duration) {
   final hours = duration.inHours;
   final minutes = duration.inMinutes.remainder(60);
@@ -208,6 +227,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
   final _birdsController = TextEditingController();
   final _pointsController = TextEditingController();
   final _secondaryPointsController = TextEditingController();
+  final _tomstandController = TextEditingController();
   final _flushesController = TextEditingController();
   final _notesController = TextEditingController();
   SessionType _sessionType = SessionType.training;
@@ -313,6 +333,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
         _birdsController.text = session.birdsSeen.toString();
         _pointsController.text = session.points.toString();
         _secondaryPointsController.text = session.secondaryPoints.toString();
+        _tomstandController.text = session.tomstandCount.toString();
         _flushesController.text = session.flushes.toString();
         _notesController.text = session.notes;
         _selectedBirdSpecies
@@ -362,6 +383,10 @@ class _HuntSessionPageState extends State<HuntSessionPage>
       _restoreDraft(widget.initialDraft!);
     }
 
+    if (!_isEditMode && _selectedDateTime == null) {
+      _setSelectedDateTime(DateTime.now(), notify: false);
+    }
+
     if (_isDraftEnabled) {
       _attachDraftListeners();
     }
@@ -379,6 +404,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     _birdsController.addListener(_onBirdsChanged);
     _pointsController.addListener(_onPointsChanged);
     _secondaryPointsController.addListener(_onSecondaryPointsChanged);
+    _tomstandController.addListener(_onTomstandChanged);
     _flushesController.addListener(_onFlushesChanged);
     _notesController.addListener(_onNotesChanged);
   }
@@ -390,6 +416,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
       activeMinutes: _parseNonNegative(_durationController.text),
       birdCount: _parseNonNegative(_birdsController.text),
       standCount: _parseNonNegative(_pointsController.text),
+      tomstandCount: _parseNonNegative(_tomstandController.text),
       flushCount: _parseNonNegative(_flushesController.text),
       notes: _notesController.text,
       locationName: _locationController.text,
@@ -418,6 +445,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     _durationController.text = state.activeMinutes.toString();
     _birdsController.text = state.birdCount.toString();
     _pointsController.text = state.standCount.toString();
+    _tomstandController.text = state.tomstandCount.toString();
     _flushesController.text = state.flushCount.toString();
     _notesController.text = state.notes ?? '';
     _importedTrackId = state.trackId;
@@ -465,6 +493,13 @@ class _HuntSessionPageState extends State<HuntSessionPage>
   void _onSecondaryPointsChanged() {
     if (_isApplyingControllerState) return;
     _activeSessionController.scheduleAutosave();
+  }
+
+  void _onTomstandChanged() {
+    if (_isApplyingControllerState) return;
+    _activeSessionController.setTomstandCount(
+      _parseNonNegative(_tomstandController.text),
+    );
   }
 
   void _onFlushesChanged() {
@@ -613,6 +648,16 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     }
   }
 
+  String _selectedDateLabel(AppLocalizations l10n) {
+    final value = _selectedDateTime ?? DateTime.now();
+    return DateFormat.yMd(l10n.localeName).format(value);
+  }
+
+  String _selectedTimeLabel(AppLocalizations l10n) {
+    final value = _selectedDateTime ?? DateTime.now();
+    return DateFormat.Hm(l10n.localeName).format(value);
+  }
+
   // ignore: unused_element
   void _setImportedTrackId(String? trackId, {bool notify = true}) {
     _importedTrackId = trackId;
@@ -646,7 +691,6 @@ class _HuntSessionPageState extends State<HuntSessionPage>
   }
 
   // ---------- Date/time pickers ----------
-  // ignore: unused_element
   Future<void> _pickDate() async {
     if (_anyBusy) return;
     final now = DateTime.now();
@@ -668,7 +712,6 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     }
   }
 
-  // ignore: unused_element
   Future<void> _pickTime() async {
     if (_anyBusy) return;
     final time = await showTimePicker(
@@ -860,7 +903,13 @@ class _HuntSessionPageState extends State<HuntSessionPage>
         '[MEDIA] add button tapped canEdit=${access.canEdit} role=$roleName',
       );
     }
-    if (!access.canEdit) {
+    final canAddMedia = canAddMediaInSessionContext(
+      hasMediaAccess: access.canEdit,
+      isEditMode: _isEditMode,
+      editingSessionDogId: _editingSession?.dogId,
+      selectedDogId: _selectedDog?.id,
+    );
+    if (!canAddMedia) {
       _showPermissionDeniedSnackBar(l10n);
       return;
     }
@@ -1177,7 +1226,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('GPX-import feilet. Se logg.')),
+          SnackBar(
+              content: Text(
+                  AppLocalizations.of(context)!.gpx_import_failed_see_log)),
         );
       }
     }
@@ -1321,7 +1372,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('GPX-import feilet. Se logg.')),
+          SnackBar(
+              content: Text(
+                  AppLocalizations.of(context)!.gpx_import_failed_see_log)),
         );
       }
     }
@@ -1512,6 +1565,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
           birdsSeen: _parseNonNegative(_birdsController.text),
           points: _parseNonNegative(_pointsController.text),
           secondaryPoints: _parseNonNegative(_secondaryPointsController.text),
+          tomstandCount: _parseNonNegative(_tomstandController.text),
           flushes: _parseNonNegative(_flushesController.text),
           notes: _notesController.text,
           birdSpecies: List<String>.from(_selectedBirdSpecies),
@@ -1580,6 +1634,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
         birdsSeen: _parseNonNegative(_birdsController.text),
         points: _parseNonNegative(_pointsController.text),
         secondaryPoints: _parseNonNegative(_secondaryPointsController.text),
+        tomstandCount: _parseNonNegative(_tomstandController.text),
         flushes: _parseNonNegative(_flushesController.text),
         notes: _notesController.text,
         trackKey: trackKey,
@@ -1893,6 +1948,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     final pts = TextEditingController(text: session.points.toString());
     final secs =
         TextEditingController(text: session.secondaryPoints.toString());
+    final tms = TextEditingController(text: session.tomstandCount.toString());
     final fls = TextEditingController(text: session.flushes.toString());
     final notes = TextEditingController(text: session.notes);
     DateTime dt = session.dateTime;
@@ -2003,6 +2059,12 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                 .hunt_session_field_secondary_points_label),
                         keyboardType: TextInputType.number),
                     TextField(
+                      controller: tms,
+                      decoration: InputDecoration(
+                        labelText:
+                          dialogL10n.hunt_session_field_tomstand_label),
+                      keyboardType: TextInputType.number),
+                    TextField(
                         controller: fls,
                         decoration: InputDecoration(
                             labelText:
@@ -2041,6 +2103,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                       birdsSeen: _parseNonNegative(birds.text),
                       points: _parseNonNegative(pts.text),
                       secondaryPoints: _parseNonNegative(secs.text),
+                      tomstandCount: _parseNonNegative(tms.text),
                       flushes: _parseNonNegative(fls.text),
                       notes: notes.text,
                     );
@@ -2207,6 +2270,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     _birdsController.dispose();
     _pointsController.dispose();
     _secondaryPointsController.dispose();
+    _tomstandController.dispose();
     _flushesController.dispose();
     _notesController.dispose();
     super.dispose();
@@ -2348,6 +2412,8 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     final totalPoints = dogSessions.fold<int>(0, (sum, s) => sum + s.points);
     final totalSecondaryPoints =
         dogSessions.fold<int>(0, (sum, s) => sum + s.secondaryPoints);
+    final totalTomstand =
+      dogSessions.fold<int>(0, (sum, s) => sum + s.tomstandCount);
     final totalFlushes = dogSessions.fold<int>(0, (sum, s) => sum + s.flushes);
 
     if (widget.homeCompact &&
@@ -2803,6 +2869,8 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                     Text(
                         '${l10n.session_summary_total_secondary_points_label} $totalSecondaryPoints'),
                     Text(
+                      '${l10n.session_summary_total_tomstand_label} $totalTomstand'),
+                    Text(
                         '${l10n.session_summary_total_flushes_label} $totalFlushes'),
                   ],
                 ],
@@ -3077,6 +3145,51 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                   // “Avansert: GPS-sporing” skjules i V1 – ingen widget her.
 
                   if (showForm) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.session_pick_date,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            key: const Key('sessionDateButton'),
+                            onPressed: _anyBusy ? null : _pickDate,
+                            icon: const Icon(Icons.calendar_today),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size(64, 52),
+                              alignment: Alignment.centerLeft,
+                            ),
+                            label: Text(
+                              _selectedDateLabel(l10n),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            key: const Key('sessionTimeButton'),
+                            onPressed: _anyBusy ? null : _pickTime,
+                            icon: const Icon(Icons.access_time),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size(64, 52),
+                              alignment: Alignment.centerLeft,
+                            ),
+                            label: Text(
+                              _selectedTimeLabel(l10n),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
                     TextField(
                       controller: _locationController,
                       decoration: InputDecoration(
@@ -3127,6 +3240,13 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                       decoration: InputDecoration(
                           labelText:
                               l10n.hunt_session_field_secondary_points_label),
+                      keyboardType: TextInputType.number,
+                      enabled: !_anyBusy,
+                    ),
+                    TextField(
+                      controller: _tomstandController,
+                      decoration: InputDecoration(
+                          labelText: l10n.hunt_session_field_tomstand_label),
                       keyboardType: TextInputType.number,
                       enabled: !_anyBusy,
                     ),
@@ -3368,10 +3488,12 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
+                                  '📅 ${DateFormat('dd.MM.yyyy HH:mm').format(filteredEntries[i].value.dateTime)}\n'
                                   '⏱ ${l10n.session_unit_min}: ${filteredEntries[i].value.durationMinutes}\n'
                                   '🐦 ${l10n.session_label_birds}: ${filteredEntries[i].value.birdsSeen}   '
                                   '📍 ${l10n.session_label_points}: ${filteredEntries[i].value.points}\n'
                                   '➡️ ${l10n.session_unit_sec}: ${filteredEntries[i].value.secondaryPoints}   '
+                                  '🎯 ${l10n.session_field_tomstand}: ${filteredEntries[i].value.tomstandCount}\n'
                                   '💨 ${l10n.session_label_flushes}: ${filteredEntries[i].value.flushes}',
                                 ),
                                 const SizedBox(height: 4),
@@ -3695,6 +3817,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     final birdsText = birdText(session.birdsSeen);
     final standTextValue = standText(session.points);
     final secondaryText = session.secondaryPoints.toString();
+    final tomstandText = session.tomstandCount.toString();
     final flushTextValue = flushText(session.flushes);
     final speciesText = session.birdSpecies.isEmpty
         ? l10n.session_detail_empty_bird_species
@@ -3727,6 +3850,10 @@ class _HuntSessionPageState extends State<HuntSessionPage>
         _buildDetailRow(
           l10n.session_detail_detail_label_secondary_points,
           secondaryText,
+        ),
+        _buildDetailRow(
+          l10n.session_detail_detail_label_tomstand,
+          tomstandText,
         ),
         _buildDetailRow(
           l10n.session_detail_detail_label_flushes,

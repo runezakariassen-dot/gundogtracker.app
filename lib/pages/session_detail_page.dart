@@ -107,6 +107,7 @@ class _SessionDetailPageState extends State<SessionDetailPage>
   final _birdsController = TextEditingController();
   final _pointsController = TextEditingController();
   final _secondaryPointsController = TextEditingController();
+  final _tomstandController = TextEditingController();
   final _flushesController = TextEditingController();
   final _notesController = TextEditingController();
 
@@ -198,6 +199,7 @@ class _SessionDetailPageState extends State<SessionDetailPage>
         _birdsController.text = session.birdsSeen.toString();
         _pointsController.text = session.points.toString();
         _secondaryPointsController.text = session.secondaryPoints.toString();
+        _tomstandController.text = session.tomstandCount.toString();
         _flushesController.text = session.flushes.toString();
         _notesController.text = session.notes;
 
@@ -264,6 +266,7 @@ class _SessionDetailPageState extends State<SessionDetailPage>
     _birdsController.addListener(_onBirdsChanged);
     _pointsController.addListener(_onPointsChanged);
     _secondaryPointsController.addListener(_onSecondaryPointsChanged);
+    _tomstandController.addListener(_onTomstandChanged);
     _flushesController.addListener(_onFlushesChanged);
     _notesController.addListener(_onNotesChanged);
   }
@@ -275,6 +278,7 @@ class _SessionDetailPageState extends State<SessionDetailPage>
       activeMinutes: _parseNonNegative(_durationController.text),
       birdCount: _parseNonNegative(_birdsController.text),
       standCount: _parseNonNegative(_pointsController.text),
+      tomstandCount: _parseNonNegative(_tomstandController.text),
       flushCount: _parseNonNegative(_flushesController.text),
       notes: _notesController.text,
       locationName: _locationController.text,
@@ -304,6 +308,7 @@ class _SessionDetailPageState extends State<SessionDetailPage>
     _durationController.text = state.activeMinutes.toString();
     _birdsController.text = state.birdCount.toString();
     _pointsController.text = state.standCount.toString();
+    _tomstandController.text = state.tomstandCount.toString();
     _flushesController.text = state.flushCount.toString();
     _notesController.text = state.notes ?? '';
     _importedTrackId = state.trackId;
@@ -340,6 +345,13 @@ class _SessionDetailPageState extends State<SessionDetailPage>
   void _onSecondaryPointsChanged() {
     if (_isApplyingControllerState) return;
     _activeSessionController.scheduleAutosave();
+  }
+
+  void _onTomstandChanged() {
+    if (_isApplyingControllerState) return;
+    _activeSessionController.setTomstandCount(
+      _parseNonNegative(_tomstandController.text),
+    );
   }
 
   void _onFlushesChanged() {
@@ -1091,6 +1103,7 @@ class _SessionDetailPageState extends State<SessionDetailPage>
           birdsSeen: _parseNonNegative(_birdsController.text),
           points: _parseNonNegative(_pointsController.text),
           secondaryPoints: _parseNonNegative(_secondaryPointsController.text),
+          tomstandCount: _parseNonNegative(_tomstandController.text),
           flushes: _parseNonNegative(_flushesController.text),
           notes: _notesController.text,
           birdSpecies: List<String>.from(_selectedBirdSpecies),
@@ -1137,6 +1150,7 @@ class _SessionDetailPageState extends State<SessionDetailPage>
         birdsSeen: _parseNonNegative(_birdsController.text),
         points: _parseNonNegative(_pointsController.text),
         secondaryPoints: _parseNonNegative(_secondaryPointsController.text),
+        tomstandCount: _parseNonNegative(_tomstandController.text),
         flushes: _parseNonNegative(_flushesController.text),
         notes: _notesController.text,
         trackKey: trackKey,
@@ -1196,6 +1210,7 @@ class _SessionDetailPageState extends State<SessionDetailPage>
       _birdsController.clear();
       _pointsController.clear();
       _secondaryPointsController.clear();
+      _tomstandController.clear();
       _flushesController.clear();
       _notesController.clear();
       _selectedBirdSpecies.clear();
@@ -1493,9 +1508,38 @@ class _SessionDetailPageState extends State<SessionDetailPage>
                 leading: const Icon(Icons.delete),
                 title: Text(l10n.session_detail_session_menu_delete),
                 onTap: () async {
+                  Navigator.pop(ctx);
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (dialogCtx) {
+                      final dl10n = AppLocalizations.of(dialogCtx)!;
+                      return AlertDialog(
+                        title:
+                            Text(dl10n.session_detail_confirm_delete_title),
+                        content:
+                            Text(dl10n.session_detail_confirm_delete_body),
+                        actions: [
+                          TextButton(
+                            onPressed: () =>
+                                Navigator.pop(dialogCtx, false),
+                            child: Text(dl10n.common_cancel),
+                          ),
+                          TextButton(
+                            onPressed: () =>
+                                Navigator.pop(dialogCtx, true),
+                            style: TextButton.styleFrom(
+                              foregroundColor:
+                                  Theme.of(dialogCtx).colorScheme.error,
+                            ),
+                            child: Text(dl10n.dog_editor_button_delete),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                  if (confirm != true) return;
                   await _deleteSessionWithSync(sessionKey, session);
                   if (mounted) setState(() {});
-                  Navigator.pop(ctx);
                 },
               ),
             ],
@@ -1711,12 +1755,40 @@ class _SessionDetailPageState extends State<SessionDetailPage>
             ),
           ),
           IconButton(
-            onPressed: _anyBusy ? null : () => _deleteSessionMediaAt(index),
+            onPressed: _anyBusy ? null : () => _confirmDeleteSessionMedia(index),
             icon: const Icon(Icons.close),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _confirmDeleteSessionMedia(int index) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) {
+        final dl10n = AppLocalizations.of(dialogCtx)!;
+        return AlertDialog(
+          title: Text(dl10n.session_detail_media_delete_title),
+          content: Text(dl10n.session_detail_media_delete_body),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogCtx, false),
+              child: Text(dl10n.common_cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogCtx, true),
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(dialogCtx).colorScheme.error,
+              ),
+              child: Text(dl10n.dog_editor_button_delete),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed != true) return;
+    await _deleteSessionMediaAt(index);
   }
 
   Future<void> _deleteSessionMediaAt(int index) async {
@@ -1783,6 +1855,7 @@ class _SessionDetailPageState extends State<SessionDetailPage>
     final birdsText = birdText(session.birdsSeen, l10n: l10n);
     final standTextValue = standText(session.points);
     final secondaryText = session.secondaryPoints.toString();
+    final tomstandText = session.tomstandCount.toString();
     final flushTextValue = flushText(session.flushes);
     final speciesText = session.birdSpecies.isEmpty
         ? l10n.session_detail_empty_bird_species
@@ -1818,6 +1891,10 @@ class _SessionDetailPageState extends State<SessionDetailPage>
         _buildDetailRow(
           l10n.session_detail_field_secondary_points_label,
           secondaryText,
+        ),
+        _buildDetailRow(
+          l10n.session_detail_field_tomstand_label,
+          tomstandText,
         ),
         _buildDetailRow(
           l10n.session_detail_label_flushes,
@@ -1901,6 +1978,7 @@ class _SessionDetailPageState extends State<SessionDetailPage>
     _birdsController.dispose();
     _pointsController.dispose();
     _secondaryPointsController.dispose();
+    _tomstandController.dispose();
     _flushesController.dispose();
     _notesController.dispose();
 
@@ -1986,6 +2064,8 @@ class _SessionDetailPageState extends State<SessionDetailPage>
     final totalPoints = dogSessions.fold<int>(0, (sum, s) => sum + s.points);
     final totalSecondaryPoints =
         dogSessions.fold<int>(0, (sum, s) => sum + s.secondaryPoints);
+    final totalTomstand =
+      dogSessions.fold<int>(0, (sum, s) => sum + s.tomstandCount);
     final totalFlushes = dogSessions.fold<int>(0, (sum, s) => sum + s.flushes);
 
     if (widget.homeCompact &&
@@ -2343,6 +2423,9 @@ class _SessionDetailPageState extends State<SessionDetailPage>
                     totalSecondaryPoints),
               ),
               Text(
+                l10n.session_detail_stats_total_tomstand(totalTomstand),
+              ),
+              Text(
                 l10n.session_detail_stats_total_flushes(totalFlushes),
               ),
               const SizedBox(height: 16),
@@ -2468,6 +2551,14 @@ class _SessionDetailPageState extends State<SessionDetailPage>
               controller: _secondaryPointsController,
               decoration: InputDecoration(
                 labelText: l10n.session_detail_field_secondary_points_label,
+              ),
+              keyboardType: TextInputType.number,
+              enabled: !_anyBusy,
+            ),
+            TextField(
+              controller: _tomstandController,
+              decoration: InputDecoration(
+                labelText: l10n.session_detail_field_tomstand_label,
               ),
               keyboardType: TextInputType.number,
               enabled: !_anyBusy,
@@ -2677,11 +2768,17 @@ class _SessionDetailPageState extends State<SessionDetailPage>
                           ),
                           const SizedBox(height: 8),
                           Text(
+                            '📅 ${DateFormat('dd.MM.yyyy').format(filteredEntries[i].value.dateTime)}',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
                             l10n.session_detail_saved_session_summary(
                               filteredEntries[i].value.durationMinutes,
                               filteredEntries[i].value.birdsSeen,
                               filteredEntries[i].value.points,
                               filteredEntries[i].value.secondaryPoints,
+                              filteredEntries[i].value.tomstandCount,
                               filteredEntries[i].value.flushes,
                             ),
                           ),
