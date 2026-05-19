@@ -688,6 +688,7 @@
   "session_summary_total_bird_contacts_label": "Total bird contacts:",
   "session_summary_total_points_label": "Total points:",
   "session_summary_total_secondary_points_label": "Total secondary points:",
+  "session_summary_total_tomstand_label": "Tomstand total:",
   "session_summary_total_flushes_label": "Total flushes:",
   "session_action_add_new_session": "Add new session",
   "session_action_cancel": "Cancel",
@@ -699,6 +700,7 @@
   "session_field_bird_contacts": "Bird contacts",
   "session_field_points": "Points",
   "session_field_secondary_points": "Secondary points",
+  "session_field_tomstand": "Tomstand",
   "session_field_flushes": "Flushes",
   "session_pick_date": "Select date",
   "session_pick_time": "Time",
@@ -918,6 +920,7 @@
   "session_detail_field_bird_contacts_label": "Bird contacts",
   "session_detail_field_points_label": "Points",
   "session_detail_field_secondary_points_label": "Secondary points",
+  "session_detail_field_tomstand_label": "Tomstand",
   "session_detail_field_flushes_label": "Flushes",
   "session_detail_field_notes_label": "Note",
   "session_detail_version_build": " (build {buildNumber})",
@@ -1004,6 +1007,14 @@
       }
     }
   },
+  "session_detail_stats_total_tomstand": "Tomstand total: {count}",
+  "@session_detail_stats_total_tomstand": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "session_detail_stats_total_flushes": "Flushes total: {count}",
   "@session_detail_stats_total_flushes": {
     "placeholders": {
@@ -1015,8 +1026,12 @@
   "session_detail_button_select_date": "Select date",
   "session_detail_button_select_time": "Time",
   "session_detail_label_duration_from_track": "Taken from GPS track",
+  "session_detail_confirm_delete_title": "Delete session?",
+  "session_detail_confirm_delete_body": "This removes the session from the dog.",
+  "session_detail_media_delete_title": "Delete media?",
+  "session_detail_media_delete_body": "This removes the selected media from the session.",
   "session_detail_saved_session_summary":
-      "Time: {durationMinutes} min, Birds: {birds}, Points: {stand}, Secondary: {secondaryPoints}, Flushes: {flushes}",
+      "Time: {durationMinutes} min, Birds: {birds}, Points: {stand}, Secondary: {secondaryPoints}, Tomstand: {tomstandCount}, Flushes: {flushes}",
   "@session_detail_saved_session_summary": {
     "description": "Summary line for saved session entries.",
     "placeholders": {
@@ -1030,6 +1045,9 @@
         "type": "int"
       },
       "secondaryPoints": {
+        "type": "int"
+      },
+      "tomstandCount": {
         "type": "int"
       },
       "flushes": {
@@ -1061,6 +1079,7 @@
   "hunt_session_field_birds_seen_label": "Bird contacts",
   "hunt_session_field_points_label": "Points",
   "hunt_session_field_secondary_points_label": "Secondary points",
+  "hunt_session_field_tomstand_label": "Tomstand",
   "hunt_session_field_flushes_label": "Flushes",
   "hunt_session_field_notes_label": "Notes",
   "hunt_session_action_save": "Save",
@@ -1082,6 +1101,7 @@
   "session_detail_detail_label_bird_contacts": "Bird contacts",
   "session_detail_detail_label_points": "Points",
   "session_detail_detail_label_secondary_points": "Secondary points",
+  "session_detail_detail_label_tomstand": "Tomstand",
   "session_detail_detail_label_flushes": "Flushes",
   "session_detail_label_bird_species": "Bird species",
   "session_detail_label_gps_track": "GPS track",

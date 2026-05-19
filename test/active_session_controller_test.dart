@@ -90,6 +90,7 @@ void main() {
         activeMinutes: 12,
         birdCount: 3,
         standCount: 4,
+        tomstandCount: 2,
         flushCount: 1,
         notes: 'Notat',
         locationName: 'Terreng',
@@ -105,6 +106,7 @@ void main() {
       expect(state.activeMinutes, draft.activeMinutes);
       expect(state.birdCount, draft.birdCount);
       expect(state.standCount, draft.standCount);
+      expect(state.tomstandCount, draft.tomstandCount);
       expect(state.flushCount, draft.flushCount);
       expect(state.notes, draft.notes);
       expect(state.locationName, draft.locationName);
@@ -198,6 +200,33 @@ void main() {
       final scheduledNotes = autosave.lastScheduled;
       expect(scheduledNotes, isNotNull);
       expect(scheduledNotes!.notes, 'abc');
+    },
+    tags: ['ci'],
+  );
+
+  test(
+    'setTomstandCount clamps negatives and schedules autosave',
+    () {
+      final repo = _FakeDraftRepository();
+      final autosave = _FakeAutosaveService(repo);
+      final controller = ActiveSessionController(
+        autosaveService: autosave,
+        draftRepository: repo,
+        draftEnabled: true,
+        now: () => DateTime(2024, 1, 2, 9, 0),
+      );
+
+      controller.setDogId('dog-1');
+      controller.setTomstandCount(3);
+
+      expect(controller.state.tomstandCount, 3);
+      expect(autosave.lastScheduled, isNotNull);
+      expect(autosave.lastScheduled!.tomstandCount, 3);
+
+      controller.setTomstandCount(-1);
+
+      expect(controller.state.tomstandCount, 0);
+      expect(autosave.lastScheduled!.tomstandCount, 0);
     },
     tags: ['ci'],
   );

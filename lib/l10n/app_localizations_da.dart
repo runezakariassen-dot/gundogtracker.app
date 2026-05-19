@@ -110,150 +110,150 @@ class AppLocalizationsDa extends AppLocalizations {
   String get statistics => 'Statistik';
 
   @override
-  String get advanced_statistics => 'Avanceret statistik';
+  String get advanced_statistics => 'Advanced statistics';
 
   @override
-  String get advanced_statistics_overview => 'Oversigt';
+  String get advanced_statistics_overview => 'Overview';
 
   @override
-  String get advanced_statistics_progress => 'Udvikling';
+  String get advanced_statistics_progress => 'Progress';
 
   @override
-  String get advanced_statistics_season => 'Sæson';
+  String get advanced_statistics_season => 'Season';
 
   @override
-  String get advanced_statistics_comparison => 'Sammenligning';
+  String get advanced_statistics_comparison => 'Comparison';
 
   @override
-  String get advanced_statistics_export => 'Eksport';
+  String get advanced_statistics_export => 'Export';
 
   @override
-  String get advanced_statistics_no_progress_data => 'Ingen udviklingsdata tilgængelige';
+  String get advanced_statistics_no_progress_data => 'No progress data available';
 
   @override
-  String get advanced_statistics_no_season_data => 'Ingen sæsondata tilgængelige';
+  String get advanced_statistics_no_season_data => 'No seasonal data available';
 
   @override
-  String get advanced_statistics_need_two_dogs => 'Kræver mindst 2 hunde til sammenligning';
+  String get advanced_statistics_need_two_dogs => 'Need at least 2 dogs to compare';
 
   @override
-  String get advanced_statistics_exporting => 'Eksporterer...';
+  String get advanced_statistics_exporting => 'Exporting...';
 
   @override
-  String get advanced_statistics_export_stats => 'Eksportér statistik';
+  String get advanced_statistics_export_stats => 'Export statistics';
 
   @override
-  String get advanced_statistics_export_sessions => 'Eksportér sessioner';
+  String get advanced_statistics_export_sessions => 'Export sessions';
 
   @override
-  String get advanced_statistics_generate_text_report => 'Generér tekstrapport';
+  String get advanced_statistics_generate_text_report => 'Generate text report';
 
   @override
   String advanced_statistics_key_metrics_for(Object dogName) {
-    return 'Nøgletal for $dogName';
+    return 'Key metrics for $dogName';
   }
 
   @override
-  String get advanced_statistics_stand_rate_per_hour => 'Stand pr. time';
+  String get advanced_statistics_stand_rate_per_hour => 'Stand-rate per hour';
 
   @override
-  String get advanced_statistics_bird_contacts_per_session => 'Fuglekontakter pr. session';
+  String get advanced_statistics_bird_contacts_per_session => 'Bird contacts per session';
 
   @override
-  String get advanced_statistics_average_flushes_per_session => 'Gennemsnitlige stød pr. session';
+  String get advanced_statistics_average_flushes_per_session => 'Average flushes per session';
 
   @override
-  String get advanced_statistics_success_rate => 'Succesrate';
+  String get advanced_statistics_success_rate => 'Success rate';
 
   @override
-  String get advanced_statistics_totals => 'Totaler';
+  String get advanced_statistics_totals => 'Totals';
 
   @override
-  String get advanced_statistics_sessions_total => 'Sessioner i alt';
+  String get advanced_statistics_sessions_total => 'Sessions total';
 
   @override
-  String get advanced_statistics_active_time => 'Aktiv tid';
+  String get advanced_statistics_active_time => 'Active time';
 
   @override
-  String get advanced_statistics_total_points => 'Samlet antal point';
+  String get advanced_statistics_total_points => 'Total points';
 
   @override
-  String get advanced_statistics_total_flushes => 'Samlet antal stød';
+  String get advanced_statistics_total_flushes => 'Total flushes';
 
   @override
-  String get advanced_statistics_bird_contacts => 'Fuglekontakter';
+  String get advanced_statistics_bird_contacts => 'Bird contacts';
 
   @override
-  String get advanced_statistics_birds_shot => 'Fugle skudt';
+  String get advanced_statistics_birds_shot => 'Birds shot';
 
   @override
   String advanced_statistics_progress_over_time(Object dogName) {
-    return 'Udvikling over tid - $dogName';
+    return 'Progress over time - $dogName';
   }
 
   @override
-  String get advanced_statistics_average_points_per_session_over_time => 'Gennemsnitlige point pr. session over tid';
+  String get advanced_statistics_average_points_per_session_over_time => 'Average points per session over time';
 
   @override
-  String get advanced_statistics_trend_analysis => 'Trendanalyse';
+  String get advanced_statistics_trend_analysis => 'Trend analysis';
 
   @override
-  String get advanced_statistics_improvement => 'Forbedring!';
+  String get advanced_statistics_improvement => 'Improvement!';
 
   @override
-  String get advanced_statistics_declining => 'Tilbagegang';
+  String get advanced_statistics_declining => 'Declining';
 
   @override
-  String get advanced_statistics_stable => 'Stabil';
+  String get advanced_statistics_stable => 'Stable';
 
   @override
   String advanced_statistics_seasonal_analysis(Object dogName) {
-    return 'Sæsonanalyse - $dogName';
+    return 'Seasonal analysis - $dogName';
   }
 
   @override
-  String get advanced_statistics_sessions => 'Sessioner';
+  String get advanced_statistics_sessions => 'Sessions';
 
   @override
-  String get advanced_statistics_points => 'Point';
+  String get advanced_statistics_points => 'Points';
 
   @override
-  String get advanced_statistics_points_per_hour => 'Point pr. time';
+  String get advanced_statistics_points_per_hour => 'Points per hour';
 
   @override
-  String get advanced_statistics_dog_comparison => 'Hundesammenligning';
+  String get advanced_statistics_dog_comparison => 'Dog comparison';
 
   @override
-  String get advanced_statistics_success_rate_percent => 'Succesrate (%)';
+  String get advanced_statistics_success_rate_percent => 'Success rate (%)';
 
   @override
-  String get advanced_statistics_export_reports => 'Eksport af rapporter';
+  String get advanced_statistics_export_reports => 'Export reports';
 
   @override
-  String get advanced_statistics_export_statistics_csv => 'Eksportér statistik som CSV';
+  String get advanced_statistics_export_statistics_csv => 'Export statistics as CSV';
 
   @override
-  String get advanced_statistics_contains_comparison_all_dogs => 'Indeholder sammenligning af alle hunde med nøgletal.';
+  String get advanced_statistics_contains_comparison_all_dogs => 'Contains comparison of all dogs with key figures.';
 
   @override
-  String get advanced_statistics_export_sessions_csv => 'Eksportér alle sessionsdata som CSV';
+  String get advanced_statistics_export_sessions_csv => 'Export all session data as CSV';
 
   @override
-  String get advanced_statistics_sessions_csv_description => 'Detaljeret oversigt over alle jagtsessioner med alle felter.';
+  String get advanced_statistics_sessions_csv_description => 'Detailed overview of all hunt sessions with all fields.';
 
   @override
-  String get advanced_statistics_generate_text_report_description => 'Generér et tekstresumé af al statistik.';
+  String get advanced_statistics_generate_text_report_description => 'Generate a text summary of all statistics.';
 
   @override
-  String get advanced_statistics_export_session_data => 'Eksportér sessionsdata';
+  String get advanced_statistics_export_session_data => 'Export session data';
 
   @override
   String advanced_statistics_text_report_for(Object dogName) {
-    return 'Tekstrapport for $dogName';
+    return 'Text report for $dogName';
   }
 
   @override
-  String get advanced_statistics_generate_readable_text_report => 'Generér en læsbar tekstrapport med al statistik.';
+  String get advanced_statistics_generate_readable_text_report => 'Generate a readable text report with all statistics.';
 
   @override
   String stats_week_label(int week) {
@@ -357,15 +357,6 @@ class AppLocalizationsDa extends AppLocalizations {
 
   @override
   String get stats_no_sessions_registered => 'Ingen sessioner registreret endnu';
-
-  @override
-  String get stats_no_sessions_empty_body => 'Registrer din første session for at se tendenser og statistik over tid.';
-
-  @override
-  String get stats_no_sessions_empty_cta => 'Start en session';
-
-  @override
-  String get statistics_no_dogs_body => 'Tilføj en hund for at se statistik her.';
 
   @override
   String get stats_filter_all_dogs => 'Alle hunde';
@@ -577,12 +568,6 @@ class AppLocalizationsDa extends AppLocalizations {
   String get dog_editor_death_date_picker_hint => 'Vælg dato';
 
   @override
-  String get dog_memorial_story_label => 'Historie / minder';
-
-  @override
-  String get dog_memorial_story_hint => 'Skriv mere om hunden, jagtminder, præmier eller personlighed';
-
-  @override
   String get dog_detail_snackbar_invite_accepted => 'Invitation accepteret';
 
   @override
@@ -692,9 +677,6 @@ class AppLocalizationsDa extends AppLocalizations {
   String get dog_detail_access_section_title => 'Adgang til denne hund';
 
   @override
-  String get dog_detail_member_action_change_role => 'Skift rolle';
-
-  @override
   String get dog_detail_member_action_set_reader => 'Sæt som læser';
 
   @override
@@ -702,18 +684,6 @@ class AppLocalizationsDa extends AppLocalizations {
 
   @override
   String get dog_detail_member_action_remove_access => 'Fjern adgang';
-
-  @override
-  String get dog_detail_role_dialog_title => 'Rediger rolle';
-
-  @override
-  String get dog_detail_role_dialog_label => 'Rolle';
-
-  @override
-  String get dog_detail_role_confirm_admin_title => 'Giv administratorrolle?';
-
-  @override
-  String get dog_detail_role_confirm_admin_message => 'Administratorer kan administrere adgang til denne hund.';
 
   @override
   String get share_role_owner => 'Ejer';
@@ -779,21 +749,6 @@ class AppLocalizationsDa extends AppLocalizations {
 
   @override
   String get share_error_invalid_email => 'Ugyldig e-mailadresse.';
-
-  @override
-  String get membership_role_error_not_authorized => 'Du har ikke tilladelse til at ændre denne rolle.';
-
-  @override
-  String get membership_role_error_membership_not_found => 'Medlem blev ikke fundet.';
-
-  @override
-  String get membership_role_error_cannot_edit_self => 'Du kan ikke ændre din egen rolle.';
-
-  @override
-  String get membership_role_error_owner_locked => 'Ejerrollen kan kun ændres via overførsel af ejerskab.';
-
-  @override
-  String get membership_role_error_cannot_promote_to_admin => 'Administratorer kan ikke tildele eller ændre administratorroller.';
 
   @override
   String get share_error_dog_not_found_title => 'Hund ikke fundet';
@@ -1000,74 +955,6 @@ class AppLocalizationsDa extends AppLocalizations {
   String get dog_detail_next_milestone_title => 'Næste milepæl';
 
   @override
-  String get dog_heat_cycle_section_title => 'Løbetid';
-
-  @override
-  String get dog_heat_cycle_add_button => 'Tilføj løbetid';
-
-  @override
-  String get dog_heat_cycle_add_title => 'Ny løbetid';
-
-  @override
-  String get dog_heat_cycle_edit_title => 'Rediger løbetid';
-
-  @override
-  String get dog_heat_cycle_start_date_label => 'Startdato';
-
-  @override
-  String get dog_heat_cycle_end_date_label => 'Slutdato (valgfri)';
-
-  @override
-  String get dog_heat_cycle_end_not_set => 'Ikke angivet';
-
-  @override
-  String get dog_heat_cycle_note_label => 'Note (valgfri)';
-
-  @override
-  String get dog_heat_cycle_note_hint => 'Skriv en note';
-
-  @override
-  String get dog_heat_cycle_empty => 'Ingen løbetid registreret endnu.';
-
-  @override
-  String dog_heat_cycle_period_value(Object start, Object end) {
-    return '$start - $end';
-  }
-
-  @override
-  String get dog_heat_cycle_edit_button => 'Rediger';
-
-  @override
-  String get dog_heat_cycle_delete_button => 'Slet';
-
-  @override
-  String get dog_heat_cycle_delete_title => 'Slet løbetid';
-
-  @override
-  String get dog_heat_cycle_delete_body => 'Vil du slette denne løbetid?';
-
-  @override
-  String get dog_heat_cycle_info_title => 'Info om løbetid';
-
-  @override
-  String get dog_heat_cycle_info_line_1 => 'Løbetid hos tæver kommer ofte ca. 1-2 gange om året, men varierer mellem individer.';
-
-  @override
-  String get dog_heat_cycle_info_line_2 => 'Varigheden er ofte omkring 2-3 uger, men kan variere.';
-
-  @override
-  String get dog_heat_cycle_info_line_3 => 'Under løbetid kan tæven være mere ukoncentreret, ændre adfærd eller præstere anderledes til træning/jagt.';
-
-  @override
-  String get dog_heat_cycle_info_line_4 => 'Vær ekstra opmærksom omkring andre hunde.';
-
-  @override
-  String get dog_heat_cycle_info_line_5 => 'Tilpas træning efter hundens form og adfærd.';
-
-  @override
-  String get dog_heat_cycle_info_line_6 => 'Kontakt dyrlæge ved unormal blødning, smerter, sygdomstegn eller bekymring.';
-
-  @override
   String get milestone_first_session_title => 'Første session gennemført';
 
   @override
@@ -1182,27 +1069,6 @@ class AppLocalizationsDa extends AppLocalizations {
   String get home_empty_offline_note => 'Du kan bruge appen helt offline. Alle data gemmes lokalt på din telefon.';
 
   @override
-  String get home_dashboard_goal_title => 'Personligt mål';
-
-  @override
-  String get home_dashboard_goal_prompt => 'Sæt et personligt mål i Indstillinger for at følge din standudvikling.';
-
-  @override
-  String get home_dashboard_latest_session_title => 'Seneste session';
-
-  @override
-  String get home_dashboard_latest_session_empty => 'Ingen sessioner registreret endnu.';
-
-  @override
-  String get home_dashboard_latest_session_unknown_dog => 'Ukendt hund';
-
-  @override
-  String get home_dashboard_quick_action_title => 'Hurtig handling';
-
-  @override
-  String get home_dashboard_quick_action_body => 'Klar til næste session? Start logningen med ét tryk.';
-
-  @override
   String get home_visible_empty_title => 'Ingen hunde tilgængelige';
 
   @override
@@ -1253,42 +1119,6 @@ class AppLocalizationsDa extends AppLocalizations {
       locale: localeName,
       other: 'stande',
       one: 'stand',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String flushesCount(num count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count stød',
-      one: '1 stød',
-      zero: '0 stød',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String birdContactsCount(num count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count fuglekontakter',
-      one: '1 fuglekontakt',
-      zero: '0 fuglekontakter',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String sessionsCount(num count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count sessioner',
-      one: '1 session',
-      zero: '0 sessioner',
     );
     return '$_temp0';
   }
@@ -1501,24 +1331,6 @@ class AppLocalizationsDa extends AppLocalizations {
   String get session_birds_none_selected => 'Ingen arter valgt';
 
   @override
-  String get species_picker_title => 'Vælg fuglearter';
-
-  @override
-  String get species_picker_empty => 'Ingen arter gemt endnu';
-
-  @override
-  String get species_picker_add_button => 'Ny fugl';
-
-  @override
-  String get species_picker_done_button => 'Færdig';
-
-  @override
-  String get species_picker_new_title => 'Ny fugleart';
-
-  @override
-  String get species_picker_name_label => 'Navn';
-
-  @override
   String get session_species_picker_title => 'Vælg arter';
 
   @override
@@ -1685,9 +1497,6 @@ class AppLocalizationsDa extends AppLocalizations {
   String get active_session_action_secondary_plus1 => 'Sekundering +1';
 
   @override
-  String get active_session_action_tomstand_plus1 => 'Tomstand +1';
-
-  @override
   String get active_session_action_flush_plus1 => 'Stød +1';
 
   @override
@@ -1742,11 +1551,6 @@ class AppLocalizationsDa extends AppLocalizations {
   @override
   String session_detail_meta_secondary_points(Object count) {
     return 'Sekundering: $count';
-  }
-
-  @override
-  String session_detail_meta_tomstand(Object count) {
-    return 'Tomstand: $count';
   }
 
   @override
@@ -1953,8 +1757,19 @@ class AppLocalizationsDa extends AppLocalizations {
   String get session_detail_label_duration_from_track => 'Hentet fra GPS-spor';
 
   @override
-  String session_detail_saved_session_summary(int durationMinutes, int birds,
-      int stand, int secondaryPoints, int tomstandCount, int flushes) {
+  String get session_detail_confirm_delete_title => 'Slet session?';
+
+  @override
+  String get session_detail_confirm_delete_body => 'Dette fjerner sessionen fra hunden.';
+
+  @override
+  String get session_detail_media_delete_title => 'Slet medie?';
+
+  @override
+  String get session_detail_media_delete_body => 'Dette fjerner det valgte medie fra sessionen.';
+
+  @override
+  String session_detail_saved_session_summary(int durationMinutes, int birds, int stand, int secondaryPoints, int tomstandCount, int flushes) {
     return 'Tid: $durationMinutes min, Fugle: $birds, stande: $stand, sekundering: $secondaryPoints, tomstand: $tomstandCount, stød: $flushes';
   }
 
@@ -1989,9 +1804,6 @@ class AppLocalizationsDa extends AppLocalizations {
 
   @override
   String get session_detail_bird_species_new => 'Ny fugl';
-
-  @override
-  String get session_notes_field_label => 'Notat';
 
   @override
   String get session_detail_action_done => 'Færdig';
@@ -2072,18 +1884,6 @@ class AppLocalizationsDa extends AppLocalizations {
 
   @override
   String get session_detail_session_menu_delete => 'Slet session';
-
-  @override
-  String get session_detail_confirm_delete_title => 'Slet session?';
-
-  @override
-  String get session_detail_confirm_delete_body => 'Denne handling kan ikke fortrydes.';
-
-  @override
-  String get session_detail_media_delete_title => 'Fjern vedhæftning?';
-
-  @override
-  String get session_detail_media_delete_body => 'Vedhæftningen fjernes permanent fra sessionen.';
 
   @override
   String get session_detail_detail_title => 'Detaljer';
@@ -2708,98 +2508,6 @@ class AppLocalizationsDa extends AppLocalizations {
   String get settings_title => 'Indstillinger';
 
   @override
-  String get settings_section_profile => 'Profil';
-
-  @override
-  String get settings_profile_name_label => 'Navn';
-
-  @override
-  String get settings_profile_phone_label => 'Telefonnummer';
-
-  @override
-  String get settings_profile_email_label => 'E-mailadresse';
-
-  @override
-  String get settings_profile_email_invalid => 'Indtast en gyldig e-mailadresse';
-
-  @override
-  String get settings_profile_personal_goal_stands_label => 'Personligt mål for stande';
-
-  @override
-  String get settings_profile_personal_goal_section_title => 'Fremdrift';
-
-  @override
-  String settings_profile_personal_goal_prompt(Object count) {
-    return '$count stande registreret i alt. Sæt et personligt mål for at følge din fremdrift.';
-  }
-
-  @override
-  String settings_profile_personal_goal_progress(Object current, Object goal) {
-    return '$current / $goal stande';
-  }
-
-  @override
-  String settings_profile_personal_goal_percent(Object percent) {
-    return '$percent% fuldført';
-  }
-
-  @override
-  String get settings_profile_personal_goal_celebration_generic => 'Tillykke! Du har nået dit mål 🎉';
-
-  @override
-  String settings_profile_personal_goal_celebration_named(Object name) {
-    return 'Tillykke $name! Du har nået dit mål 🎉';
-  }
-
-  @override
-  String get settings_profile_birthday_greeting_and => 'og';
-
-  @override
-  String get settings_profile_birthday_greeting_generic => 'Tillykke med fødselsdagen 🎉';
-
-  @override
-  String settings_profile_birthday_greeting_named(Object name) {
-    return 'Tillykke med fødselsdagen, $name! 🎉';
-  }
-
-  @override
-  String settings_profile_birthday_greeting_dogs_generic(Object dogs) {
-    return 'Tillykke med fødselsdagen! Hilsen $dogs 🎉';
-  }
-
-  @override
-  String settings_profile_birthday_greeting_dogs_named(Object name, Object dogs) {
-    return 'Tillykke med fødselsdagen, $name! Hilsen $dogs 🎉';
-  }
-
-  @override
-  String get settings_notification_birthday_title => 'Tillykke med fødselsdagen!';
-
-  @override
-  String get settings_notification_birthday_body => 'Vi ønsker dig en fantastisk dag 🎉';
-
-  @override
-  String get settings_notification_goal_title => 'Du har nået dit mål!';
-
-  @override
-  String get settings_notification_goal_body => 'Flot arbejde - fortsæt sådan 🎯';
-
-  @override
-  String get settings_profile_birth_date_label => 'Fødselsdato / fødselsdag';
-
-  @override
-  String get settings_profile_birth_date_empty => 'Ikke angivet';
-
-  @override
-  String get settings_profile_birth_date_clear => 'Fjern dato';
-
-  @override
-  String get settings_profile_saved => 'Profil gemt';
-
-  @override
-  String get settings_profile_saving => 'Gemmer profil…';
-
-  @override
   String get settings_section_general => 'Generelt';
 
   @override
@@ -3398,10 +3106,7 @@ class AppLocalizationsDa extends AppLocalizations {
   String get subscription_status_label => 'Status';
 
   @override
-  String get subscription_status_active => 'Pro aktiv';
-
-  @override
-  String get subscription_active_compact_title => 'GundogTracker Pro aktiv';
+  String get subscription_status_active => 'Aktivt';
 
   @override
   String get subscription_status_inactive => 'Ikke aktivt';

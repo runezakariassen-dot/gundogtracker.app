@@ -35,4 +35,22 @@ void main() {
     expect(session.location, '');
     expect(updated.location, '');
   });
+
+  test('HuntSession defaults tomstandCount to zero and copies it', () {
+    final session = HuntSession(
+      dogId: 'dog-1',
+      dateTime: DateTime(2024, 1, 1, 8, 0),
+      location: 'Fjell',
+      durationMinutes: 45,
+      birdsSeen: 2,
+      points: 1,
+      flushes: 1,
+      notes: 'Notat',
+    );
+
+    final updated = session.copyWith(tomstandCount: 2);
+
+    expect(session.tomstandCount, 0);
+    expect(updated.tomstandCount, 2);
+  });
 }

@@ -16,6 +16,7 @@ class ActiveSessionState {
     this.activeMinutes = 0,
     this.birdCount = 0,
     this.standCount = 0,
+    this.tomstandCount = 0,
     this.flushCount = 0,
     this.notes,
     this.locationName,
@@ -28,6 +29,7 @@ class ActiveSessionState {
   final int activeMinutes;
   final int birdCount;
   final int standCount;
+  final int tomstandCount;
   final int flushCount;
   final String? notes;
   final String? locationName;
@@ -40,6 +42,7 @@ class ActiveSessionState {
     int? activeMinutes,
     int? birdCount,
     int? standCount,
+    int? tomstandCount,
     int? flushCount,
     Object? notes = _unset,
     Object? locationName = _unset,
@@ -52,6 +55,7 @@ class ActiveSessionState {
       activeMinutes: activeMinutes ?? this.activeMinutes,
       birdCount: birdCount ?? this.birdCount,
       standCount: standCount ?? this.standCount,
+      tomstandCount: tomstandCount ?? this.tomstandCount,
       flushCount: flushCount ?? this.flushCount,
       notes: notes == _unset ? this.notes : notes as String?,
       locationName:
@@ -111,6 +115,7 @@ class ActiveSessionController extends ChangeNotifier {
       activeMinutes: draft.activeMinutes,
       birdCount: draft.birdCount,
       standCount: draft.standCount,
+      tomstandCount: draft.tomstandCount,
       flushCount: draft.flushCount,
       notes: draft.notes,
       locationName: draft.locationName,
@@ -140,6 +145,11 @@ class ActiveSessionController extends ChangeNotifier {
   void setStandCount(int count) {
     final value = count < 0 ? 0 : count;
     _updateState(_state.copyWith(standCount: value));
+  }
+
+  void setTomstandCount(int count) {
+    final value = count < 0 ? 0 : count;
+    _updateState(_state.copyWith(tomstandCount: value));
   }
 
   void setFlushCount(int count) {
@@ -226,6 +236,7 @@ class ActiveSessionController extends ChangeNotifier {
       activeMinutes: _state.activeMinutes,
       birdCount: _state.birdCount,
       standCount: _state.standCount,
+      tomstandCount: _state.tomstandCount,
       flushCount: _state.flushCount,
       notes: _normalizeText(_state.notes),
       locationName: _normalizeText(_state.locationName),

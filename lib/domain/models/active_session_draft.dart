@@ -18,6 +18,8 @@ class ActiveSessionDraft {
   final int standCount;
   @HiveField(7)
   final int flushCount;
+  @HiveField(11)
+  final int tomstandCount;
   @HiveField(8)
   final String? notes;
   @HiveField(9)
@@ -34,6 +36,7 @@ class ActiveSessionDraft {
     required this.birdCount,
     required this.standCount,
     required this.flushCount,
+    this.tomstandCount = 0,
     this.notes,
     this.locationName,
     this.trackId,
@@ -47,6 +50,7 @@ class ActiveSessionDraft {
     int birdCount = 0,
     int standCount = 0,
     int flushCount = 0,
+    int tomstandCount = 0,
     String? notes,
     String? locationName,
     String? trackId,
@@ -61,6 +65,7 @@ class ActiveSessionDraft {
       birdCount: birdCount,
       standCount: standCount,
       flushCount: flushCount,
+      tomstandCount: tomstandCount,
       notes: notes,
       locationName: locationName,
       trackId: trackId,
@@ -76,6 +81,7 @@ class ActiveSessionDraft {
     int? birdCount,
     int? standCount,
     int? flushCount,
+    int? tomstandCount,
     String? notes,
     String? locationName,
     String? trackId,
@@ -89,6 +95,7 @@ class ActiveSessionDraft {
       birdCount: birdCount ?? this.birdCount,
       standCount: standCount ?? this.standCount,
       flushCount: flushCount ?? this.flushCount,
+      tomstandCount: tomstandCount ?? this.tomstandCount,
       notes: notes ?? this.notes,
       locationName: locationName ?? this.locationName,
       trackId: trackId ?? this.trackId,
@@ -115,6 +122,7 @@ class ActiveSessionDraftAdapter extends TypeAdapter<ActiveSessionDraft> {
       birdCount: fields[5] as int,
       standCount: fields[6] as int,
       flushCount: fields[7] as int,
+      tomstandCount: fields[11] as int? ?? 0,
       notes: fields[8] as String?,
       locationName: fields[9] as String?,
       trackId: fields[10] as String?,
@@ -124,7 +132,7 @@ class ActiveSessionDraftAdapter extends TypeAdapter<ActiveSessionDraft> {
   @override
   void write(BinaryWriter writer, ActiveSessionDraft obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.sessionId)
       ..writeByte(1)
@@ -141,6 +149,8 @@ class ActiveSessionDraftAdapter extends TypeAdapter<ActiveSessionDraft> {
       ..write(obj.standCount)
       ..writeByte(7)
       ..write(obj.flushCount)
+      ..writeByte(11)
+      ..write(obj.tomstandCount)
       ..writeByte(8)
       ..write(obj.notes)
       ..writeByte(9)

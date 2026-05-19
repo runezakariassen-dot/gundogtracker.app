@@ -359,15 +359,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stats_no_sessions_registered => 'No sessions registered yet';
 
   @override
-  String get stats_no_sessions_empty_body => 'Log your first session to see trends and statistics over time.';
-
-  @override
-  String get stats_no_sessions_empty_cta => 'Start a session';
-
-  @override
-  String get statistics_no_dogs_body => 'Add a dog to see statistics here.';
-
-  @override
   String get stats_filter_all_dogs => 'All dogs';
 
   @override
@@ -577,12 +568,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dog_editor_death_date_picker_hint => 'Select date';
 
   @override
-  String get dog_memorial_story_label => 'Story / memories';
-
-  @override
-  String get dog_memorial_story_hint => 'Write more about the dog, hunting memories, awards or personality';
-
-  @override
   String get dog_detail_snackbar_invite_accepted => 'Invitation accepted';
 
   @override
@@ -692,9 +677,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dog_detail_access_section_title => 'Access to this dog';
 
   @override
-  String get dog_detail_member_action_change_role => 'Change role';
-
-  @override
   String get dog_detail_member_action_set_reader => 'Set as reader';
 
   @override
@@ -702,18 +684,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dog_detail_member_action_remove_access => 'Remove access';
-
-  @override
-  String get dog_detail_role_dialog_title => 'Edit role';
-
-  @override
-  String get dog_detail_role_dialog_label => 'Role';
-
-  @override
-  String get dog_detail_role_confirm_admin_title => 'Grant administrator role?';
-
-  @override
-  String get dog_detail_role_confirm_admin_message => 'Administrators can manage access for this dog.';
 
   @override
   String get share_role_owner => 'Owner';
@@ -779,21 +749,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get share_error_invalid_email => 'Invalid email address.';
-
-  @override
-  String get membership_role_error_not_authorized => 'You do not have permission to change this role.';
-
-  @override
-  String get membership_role_error_membership_not_found => 'Member not found.';
-
-  @override
-  String get membership_role_error_cannot_edit_self => 'You cannot change your own role.';
-
-  @override
-  String get membership_role_error_owner_locked => 'Owner role can only be changed through ownership transfer.';
-
-  @override
-  String get membership_role_error_cannot_promote_to_admin => 'Administrators cannot assign or change administrator roles.';
 
   @override
   String get share_error_dog_not_found_title => 'Dog not found';
@@ -1000,74 +955,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dog_detail_next_milestone_title => 'Next milestone';
 
   @override
-  String get dog_heat_cycle_section_title => 'Heat cycle';
-
-  @override
-  String get dog_heat_cycle_add_button => 'Add heat cycle';
-
-  @override
-  String get dog_heat_cycle_add_title => 'New heat cycle';
-
-  @override
-  String get dog_heat_cycle_edit_title => 'Edit heat cycle';
-
-  @override
-  String get dog_heat_cycle_start_date_label => 'Start date';
-
-  @override
-  String get dog_heat_cycle_end_date_label => 'End date (optional)';
-
-  @override
-  String get dog_heat_cycle_end_not_set => 'Not set';
-
-  @override
-  String get dog_heat_cycle_note_label => 'Note (optional)';
-
-  @override
-  String get dog_heat_cycle_note_hint => 'Write a note';
-
-  @override
-  String get dog_heat_cycle_empty => 'No heat cycle has been logged yet.';
-
-  @override
-  String dog_heat_cycle_period_value(Object start, Object end) {
-    return '$start - $end';
-  }
-
-  @override
-  String get dog_heat_cycle_edit_button => 'Edit';
-
-  @override
-  String get dog_heat_cycle_delete_button => 'Delete';
-
-  @override
-  String get dog_heat_cycle_delete_title => 'Delete heat cycle';
-
-  @override
-  String get dog_heat_cycle_delete_body => 'Do you want to delete this heat cycle entry?';
-
-  @override
-  String get dog_heat_cycle_info_title => 'Heat cycle info';
-
-  @override
-  String get dog_heat_cycle_info_line_1 => 'Heat cycles in female dogs often happen around 1-2 times per year, but this varies between individuals.';
-
-  @override
-  String get dog_heat_cycle_info_line_2 => 'The duration is often around 2-3 weeks, but can vary.';
-
-  @override
-  String get dog_heat_cycle_info_line_3 => 'During heat, the dog may be less focused, show behavior changes, or perform differently in training/hunting.';
-
-  @override
-  String get dog_heat_cycle_info_line_4 => 'Be extra attentive around other dogs.';
-
-  @override
-  String get dog_heat_cycle_info_line_5 => 'Adjust training based on the dog\'s condition and behavior.';
-
-  @override
-  String get dog_heat_cycle_info_line_6 => 'Contact a veterinarian if there is unusual bleeding, pain, signs of illness, or concern.';
-
-  @override
   String get milestone_first_session_title => 'First session completed';
 
   @override
@@ -1182,27 +1069,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get home_empty_offline_note => 'You can use the app completely offline. All data is stored locally on your phone.';
 
   @override
-  String get home_dashboard_goal_title => 'Personal goal';
-
-  @override
-  String get home_dashboard_goal_prompt => 'Set a personal goal in Settings to track your stands progress.';
-
-  @override
-  String get home_dashboard_latest_session_title => 'Latest session';
-
-  @override
-  String get home_dashboard_latest_session_empty => 'No sessions registered yet.';
-
-  @override
-  String get home_dashboard_latest_session_unknown_dog => 'Unknown dog';
-
-  @override
-  String get home_dashboard_quick_action_title => 'Quick action';
-
-  @override
-  String get home_dashboard_quick_action_body => 'Ready for the next session? Start logging with one tap.';
-
-  @override
   String get home_visible_empty_title => 'No dogs available';
 
   @override
@@ -1253,42 +1119,6 @@ class AppLocalizationsEn extends AppLocalizations {
       locale: localeName,
       other: 'points',
       one: 'point',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String flushesCount(num count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count flushes',
-      one: '1 flush',
-      zero: '0 flushes',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String birdContactsCount(num count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count bird contacts',
-      one: '1 bird contact',
-      zero: '0 bird contacts',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String sessionsCount(num count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count sessions',
-      one: '1 session',
-      zero: '0 sessions',
     );
     return '$_temp0';
   }
@@ -1501,24 +1331,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get session_birds_none_selected => 'No species selected';
 
   @override
-  String get species_picker_title => 'Select bird species';
-
-  @override
-  String get species_picker_empty => 'No species saved yet';
-
-  @override
-  String get species_picker_add_button => 'New bird';
-
-  @override
-  String get species_picker_done_button => 'Done';
-
-  @override
-  String get species_picker_new_title => 'New bird species';
-
-  @override
-  String get species_picker_name_label => 'Name';
-
-  @override
   String get session_species_picker_title => 'Select species';
 
   @override
@@ -1685,9 +1497,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get active_session_action_secondary_plus1 => 'Backing +1';
 
   @override
-  String get active_session_action_tomstand_plus1 => 'Tomstand +1';
-
-  @override
   String get active_session_action_flush_plus1 => 'Flush +1';
 
   @override
@@ -1742,11 +1551,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String session_detail_meta_secondary_points(Object count) {
     return 'Secondary points: $count';
-  }
-
-  @override
-  String session_detail_meta_tomstand(Object count) {
-    return 'Tomstand: $count';
   }
 
   @override
@@ -1953,8 +1757,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get session_detail_label_duration_from_track => 'Taken from GPS track';
 
   @override
-  String session_detail_saved_session_summary(int durationMinutes, int birds,
-      int stand, int secondaryPoints, int tomstandCount, int flushes) {
+  String get session_detail_confirm_delete_title => 'Delete session?';
+
+  @override
+  String get session_detail_confirm_delete_body => 'This removes the session from the dog.';
+
+  @override
+  String get session_detail_media_delete_title => 'Delete media?';
+
+  @override
+  String get session_detail_media_delete_body => 'This removes the selected media from the session.';
+
+  @override
+  String session_detail_saved_session_summary(int durationMinutes, int birds, int stand, int secondaryPoints, int tomstandCount, int flushes) {
     return 'Time: $durationMinutes min, Birds: $birds, Points: $stand, Secondary: $secondaryPoints, Tomstand: $tomstandCount, Flushes: $flushes';
   }
 
@@ -1989,9 +1804,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get session_detail_bird_species_new => 'New bird';
-
-  @override
-  String get session_notes_field_label => 'Notes';
 
   @override
   String get session_detail_action_done => 'Done';
@@ -2072,18 +1884,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get session_detail_session_menu_delete => 'Delete session';
-
-  @override
-  String get session_detail_confirm_delete_title => 'Delete session?';
-
-  @override
-  String get session_detail_confirm_delete_body => 'This action cannot be undone.';
-
-  @override
-  String get session_detail_media_delete_title => 'Remove attachment?';
-
-  @override
-  String get session_detail_media_delete_body => 'The attachment will be permanently removed from the session.';
 
   @override
   String get session_detail_detail_title => 'Details';
@@ -2708,98 +2508,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_title => 'Settings';
 
   @override
-  String get settings_section_profile => 'Profile';
-
-  @override
-  String get settings_profile_name_label => 'Name';
-
-  @override
-  String get settings_profile_phone_label => 'Phone number';
-
-  @override
-  String get settings_profile_email_label => 'Email address';
-
-  @override
-  String get settings_profile_email_invalid => 'Enter a valid email address';
-
-  @override
-  String get settings_profile_personal_goal_stands_label => 'Personal stands goal';
-
-  @override
-  String get settings_profile_personal_goal_section_title => 'Progress';
-
-  @override
-  String settings_profile_personal_goal_prompt(Object count) {
-    return '$count stands registered in total. Set a personal goal to track your progress.';
-  }
-
-  @override
-  String settings_profile_personal_goal_progress(Object current, Object goal) {
-    return '$current / $goal stands';
-  }
-
-  @override
-  String settings_profile_personal_goal_percent(Object percent) {
-    return '$percent% complete';
-  }
-
-  @override
-  String get settings_profile_personal_goal_celebration_generic => 'Congratulations! You reached your goal 🎉';
-
-  @override
-  String settings_profile_personal_goal_celebration_named(Object name) {
-    return 'Congratulations $name! You reached your goal 🎉';
-  }
-
-  @override
-  String get settings_profile_birthday_greeting_and => 'and';
-
-  @override
-  String get settings_profile_birthday_greeting_generic => 'Happy birthday 🎉';
-
-  @override
-  String settings_profile_birthday_greeting_named(Object name) {
-    return 'Happy birthday, $name! 🎉';
-  }
-
-  @override
-  String settings_profile_birthday_greeting_dogs_generic(Object dogs) {
-    return 'Happy birthday! Greetings from $dogs 🎉';
-  }
-
-  @override
-  String settings_profile_birthday_greeting_dogs_named(Object name, Object dogs) {
-    return 'Happy birthday, $name! Greetings from $dogs 🎉';
-  }
-
-  @override
-  String get settings_notification_birthday_title => 'Happy birthday!';
-
-  @override
-  String get settings_notification_birthday_body => 'Wishing you a wonderful day 🎉';
-
-  @override
-  String get settings_notification_goal_title => 'You reached your goal!';
-
-  @override
-  String get settings_notification_goal_body => 'Great work - keep it up 🎯';
-
-  @override
-  String get settings_profile_birth_date_label => 'Birth date / birthday';
-
-  @override
-  String get settings_profile_birth_date_empty => 'Not set';
-
-  @override
-  String get settings_profile_birth_date_clear => 'Clear date';
-
-  @override
-  String get settings_profile_saved => 'Profile saved';
-
-  @override
-  String get settings_profile_saving => 'Saving profile…';
-
-  @override
   String get settings_section_general => 'General';
 
   @override
@@ -3398,10 +3106,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subscription_status_label => 'Status';
 
   @override
-  String get subscription_status_active => 'Pro active';
-
-  @override
-  String get subscription_active_compact_title => 'GundogTracker Pro active';
+  String get subscription_status_active => 'Active';
 
   @override
   String get subscription_status_inactive => 'Not active';

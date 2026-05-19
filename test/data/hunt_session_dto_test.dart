@@ -17,6 +17,7 @@ void main() {
       flushes: 1,
       notes: 'Notat',
       secondaryPoints: 0,
+      tomstandCount: 2,
       trackKey: 123,
       trackId: 'track-1',
       birdSpecies: const ['Rype'],
@@ -36,6 +37,7 @@ void main() {
     expect(decoded.birdsSeen, session.birdsSeen);
     expect(decoded.points, session.points);
     expect(decoded.flushes, session.flushes);
+    expect(decoded.tomstandCount, session.tomstandCount);
     expect(decoded.notes, session.notes);
     expect(decoded.trackId, session.trackId);
     expect(decoded.location, session.location);
@@ -58,6 +60,7 @@ void main() {
     }).toModel();
 
     expect(decoded.updatedAt, DateTime.parse('2024-01-01T08:00:00.000Z'));
+    expect(decoded.tomstandCount, 0);
   });
 
   test('HuntSessionDto tolerates missing or blank location', () {

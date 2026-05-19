@@ -16,11 +16,10 @@ class HuntSessionAdapter extends TypeAdapter<HuntSession> {
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    final dateTime = fields[1] as DateTime;
     return HuntSession(
       dogId: fields[0] as String,
       dogKey: fields[13] as String?,
-      dateTime: dateTime,
+      dateTime: fields[1] as DateTime,
       location: fields[2] as String,
       durationMinutes: fields[3] as int,
       birdsSeen: fields[4] as int,
@@ -28,6 +27,7 @@ class HuntSessionAdapter extends TypeAdapter<HuntSession> {
       flushes: fields[6] as int,
       notes: fields[7] as String,
       secondaryPoints: fields[12] as int?,
+      tomstandCount: fields[20] as int?,
       trackKey: fields[8] as int?,
       trackId: fields[9] as String?,
       birdSpecies: (fields[10] as List?)?.cast<String>(),
@@ -36,7 +36,7 @@ class HuntSessionAdapter extends TypeAdapter<HuntSession> {
       sessionType: fields[15] as SessionType?,
       birdsShotCount: fields[16] as int?,
       birdsShotSpecies: fields[17] as String?,
-      updatedAt: fields[18] as DateTime? ?? dateTime,
+      updatedAt: fields[18] as DateTime?,
       deletedAt: fields[19] as DateTime?,
     );
   }
@@ -44,7 +44,7 @@ class HuntSessionAdapter extends TypeAdapter<HuntSession> {
   @override
   void write(BinaryWriter writer, HuntSession obj) {
     writer
-      ..writeByte(20)
+      ..writeByte(21)
       ..writeByte(0)
       ..write(obj.dogId)
       ..writeByte(13)
@@ -65,6 +65,8 @@ class HuntSessionAdapter extends TypeAdapter<HuntSession> {
       ..write(obj.notes)
       ..writeByte(12)
       ..write(obj.secondaryPoints)
+      ..writeByte(20)
+      ..write(obj.tomstandCount)
       ..writeByte(8)
       ..write(obj.trackKey)
       ..writeByte(9)

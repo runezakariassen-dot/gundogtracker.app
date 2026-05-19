@@ -562,6 +562,7 @@
   "session_summary_total_bird_contacts_label": "Fuglekontakter i alt:",
   "session_summary_total_points_label": "Stand i alt:",
   "session_summary_total_secondary_points_label": "Sekundering i alt:",
+  "session_summary_total_tomstand_label": "Tomstand i alt:",
   "session_summary_total_flushes_label": "Stød i alt:",
 
   "session_action_add_new_session": "Tilføj ny session",
@@ -576,6 +577,7 @@
   "session_field_bird_contacts": "Fuglekontakter",
   "session_field_points": "Stand",
   "session_field_secondary_points": "Sekundering",
+  "session_field_tomstand": "Tomstand",
   "session_field_flushes": "Stød",
 
   "session_pick_date": "Vælg dato",
@@ -752,6 +754,7 @@
   "session_detail_field_bird_contacts_label": "Fuglekontakter",
   "session_detail_field_points_label": "Point",
   "session_detail_field_secondary_points_label": "Sekundering",
+  "session_detail_field_tomstand_label": "Tomstand",
   "session_detail_field_flushes_label": "Stød",
   "session_detail_field_notes_label": "Note",
 
@@ -795,14 +798,21 @@
   "session_detail_stats_total_secondary_points": "Sekundering i alt: {count}",
   "@session_detail_stats_total_secondary_points": { "placeholders": { "count": { "type": "int" } } },
 
+  "session_detail_stats_total_tomstand": "Tomstand i alt: {count}",
+  "@session_detail_stats_total_tomstand": { "placeholders": { "count": { "type": "int" } } },
+
   "session_detail_stats_total_flushes": "Stød i alt: {count}",
   "@session_detail_stats_total_flushes": { "placeholders": { "count": { "type": "int" } } },
 
   "session_detail_button_select_date": "Vælg dato",
   "session_detail_button_select_time": "Tidspunkt",
   "session_detail_label_duration_from_track": "Hentet fra GPS-spor",
+  "session_detail_confirm_delete_title": "Slet session?",
+  "session_detail_confirm_delete_body": "Dette fjerner sessionen fra hunden.",
+  "session_detail_media_delete_title": "Slet medie?",
+  "session_detail_media_delete_body": "Dette fjerner det valgte medie fra sessionen.",
 
-  "session_detail_saved_session_summary": "Tid: {durationMinutes} min, Fugle: {birds}, stande: {stand}, sekundering: {secondaryPoints}, stød: {flushes}",
+  "session_detail_saved_session_summary": "Tid: {durationMinutes} min, Fugle: {birds}, stande: {stand}, sekundering: {secondaryPoints}, tomstand: {tomstandCount}, stød: {flushes}",
   "@session_detail_saved_session_summary": {
     "description": "Summary line for saved session entries.",
     "placeholders": {
@@ -810,6 +820,7 @@
       "birds": { "type": "int" },
       "stand": { "type": "int" },
       "secondaryPoints": { "type": "int" },
+      "tomstandCount": { "type": "int" },
       "flushes": { "type": "int" }
     }
   },
@@ -867,6 +878,7 @@
   "hunt_session_field_birds_seen_label": "Fuglekontakter",
   "hunt_session_field_points_label": "Point",
   "hunt_session_field_secondary_points_label": "Sekundering",
+  "hunt_session_field_tomstand_label": "Tomstand",
   "hunt_session_field_flushes_label": "Stød",
   "hunt_session_field_notes_label": "Note",
   "hunt_session_action_save": "Gem",
@@ -889,6 +901,7 @@
   "session_detail_detail_label_bird_contacts": "Fuglekontakter",
   "session_detail_detail_label_points": "Point",
   "session_detail_detail_label_secondary_points": "Sekundering",
+  "session_detail_detail_label_tomstand": "Tomstand",
   "session_detail_detail_label_flushes": "Stød",
 
   "session_detail_label_bird_species": "Fuglearter",

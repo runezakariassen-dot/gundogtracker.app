@@ -14,6 +14,7 @@ class HuntSessionDto {
     required this.notes,
     required this.secondaryPoints,
     required this.updatedAt,
+    this.tomstandCount = 0,
     this.deletedAt,
     this.dogKey,
     this.trackKey,
@@ -39,6 +40,7 @@ class HuntSessionDto {
   final int flushes;
   final String notes;
   final int secondaryPoints;
+  final int tomstandCount;
   final int? trackKey;
   final String? trackId;
   final List<String> birdSpecies;
@@ -64,6 +66,7 @@ class HuntSessionDto {
       flushes: _requireInt(json, 'flushes'),
       notes: _requireString(json, 'notes'),
       secondaryPoints: _requireInt(json, 'secondaryPoints'),
+      tomstandCount: _readInt(json, 'tomstandCount') ?? 0,
       updatedAt: _readDate(json, 'updatedAt') ?? dateTime,
       deletedAt: _readDate(json, 'deletedAt'),
       trackKey: _readInt(json, 'trackKey'),
@@ -90,6 +93,7 @@ class HuntSessionDto {
       'flushes': flushes,
       'notes': notes,
       'secondaryPoints': secondaryPoints,
+      'tomstandCount': tomstandCount,
       'trackKey': trackKey,
       'trackId': trackId,
       'birdSpecies': birdSpecies,
@@ -116,6 +120,7 @@ class HuntSessionDto {
       flushes: session.flushes,
       notes: session.notes,
       secondaryPoints: session.secondaryPoints,
+      tomstandCount: session.tomstandCount,
       updatedAt: session.updatedAt,
       trackKey: session.trackKey,
       trackId: session.trackId,
@@ -141,6 +146,7 @@ class HuntSessionDto {
       flushes: flushes,
       notes: notes,
       secondaryPoints: secondaryPoints,
+      tomstandCount: tomstandCount,
       trackKey: trackKey,
       trackId: trackId,
       birdSpecies: birdSpecies,

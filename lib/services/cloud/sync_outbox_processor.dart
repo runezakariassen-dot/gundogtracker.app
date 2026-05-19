@@ -238,6 +238,7 @@ class SyncOutboxProcessor {
       flushes: _nonNegative(_readInt(payload, 'flushes') ?? 0),
       notes: _optionalString(payload, 'notes') ?? '',
       secondaryPoints: _nonNegative(_readInt(payload, 'secondaryPoints') ?? 0),
+      tomstandCount: _nonNegative(_readInt(payload, 'tomstandCount') ?? 0),
       trackKey: _readInt(payload, 'trackKey'),
       trackId: _optionalString(payload, 'trackId'),
       birdSpecies: _readStringList(payload, 'birdSpecies'),

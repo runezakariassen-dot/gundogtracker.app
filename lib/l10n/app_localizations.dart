@@ -64,8 +64,7 @@ import 'app_localizations_sv.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -73,8 +72,7 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate =
-      _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -86,8 +84,7 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
     delegate,
     GlobalMaterialLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,
@@ -1768,8 +1765,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{name} was {years} {months} {days} old'**
-  String dog_detail_farewell_age_sentence(
-      Object name, Object years, Object months, Object days);
+  String dog_detail_farewell_age_sentence(Object name, Object years, Object months, Object days);
 
   /// No description provided for @dog_detail_next_milestones_title.
   ///
@@ -2299,6 +2295,12 @@ abstract class AppLocalizations {
   /// **'Total secondary points:'**
   String get session_summary_total_secondary_points_label;
 
+  /// No description provided for @session_summary_total_tomstand_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomstand total:'**
+  String get session_summary_total_tomstand_label;
+
   /// No description provided for @session_summary_total_flushes_label.
   ///
   /// In en, this message translates to:
@@ -2364,6 +2366,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Secondary points'**
   String get session_field_secondary_points;
+
+  /// No description provided for @session_field_tomstand.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomstand'**
+  String get session_field_tomstand;
 
   /// No description provided for @session_field_flushes.
   ///
@@ -3019,6 +3027,12 @@ abstract class AppLocalizations {
   /// **'Secondary points'**
   String get session_detail_field_secondary_points_label;
 
+  /// No description provided for @session_detail_field_tomstand_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomstand'**
+  String get session_detail_field_tomstand_label;
+
   /// No description provided for @session_detail_field_flushes_label.
   ///
   /// In en, this message translates to:
@@ -3109,6 +3123,12 @@ abstract class AppLocalizations {
   /// **'Secondary points total: {count}'**
   String session_detail_stats_total_secondary_points(int count);
 
+  /// No description provided for @session_detail_stats_total_tomstand.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomstand total: {count}'**
+  String session_detail_stats_total_tomstand(int count);
+
   /// No description provided for @session_detail_stats_total_flushes.
   ///
   /// In en, this message translates to:
@@ -3133,12 +3153,35 @@ abstract class AppLocalizations {
   /// **'Taken from GPS track'**
   String get session_detail_label_duration_from_track;
 
+  /// No description provided for @session_detail_confirm_delete_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete session?'**
+  String get session_detail_confirm_delete_title;
+
+  /// No description provided for @session_detail_confirm_delete_body.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes the session from the dog.'**
+  String get session_detail_confirm_delete_body;
+
+  /// No description provided for @session_detail_media_delete_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete media?'**
+  String get session_detail_media_delete_title;
+
+  /// No description provided for @session_detail_media_delete_body.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes the selected media from the session.'**
+  String get session_detail_media_delete_body;
+
   /// Summary line for saved session entries.
   ///
   /// In en, this message translates to:
-  /// **'Time: {durationMinutes} min, Birds: {birds}, Points: {stand}, Secondary: {secondaryPoints}, Flushes: {flushes}'**
-  String session_detail_saved_session_summary(int durationMinutes, int birds,
-      int stand, int secondaryPoints, int flushes);
+  /// **'Time: {durationMinutes} min, Birds: {birds}, Points: {stand}, Secondary: {secondaryPoints}, Tomstand: {tomstandCount}, Flushes: {flushes}'**
+  String session_detail_saved_session_summary(int durationMinutes, int birds, int stand, int secondaryPoints, int tomstandCount, int flushes);
 
   /// No description provided for @session_detail_button_exporting.
   ///
@@ -3272,6 +3315,12 @@ abstract class AppLocalizations {
   /// **'Secondary points'**
   String get hunt_session_field_secondary_points_label;
 
+  /// No description provided for @hunt_session_field_tomstand_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomstand'**
+  String get hunt_session_field_tomstand_label;
+
   /// No description provided for @hunt_session_field_flushes_label.
   ///
   /// In en, this message translates to:
@@ -3392,6 +3441,12 @@ abstract class AppLocalizations {
   /// **'Secondary points'**
   String get session_detail_detail_label_secondary_points;
 
+  /// No description provided for @session_detail_detail_label_tomstand.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomstand'**
+  String get session_detail_detail_label_tomstand;
+
   /// No description provided for @session_detail_detail_label_flushes.
   ///
   /// In en, this message translates to:
@@ -3492,8 +3547,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{minutes}m {seconds}s'**
-  String session_detail_helper_duration_minutes_seconds(
-      int minutes, int seconds);
+  String session_detail_helper_duration_minutes_seconds(int minutes, int seconds);
 
   /// Formatted duration when only seconds exist.
   ///
@@ -3751,8 +3805,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{month} {year}: Points {stand}, Flushes {flush}'**
-  String stats_stand_flush_tooltip(
-      String month, int year, String stand, String flush);
+  String stats_stand_flush_tooltip(String month, int year, String stand, String flush);
 
   /// No description provided for @stats_info_points_flushes_title.
   ///
@@ -5576,8 +5629,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{dog} achieved “{milestone}” on {date}{age}'**
-  String milestone_achieved_sentence(
-      Object dog, Object milestone, Object date, Object age);
+  String milestone_achieved_sentence(Object dog, Object milestone, Object date, Object age);
 
   /// No description provided for @milestone_bird_threshold_label.
   ///
@@ -5940,8 +5992,7 @@ abstract class AppLocalizations {
   String birdsDownCount(num count);
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -5950,29 +6001,27 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['da', 'en', 'nb', 'sv'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['da', 'en', 'nb', 'sv'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'da':
-      return AppLocalizationsDa();
-    case 'en':
-      return AppLocalizationsEn();
-    case 'nb':
-      return AppLocalizationsNb();
-    case 'sv':
-      return AppLocalizationsSv();
+    case 'da': return AppLocalizationsDa();
+    case 'en': return AppLocalizationsEn();
+    case 'nb': return AppLocalizationsNb();
+    case 'sv': return AppLocalizationsSv();
   }
 
   throw FlutterError(
-      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.'
+  );
 }

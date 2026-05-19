@@ -24,6 +24,7 @@ class LocalHuntSessionRepository implements HuntSessionRepository {
     int flushes = 0,
     String notes = '',
     int secondaryPoints = 0,
+    int tomstandCount = 0,
     List<String>? birdSpecies,
     List<String>? mediaPaths,
     String? createdByUserId,
@@ -40,6 +41,7 @@ class LocalHuntSessionRepository implements HuntSessionRepository {
       flushes: flushes,
       notes: notes,
       secondaryPoints: secondaryPoints,
+      tomstandCount: tomstandCount,
       birdSpecies: birdSpecies,
       mediaPaths: mediaPaths,
       createdByUserId: createdByUserId,
@@ -58,6 +60,7 @@ class LocalHuntSessionRepository implements HuntSessionRepository {
     int? flushes,
     String? notes,
     int? secondaryPoints,
+    int? tomstandCount,
     List<String>? birdSpecies,
     List<String>? mediaPaths,
   }) async {
@@ -74,6 +77,7 @@ class LocalHuntSessionRepository implements HuntSessionRepository {
       flushes: flushes,
       notes: notes,
       secondaryPoints: secondaryPoints,
+      tomstandCount: tomstandCount,
       birdSpecies: birdSpecies,
       mediaPaths: mediaPaths,
     );
