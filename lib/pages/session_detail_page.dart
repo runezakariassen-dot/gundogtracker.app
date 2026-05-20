@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -18,7 +19,6 @@ import 'package:uuid/uuid.dart';
 import 'package:jakthund_app/data/local/local_hunt_session_repository.dart';
 import 'package:jakthund_app/data/local/sync_outbox_service.dart';
 import 'package:jakthund_app/data/repositories/local_active_session_draft_repository.dart';
-import 'package:jakthund_app/domain/dogs/dog_visibility.dart';
 import 'package:jakthund_app/domain/milestones/milestone_evaluator.dart';
 import 'package:jakthund_app/domain/milestones/milestone_service.dart';
 import 'package:jakthund_app/domain/models/active_session_draft.dart';
@@ -27,6 +27,7 @@ import 'package:jakthund_app/domain/sessions/session_visibility.dart';
 import 'package:jakthund_app/domain/services/active_session_autosave_service.dart';
 import 'package:jakthund_app/features/session/active_session_controller.dart';
 import 'package:jakthund_app/models/dog.dart';
+import 'package:jakthund_app/models/dog_membership.dart';
 import 'package:jakthund_app/models/gps_point.dart';
 import 'package:jakthund_app/models/gps_track.dart';
 import 'package:jakthund_app/models/hunt_session.dart';
@@ -114,6 +115,7 @@ class _SessionDetailPageState extends State<SessionDetailPage>
   // Hive
   late final Box<HuntSession> _sessionsBox;
   late final Box<Dog> _dogsBox;
+  late final Box<DogMembership> _membershipBox;
   late final Box<GpsTrack> _tracksBox;
   late final Box<Track> _tracksStore;
   late final Box<String> _birdSpeciesBox;
@@ -169,6 +171,8 @@ class _SessionDetailPageState extends State<SessionDetailPage>
 
     _sessionsBox = HiveLifecycleService.getBox<HuntSession>(sessionsBoxName);
     _dogsBox = HiveLifecycleService.getBox<Dog>(dogsBoxName);
+    _membershipBox =
+        HiveLifecycleService.getBox<DogMembership>(dogMembershipsBoxName);
     _tracksBox = HiveLifecycleService.getBox<GpsTrack>(gpsTracksBoxName);
     _tracksStore = HiveLifecycleService.getBox<Track>(tracksBoxName);
     _birdSpeciesBox = HiveLifecycleService.getBox<String>(birdSpeciesBoxName);
@@ -445,7 +449,20 @@ class _SessionDetailPageState extends State<SessionDetailPage>
     return null;
   }
 
-  List<Dog> _activeDogs() => filterActiveDogs(_dogsBox.values);
+  String? _currentUserIdOrNull() {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid.trim();
+      return uid == null || uid.isEmpty ? null : uid;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  List<Dog> _activeDogs() => visibleSessionDogsForUser(
+        dogs: _dogsBox.values,
+        memberships: _membershipBox.values,
+        currentUserId: _currentUserIdOrNull(),
+      );
 
   List<HuntSession> _visibleSessions() => filterVisibleSessions(
         sessions: _sessionsBox.values,

@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -26,6 +27,7 @@ import 'package:jakthund_app/domain/services/active_session_autosave_service.dar
 import 'package:jakthund_app/domain/subscription/subscription_service.dart';
 import 'package:jakthund_app/features/session/active_session_controller.dart';
 import 'package:jakthund_app/models/dog.dart';
+import 'package:jakthund_app/models/dog_membership.dart';
 import 'package:jakthund_app/models/gps_point.dart';
 import 'package:jakthund_app/models/gps_track.dart';
 import 'package:jakthund_app/models/hunt_session.dart';
@@ -101,6 +103,27 @@ bool canAddMediaInSessionContext({
     return false;
   }
   return editingSessionDogId == selectedDogId;
+}
+
+List<Dog> visibleSessionDogsForUser({
+  required Iterable<Dog> dogs,
+  required Iterable<DogMembership> memberships,
+  required String? currentUserId,
+}) {
+  final activeMemberships = currentUserId == null
+      ? const <DogMembership>[]
+      : memberships
+          .where(
+            (membership) =>
+                membership.userId.trim() == currentUserId &&
+                membership.status == Status.active,
+          )
+          .toList(growable: false);
+  return filterVisibleDogs(
+    dogs: dogs,
+    memberships: activeMemberships,
+    currentUserId: currentUserId,
+  );
 }
 
 String _formatDuration(Duration duration) {
@@ -237,6 +260,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
   // Hive
   late final Box<HuntSession> _sessionsBox;
   late final Box<Dog> _dogsBox;
+  late final Box<DogMembership> _membershipBox;
   late final Box<GpsTrack> _tracksBox;
   late final Box<Track> _tracksStore;
   late final Box<String> _birdSpeciesBox;
@@ -303,6 +327,8 @@ class _HuntSessionPageState extends State<HuntSessionPage>
 
     _sessionsBox = HiveLifecycleService.getBox<HuntSession>(sessionsBoxName);
     _dogsBox = HiveLifecycleService.getBox<Dog>(dogsBoxName);
+    _membershipBox =
+        HiveLifecycleService.getBox<DogMembership>(dogMembershipsBoxName);
     _tracksBox = HiveLifecycleService.getBox<GpsTrack>(gpsTracksBoxName);
     _tracksStore = HiveLifecycleService.getBox<Track>(tracksBoxName);
     _birdSpeciesBox = HiveLifecycleService.getBox<String>(birdSpeciesBoxName);
@@ -584,7 +610,20 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     return null;
   }
 
-  List<Dog> _activeDogs() => filterActiveDogs(_dogsBox.values);
+  String? _currentUserIdOrNull() {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid.trim();
+      return uid == null || uid.isEmpty ? null : uid;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  List<Dog> _activeDogs() => visibleSessionDogsForUser(
+        dogs: _dogsBox.values,
+        memberships: _membershipBox.values,
+        currentUserId: _currentUserIdOrNull(),
+      );
 
   List<HuntSession> _visibleSessions() => filterVisibleSessions(
         sessions: _sessionsBox.values,
