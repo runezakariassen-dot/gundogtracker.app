@@ -2,7 +2,7 @@ name: jakthund_app
 description: "Offline-first hunting log for pointing dogs."
 publish_to: 'none'
 
-version: 1.0.1+2
+version: 1.0.8+13
 
 environment:
   sdk: ^3.5.4
