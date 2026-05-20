@@ -155,7 +155,7 @@ class _DogEditorPageState extends State<DogEditorPage> {
     try {
       final l10n = AppLocalizations.of(context)!;
       final name = _nameController.text.trim();
-      final currentUserId = _identityService.getCurrentUserId();
+      final currentUserId = _currentMembershipUserId();
       final nicknameText = _nicknameController.text.trim();
       final nickname = nicknameText.isEmpty ? null : nicknameText;
       if (name.isEmpty) {
@@ -220,12 +220,14 @@ class _DogEditorPageState extends State<DogEditorPage> {
         await _persistDogLocally(updated);
         await _enqueueDogAutosync(updated);
       } else {
-        final currentUid = _identityService.getCurrentUserId();
-        final memberships = _membershipBox.values
-            .where((membership) =>
-                membership.userId == currentUid &&
-                membership.status == Status.active)
-            .toList(growable: false);
+        final currentUid = currentUserId;
+        final memberships = currentUid == null
+            ? <DogMembership>[]
+            : _membershipBox.values
+                .where((membership) =>
+                    membership.userId.trim() == currentUid &&
+                    membership.status == Status.active)
+                .toList(growable: false);
         final dogLimitSnapshot = buildDogLimitCountSnapshot(
           dogs: _dogsBox.values,
           memberships: memberships,

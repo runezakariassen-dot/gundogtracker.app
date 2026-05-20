@@ -33,10 +33,14 @@ List<Dog> filterVisibleDogs({
   required String? currentUserId,
 }) {
   final activeDogs = filterActiveDogs(dogs);
-  final allowedDogKeys = memberships
-      .where((membership) => membership.status == Status.active)
-      .map((membership) => membership.dogKey)
-      .toSet();
+  final allowedDogKeys = currentUserId == null
+      ? const <String>{}
+      : memberships
+          .where((membership) =>
+              membership.userId.trim() == currentUserId &&
+              membership.status == Status.active)
+          .map((membership) => membership.dogKey)
+          .toSet();
 
   return activeDogs.where((dog) {
     final hasMembership = allowedDogKeys.contains(dog.dogKey);
@@ -68,11 +72,7 @@ DogLimitCountSnapshot buildDogLimitCountSnapshot({
     memberships: memberships,
     currentUserId: currentUserId,
   );
-  final countedDogsByIdentity = <String, Dog>{};
   for (final dog in visibleDogs) {
-    final identity =
-        dog.dogKey.trim().isNotEmpty ? 'dogKey:${dog.dogKey}' : 'id:${dog.id}';
-    countedDogsByIdentity.putIfAbsent(identity, () => dog);
     // ignore: avoid_print
     print(
       '[SUBSCRIPTION][DOG_LIMIT] counting: id=${dog.id} '
@@ -83,11 +83,11 @@ DogLimitCountSnapshot buildDogLimitCountSnapshot({
   print('[SUBSCRIPTION][DOG_LIMIT] visible dogs: ${visibleDogs.length}');
   // ignore: avoid_print
   print(
-    '[SUBSCRIPTION][DOG_LIMIT] counted dogs: ${countedDogsByIdentity.length}',
+    '[SUBSCRIPTION][DOG_LIMIT] counted dogs: ${visibleDogs.length}',
   );
   return DogLimitCountSnapshot(
     visibleDogs: visibleDogs,
-    countedDogs: countedDogsByIdentity.values.toList(growable: false),
+    countedDogs: visibleDogs,
   );
 }
 

@@ -137,6 +137,30 @@ void main() {
     expect(snapshot.countedDogs.length, lessThan(freeDogLimit));
   });
 
+  test('quota count matches visible dogs so two visible dogs can add a third',
+      () {
+    final dogs = <Dog>[
+      _buildDog(id: 'dog-a-1', dogKey: 'DOG-A-1', ownerUserId: 'user-a'),
+      _buildDog(id: 'dog-a-2', dogKey: 'DOG-A-2', ownerUserId: 'user-a'),
+      _buildDog(id: 'dog-b-1', dogKey: 'DOG-B-1', ownerUserId: 'user-b'),
+      _buildDog(id: 'dog-b-2', dogKey: 'DOG-B-2', ownerUserId: 'user-b'),
+    ];
+
+    final snapshot = buildDogLimitCountSnapshot(
+      dogs: dogs,
+      memberships: const <DogMembership>[],
+      currentUserId: 'user-b',
+    );
+
+    expect(snapshot.visibleDogs.map((dog) => dog.id), <String>[
+      'dog-b-1',
+      'dog-b-2',
+    ]);
+    expect(snapshot.countedDogs.length, snapshot.visibleDogs.length);
+    expect(snapshot.countedDogs.length, 2);
+    expect(snapshot.countedDogs.length, lessThan(freeDogLimit));
+  });
+
   test('quota count ignores deleted dogs', () {
     final deletedDog = _buildDog(
       id: 'dog-1',
@@ -176,6 +200,54 @@ void main() {
 
     expect(snapshot.visibleDogs, isEmpty);
     expect(snapshot.countedDogs, isEmpty);
+  });
+
+  test('other user active memberships do not make dogs visible or counted', () {
+    final otherUserSharedDog = _buildDog(
+      id: 'dog-1',
+      dogKey: 'DOG-1',
+      ownerUserId: 'owner-user',
+    );
+
+    final snapshot = buildDogLimitCountSnapshot(
+      dogs: <Dog>[otherUserSharedDog],
+      memberships: <DogMembership>[
+        _membership(
+          dogKey: 'DOG-1',
+          userId: 'other-viewer',
+          role: Role.viewer,
+          status: Status.active,
+        ),
+      ],
+      currentUserId: 'viewer-user',
+    );
+
+    expect(snapshot.visibleDogs, isEmpty);
+    expect(snapshot.countedDogs, isEmpty);
+  });
+
+  test('active membership for current user makes another owner dog count', () {
+    final sharedDog = _buildDog(
+      id: 'dog-1',
+      dogKey: 'DOG-1',
+      ownerUserId: 'owner-user',
+    );
+
+    final snapshot = buildDogLimitCountSnapshot(
+      dogs: <Dog>[sharedDog],
+      memberships: <DogMembership>[
+        _membership(
+          dogKey: 'DOG-1',
+          userId: 'viewer-user',
+          role: Role.viewer,
+          status: Status.active,
+        ),
+      ],
+      currentUserId: 'viewer-user',
+    );
+
+    expect(snapshot.visibleDogs.map((dog) => dog.id), <String>['dog-1']);
+    expect(snapshot.countedDogs.map((dog) => dog.id), <String>['dog-1']);
   });
 }
 
