@@ -480,7 +480,24 @@ class FirestoreDogSyncService {
             break;
         }
 
-        final mergedDog = box.get(localEntry.key) ?? localDog;
+        var mergedDog = box.get(localEntry.key) ?? localDog;
+        if (uid != null &&
+            uid.isNotEmpty &&
+            cloudDog.cloudOwnerUid == uid &&
+            (mergedDog.ownerUserId != uid ||
+                mergedDog.cloudOwnerUid != uid ||
+                mergedDog.cloudId != cloudDog.cloudId)) {
+          mergedDog = mergedDog.copyWith(
+            ownerUserId: uid,
+            cloudOwnerUid: uid,
+            cloudId: cloudDog.cloudId,
+          );
+          await box.put(localEntry.key, mergedDog);
+          _printLog(
+            '[CLOUD][DOG] corrected local owner metadata: '
+            'dogId=${mergedDog.id} cloudId=${mergedDog.cloudId} uid=$uid',
+          );
+        }
         if (uid != null && uid.isNotEmpty) {
           await _ensureLocalMembershipForDog(mergedDog, uid);
         }

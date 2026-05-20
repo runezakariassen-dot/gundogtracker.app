@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
@@ -41,7 +42,7 @@ class SharingService {
     required String recipientEmail,
     Duration ttl = const Duration(days: 7),
   }) async {
-    final currentUserId = _identityService.getCurrentUserId();
+    final currentUserId = _currentUserId();
     if (!await _hasSharingPrivilege(currentUserId, dogKey)) {
       throw ShareException(ShareError.notOwner);
     }
@@ -93,7 +94,7 @@ class SharingService {
       throw ShareException(ShareError.inviteExpired);
     }
 
-    final currentUserId = _identityService.getCurrentUserId();
+    final currentUserId = _currentUserId();
     if (invite.expiresAt.isBefore(_now())) {
       final expired = invite.copyWith(status: Status.expired);
       await _inviteRepository.upsertInvite(expired);
@@ -199,19 +200,38 @@ class SharingService {
     return null;
   }
 
+  String _currentUserId() {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid.trim();
+      if (uid != null && uid.isNotEmpty) {
+        return uid;
+      }
+    } catch (_) {
+      // Fall back to local identity for offline mode and domain tests.
+    }
+    return _identityService.getCurrentUserId();
+  }
+
   Future<bool> _hasSharingPrivilege(String userId, String dogKey) async {
     final membership =
         await _membershipRepository.getMembership(dogKey, userId);
-    final hasActiveMembership = membership != null &&
+    final hasAdminMembership = membership != null &&
         membership.status == Status.active &&
         membership.role.isCanonicalAdmin;
-    if (!hasActiveMembership && kDebugMode) {
+    final dog = await _dogRepository.getDog(dogKey);
+    final isOwner = dog != null &&
+        (dog.ownerUserId == userId || dog.cloudOwnerUid == userId);
+    final canShare = isOwner || hasAdminMembership;
+    if (kDebugMode) {
       final resolvedRole = membership?.role.name ?? 'none';
       debugPrint(
-        '[Sharing] Access denied (dog=$dogKey user=$userId role=$resolvedRole)',
+        '[SHARE][PERMISSION] activeUid=$userId dogId=${dog?.id ?? dogKey} '
+        'cloudId=${dog?.cloudId ?? ''} ownerUserId=${dog?.ownerUserId ?? ''} '
+        'cloudOwnerUid=${dog?.cloudOwnerUid ?? ''} role=$resolvedRole '
+        'canShare=$canShare',
       );
     }
-    return hasActiveMembership;
+    return canShare;
   }
 
   Future<String> _generateUniqueToken() async {

@@ -191,6 +191,15 @@ class _DogDetailPageState extends State<DogDetailPage> {
     return ids;
   }
 
+  String? get _activeFirebaseUid {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid.trim();
+      return uid == null || uid.isEmpty ? null : uid;
+    } catch (_) {
+      return null;
+    }
+  }
+
   void _showShareError(ShareException error) {
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
@@ -1075,6 +1084,19 @@ class _DogDetailPageState extends State<DogDetailPage> {
     final myRole = _resolveMyRole(dog);
     final roleLabel = myRole != null ? _shareRoleLabel(l10n, myRole) : null;
     final canShare = myRole == Role.owner || myRole == Role.admin;
+    final activeUid = _activeFirebaseUid ?? _currentUserId.trim();
+    final activeMembership = activeUid.isEmpty
+        ? null
+        : _membershipBox.get('${dog.dogKey}::$activeUid');
+    if (kDebugMode) {
+      debugPrint(
+        '[SHARE][PERMISSION] activeUid=$activeUid dogId=${dog.id} '
+        'cloudId=${dog.cloudId ?? ''} ownerUserId=${dog.ownerUserId ?? ''} '
+        'cloudOwnerUid=${dog.cloudOwnerUid ?? ''} '
+        'role=${activeMembership?.role.name ?? myRole?.name ?? 'none'} '
+        'canShare=$canShare',
+      );
+    }
 
     final children = <Widget>[
       Text(
@@ -1398,6 +1420,12 @@ class _DogDetailPageState extends State<DogDetailPage> {
   }
 
   Role? _resolveMyRole(Dog dog) {
+    final activeUid = _activeFirebaseUid;
+    if (activeUid != null &&
+        (dog.ownerUserId == activeUid || dog.cloudOwnerUid == activeUid)) {
+      return Role.owner;
+    }
+
     final resolvedRole = resolveHighestActiveRoleForUserIds(
       memberships: _membershipBox.values,
       dogKey: dog.dogKey,
@@ -1925,6 +1953,12 @@ class _DogDetailPageState extends State<DogDetailPage> {
   }
 
   bool _isOwner(Dog dog) {
+    final activeUid = _activeFirebaseUid;
+    if (activeUid != null &&
+        (dog.ownerUserId == activeUid || dog.cloudOwnerUid == activeUid)) {
+      return true;
+    }
+
     return _membershipBox.values.any((membership) {
       final isTargetDog = membership.dogKey == dog.dogKey;
       final isCurrentUser =

@@ -7,7 +7,9 @@ import 'package:jakthund_app/data/hive_boxes.dart';
 import 'package:jakthund_app/data/hive_path_service.dart';
 import 'package:jakthund_app/domain/domain_bootstrap.dart';
 import 'package:jakthund_app/domain/domain_di.dart';
+import 'package:jakthund_app/domain/dogs/dog_visibility.dart';
 import 'package:jakthund_app/domain/domain_errors.dart';
+import 'package:jakthund_app/models/dog.dart';
 import 'package:jakthund_app/models/dog_membership.dart';
 import 'package:jakthund_app/models/share_invitation.dart';
 import 'package:jakthund_app/services/hive_lifecycle_service.dart';
@@ -52,6 +54,148 @@ void main() {
     expect(invite.dogKey, dog.dogKey);
     expect(invite.role, Role.editor);
     expect(invite.status, Status.pending);
+  });
+
+  test('owner uid can create invite without local owner membership', () async {
+    await initDomainLayer();
+    final identity = UserIdentityService();
+    await identity.setCurrentUserId('owner');
+    final dog = _buildDog(
+      id: 'dog-owner',
+      dogKey: 'DOG-OWNER',
+      ownerUserId: 'owner',
+      cloudOwnerUid: 'owner',
+    );
+    await dogsBox().add(dog);
+
+    final invite = await DomainDi.sharingService(identityService: identity)
+        .createShareInvite(
+      dogKey: dog.dogKey,
+      recipientEmail: 'friend@example.com',
+    );
+
+    expect(invite.dogKey, dog.dogKey);
+    expect(invite.createdByUserId, 'owner');
+  });
+
+  test('admin member can create invite for shared dog', () async {
+    await initDomainLayer();
+    final identity = UserIdentityService();
+    await identity.setCurrentUserId('admin-user');
+    final dog = _buildDog(
+      id: 'dog-shared-admin',
+      dogKey: 'DOG-SHARED-ADMIN',
+      ownerUserId: 'owner',
+    );
+    await dogsBox().add(dog);
+    await dogMembershipsBox().put(
+      '${dog.dogKey}::admin-user',
+      _membership(
+        dogKey: dog.dogKey,
+        userId: 'admin-user',
+        role: Role.admin,
+        status: Status.active,
+      ),
+    );
+
+    final invite = await DomainDi.sharingService(identityService: identity)
+        .createShareInvite(
+      dogKey: dog.dogKey,
+      recipientEmail: 'admin-share@example.com',
+    );
+
+    expect(invite.dogKey, dog.dogKey);
+  });
+
+  test('viewer cannot create invite for shared dog', () async {
+    await initDomainLayer();
+    final identity = UserIdentityService();
+    await identity.setCurrentUserId('viewer-user');
+    final dog = _buildDog(
+      id: 'dog-viewer',
+      dogKey: 'DOG-VIEWER',
+      ownerUserId: 'owner',
+    );
+    await dogsBox().add(dog);
+    await dogMembershipsBox().put(
+      '${dog.dogKey}::viewer-user',
+      _membership(
+        dogKey: dog.dogKey,
+        userId: 'viewer-user',
+        role: Role.viewer,
+        status: Status.active,
+      ),
+    );
+
+    await expectLater(
+      DomainDi.sharingService(identityService: identity).createShareInvite(
+        dogKey: dog.dogKey,
+        recipientEmail: 'viewer-share@example.com',
+      ),
+      throwsA(
+        isA<ShareException>()
+            .having((e) => e.code, 'code', ShareError.notOwner),
+      ),
+    );
+  });
+
+  test('revoked admin member cannot create invite', () async {
+    await initDomainLayer();
+    final identity = UserIdentityService();
+    await identity.setCurrentUserId('admin-user');
+    final dog = _buildDog(
+      id: 'dog-revoked',
+      dogKey: 'DOG-REVOKED',
+      ownerUserId: 'owner',
+    );
+    await dogsBox().add(dog);
+    await dogMembershipsBox().put(
+      '${dog.dogKey}::admin-user',
+      _membership(
+        dogKey: dog.dogKey,
+        userId: 'admin-user',
+        role: Role.admin,
+        status: Status.revoked,
+      ),
+    );
+
+    await expectLater(
+      DomainDi.sharingService(identityService: identity).createShareInvite(
+        dogKey: dog.dogKey,
+        recipientEmail: 'revoked-share@example.com',
+      ),
+      throwsA(
+        isA<ShareException>()
+            .having((e) => e.code, 'code', ShareError.notOwner),
+      ),
+    );
+  });
+
+  test('dog visible to owner is shareable by owner', () async {
+    await initDomainLayer();
+    final identity = UserIdentityService();
+    await identity.setCurrentUserId('owner');
+    final dog = _buildDog(
+      id: 'dog-visible-owner',
+      dogKey: 'DOG-VISIBLE-OWNER',
+      ownerUserId: 'owner',
+      cloudOwnerUid: 'owner',
+    );
+    await dogsBox().add(dog);
+
+    final visibleDogs = filterVisibleDogs(
+      dogs: dogsBox().values,
+      memberships: dogMembershipsBox().values,
+      currentUserId: 'owner',
+    );
+    expect(visibleDogs.map((dog) => dog.id), <String>['dog-visible-owner']);
+
+    final invite = await DomainDi.sharingService(identityService: identity)
+        .createShareInvite(
+      dogKey: dog.dogKey,
+      recipientEmail: 'visible-owner@example.com',
+    );
+    expect(invite.dogKey, dog.dogKey);
   });
 
   test('non-owner cannot create invite', () async {
@@ -231,4 +375,38 @@ void main() {
     expect(storedInvite, isNotNull);
     expect(storedInvite!.status, Status.revoked);
   });
+}
+
+Dog _buildDog({
+  required String id,
+  required String dogKey,
+  required String ownerUserId,
+  String? cloudOwnerUid,
+}) {
+  return Dog(
+    id: id,
+    name: 'Test2',
+    dogKey: dogKey,
+    regNrDisplay: 'NO123/45',
+    ownerUserId: ownerUserId,
+    cloudOwnerUid: cloudOwnerUid,
+    cloudId: id,
+    updatedAt: DateTime.utc(2026, 1, 1, 12),
+  );
+}
+
+DogMembership _membership({
+  required String dogKey,
+  required String userId,
+  required Role role,
+  required Status status,
+}) {
+  return DogMembership(
+    dogKey: dogKey,
+    userId: userId,
+    role: role,
+    status: status,
+    addedAt: DateTime.utc(2026, 1, 1, 12),
+    addedByUserId: 'owner',
+  );
 }
