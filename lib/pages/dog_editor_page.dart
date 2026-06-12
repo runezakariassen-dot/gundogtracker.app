@@ -536,8 +536,11 @@ class _DogEditorPageState extends State<DogEditorPage> {
       if (!mounted) {
         return;
       }
-      _allowImmediatePop = true;
-      Navigator.of(context).pop(true);
+      setState(() => _allowImmediatePop = true);
+      await WidgetsBinding.instance.endOfFrame;
+      if (mounted) {
+        Navigator.of(context).pop(true);
+      }
     } finally {
       if (mounted) {
         setState(() => _isRemovingSharedDog = false);
@@ -1493,7 +1496,7 @@ class _DogEditorPageState extends State<DogEditorPage> {
         : _formatDate(context, _selectedBirthDate!);
 
     return PopScope(
-      canPop: _allowImmediatePop,
+      canPop: _allowImmediatePop || !_hasUnsavedChanges,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) {
           return;

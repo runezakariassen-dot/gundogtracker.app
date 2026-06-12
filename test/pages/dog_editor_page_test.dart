@@ -30,12 +30,22 @@ void main() {
   });
 
   tearDown(() async {
-    await Hive.close();
+    try {
+      await Hive.close().timeout(const Duration(seconds: 5));
+    } catch (_) {
+      // Avoid hanging widget tests if Hive cleanup stalls.
+    }
     HiveLifecycleService.resetForTesting();
     HivePathService.setOverridePathForTesting(null);
     final tempDir = Directory(tempDirPath);
     if (await tempDir.exists()) {
-      await tempDir.delete(recursive: true);
+      try {
+        await tempDir
+            .delete(recursive: true)
+            .timeout(const Duration(seconds: 5));
+      } catch (_) {
+        // Best-effort cleanup only.
+      }
     }
   });
 
@@ -256,9 +266,8 @@ void main() {
         locale: const Locale('nb'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: DogEditorPage(
-          initialDog: dog,
-          currentUserIdOverride: 'member-b',
+        home: _SharedDogEditorTestHost(
+          dog: dog,
           upsertMembershipOverride: (membership) async {
             locallyRevokedMembership = membership;
           },
@@ -275,11 +284,14 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.tap(find.text('Åpne delt editor'));
+    await tester.pumpAndSettle();
     await _tapRemoveSharedDog(tester);
     await tester.pumpAndSettle();
-    await tester.runAsync(() => tester.tap(find.text('Fjern')));
+    await tester.tap(find.text('Fjern'));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
 
     expect(
       calledCanonicalPath,
@@ -295,6 +307,8 @@ void main() {
           .toList(growable: false),
       isEmpty,
     );
+    expect(find.byType(DogEditorPage), findsNothing);
+
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
   });
@@ -474,6 +488,41 @@ class _DogEditorTestHost extends StatelessWidget {
             );
           },
           child: const Text('Åpne editor'),
+        ),
+      ),
+    );
+  }
+}
+
+class _SharedDogEditorTestHost extends StatelessWidget {
+  const _SharedDogEditorTestHost({
+    required this.dog,
+    required this.upsertMembershipOverride,
+    required this.revokeSharedDogMembership,
+  });
+
+  final Dog dog;
+  final UpsertDogMembershipForTesting upsertMembershipOverride;
+  final RevokeSharedDogMembership revokeSharedDogMembership;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: FilledButton(
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => DogEditorPage(
+                  initialDog: dog,
+                  currentUserIdOverride: 'member-b',
+                  upsertMembershipOverride: upsertMembershipOverride,
+                  revokeSharedDogMembership: revokeSharedDogMembership,
+                ),
+              ),
+            );
+          },
+          child: const Text('Åpne delt editor'),
         ),
       ),
     );
