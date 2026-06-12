@@ -15,6 +15,7 @@ import '../services/cloud/firestore_dog_sync_service.dart';
 import '../services/dog_photo_storage.dart';
 import '../services/hive_lifecycle_service.dart';
 import '../services/media_storage.dart';
+import '../services/notification_service.dart';
 import '../ui/locale/locale_controller.dart';
 
 class AppStartupService {
@@ -37,6 +38,7 @@ class AppStartupService {
 
     await DogPhotoStorage.ensureDocumentDirectory();
     await MediaStorage.ensureDocumentDirectoryReady();
+    await NotificationService.instance.init();
 
     await _initTileCaching();
 

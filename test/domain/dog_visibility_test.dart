@@ -249,6 +249,30 @@ void main() {
     expect(snapshot.visibleDogs.map((dog) => dog.id), <String>['dog-1']);
     expect(snapshot.countedDogs.map((dog) => dog.id), <String>['dog-1']);
   });
+
+  test('revoked non-owner membership does not make dog visible', () {
+    final dog = _buildDog(
+      id: 'dog-1',
+      dogKey: 'DOG-1',
+    );
+
+    final visibleDogs = filterVisibleDogs(
+      dogs: <Dog>[dog],
+      memberships: <DogMembership>[
+        DogMembership(
+          dogKey: 'DOG-1',
+          userId: 'user-2',
+          role: Role.editor,
+          status: Status.revoked,
+          addedAt: DateTime.utc(2024, 1, 1, 12),
+          addedByUserId: 'owner-1',
+        ),
+      ],
+      currentUserId: 'user-2',
+    );
+
+    expect(visibleDogs, isEmpty);
+  });
 }
 
 Dog _buildDog({

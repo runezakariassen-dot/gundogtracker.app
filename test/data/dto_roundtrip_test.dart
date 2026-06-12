@@ -74,6 +74,10 @@ void main() {
       recipientEmail: 'pending@example.com',
       recipientUserId: null,
       createdByUserId: 'owner',
+      cloudDogId: 'cloud-dog-1',
+      senderDisplayName: 'Owner Name',
+      senderEmail: 'owner@example.com',
+      dogName: 'Kompis',
     );
 
     final json = shareInvitationToJson(invite);
@@ -86,6 +90,10 @@ void main() {
     expect(restored.createdAt, invite.createdAt);
     expect(restored.expiresAt, invite.expiresAt);
     expect(restored.status, invite.status);
+    expect(restored.cloudDogId, invite.cloudDogId);
+    expect(restored.senderDisplayName, invite.senderDisplayName);
+    expect(restored.senderEmail, invite.senderEmail);
+    expect(restored.dogName, invite.dogName);
   });
 
   test('ownership transfer dto roundtrip preserves key fields', () {

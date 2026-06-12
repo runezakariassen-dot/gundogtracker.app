@@ -13,6 +13,7 @@ import 'package:jakthund_app/models/dog.dart';
 import 'package:jakthund_app/models/dog_membership.dart';
 import 'package:jakthund_app/models/share_invitation.dart';
 import 'package:jakthund_app/services/hive_lifecycle_service.dart';
+import 'package:jakthund_app/services/sharing_service.dart';
 import 'package:jakthund_app/services/user_identity_service.dart';
 
 void main() {
@@ -52,6 +53,7 @@ void main() {
     );
 
     expect(invite.dogKey, dog.dogKey);
+    expect(invite.dogName, dog.displayName);
     expect(invite.role, Role.editor);
     expect(invite.status, Status.pending);
   });
@@ -198,6 +200,35 @@ void main() {
     expect(invite.dogKey, dog.dogKey);
   });
 
+  test('create invite stores sender display fields', () async {
+    await initDomainLayer();
+    final identity = UserIdentityService();
+    await identity.setCurrentUserId('owner');
+
+    final dog = await DomainDi.dogService(identityService: identity).createDog(
+      regNrInput: 'NO127/45',
+      name: 'Kompis',
+    );
+
+    final sharing = SharingService(
+      identityService: identity,
+      inviteRepository: DomainDi.inviteRepository(),
+      membershipRepository: DomainDi.membershipRepository(),
+      dogRepository: DomainDi.dogRepository(),
+      currentAuthUserDisplayNameProvider: () => 'Rune Zakariassen',
+      currentAuthUserEmailProvider: () => 'rune.zakariassen@gmail.com',
+    );
+
+    final invite = await sharing.createShareInvite(
+      dogKey: dog.dogKey,
+      recipientEmail: 'member@example.com',
+    );
+
+    expect(invite.senderDisplayName, 'Rune Zakariassen');
+    expect(invite.senderEmail, 'rune.zakariassen@gmail.com');
+    expect(invite.dogName, 'Kompis');
+  });
+
   test('non-owner cannot create invite', () async {
     await initDomainLayer();
     final identity = UserIdentityService();
@@ -245,6 +276,107 @@ void main() {
     expect(membership.role, Role.editor);
     expect(membership.status, Status.active);
     expect(membership.userId, 'member');
+  });
+
+  test('multiple users can accept invites for the same dog', () async {
+    await initDomainLayer();
+    final identity = UserIdentityService();
+    await identity.setCurrentUserId('owner');
+
+    final dog = await DomainDi.dogService(identityService: identity).createDog(
+      regNrInput: 'NO128/45',
+      name: 'Kompis',
+    );
+
+    final ownerSharing = DomainDi.sharingService(identityService: identity);
+    final inviteB = await ownerSharing.createShareInvite(
+      dogKey: dog.dogKey,
+      recipientEmail: 'b@example.com',
+    );
+    final inviteC = await ownerSharing.createShareInvite(
+      dogKey: dog.dogKey,
+      recipientEmail: 'c@example.com',
+    );
+
+    await identity.setCurrentUserId('member-b');
+    final memberB = await ownerSharing.acceptShareInvite(token: inviteB.token);
+
+    await identity.setCurrentUserId('member-c');
+    final memberC = await ownerSharing.acceptShareInvite(token: inviteC.token);
+
+    final memberships = dogMembershipsBox()
+        .values
+        .where((membership) => membership.dogKey == dog.dogKey)
+        .toList(growable: false);
+
+    expect(memberB.userId, 'member-b');
+    expect(memberC.userId, 'member-c');
+    expect(
+        memberships.map((membership) => membership.userId), contains('owner'));
+    expect(
+      memberships.map((membership) => membership.userId),
+      containsAll(<String>['member-b', 'member-c']),
+    );
+    expect(
+      memberships.where((membership) => membership.status == Status.active),
+      hasLength(3),
+    );
+    expect(shareInvitesBox().get(inviteB.inviteId)?.status, Status.accepted);
+    expect(shareInvitesBox().get(inviteC.inviteId)?.status, Status.accepted);
+  });
+
+  test('accept with auth uid writes membership and triggers rehydrate',
+      () async {
+    await initDomainLayer();
+    final identity = UserIdentityService();
+    await identity.setCurrentUserId('owner');
+
+    final dog = await DomainDi.dogService(identityService: identity).createDog(
+      regNrInput: 'NO125/45',
+      name: 'Froya',
+    );
+
+    final ownerSharing = DomainDi.sharingService(identityService: identity);
+    final invite = await ownerSharing.createShareInvite(
+      dogKey: dog.dogKey,
+      recipientEmail: 'member@example.com',
+    );
+
+    var cloudMembershipWrites = 0;
+    var restoreCalls = 0;
+    var pullCalls = 0;
+
+    await identity.setCurrentUserId('local-member');
+    final sharing = SharingService(
+      identityService: identity,
+      inviteRepository: DomainDi.inviteRepository(),
+      membershipRepository: DomainDi.membershipRepository(),
+      dogRepository: DomainDi.dogRepository(),
+      currentAuthUserIdProvider: () => 'firebase-member',
+      cloudShareMembershipWriter: ({
+        required invite,
+        required membership,
+      }) async {
+        cloudMembershipWrites += 1;
+        expect(invite.cloudDogId, dog.id);
+        expect(membership.userId, 'firebase-member');
+        return true;
+      },
+      restoreAccessibleDogs: () async {
+        restoreCalls += 1;
+        return 1;
+      },
+      pullAllVisibleData: () async {
+        pullCalls += 1;
+      },
+    );
+
+    final membership = await sharing.acceptShareInvite(token: invite.token);
+
+    expect(membership.userId, 'firebase-member');
+    expect(cloudMembershipWrites, 1);
+    expect(restoreCalls, 1);
+    expect(pullCalls, 1);
   });
 
   test('accept returns existing membership when already member', () async {
@@ -374,6 +506,82 @@ void main() {
     final storedInvite = shareInvitesBox().get(invite.inviteId);
     expect(storedInvite, isNotNull);
     expect(storedInvite!.status, Status.revoked);
+  });
+
+  test('create invite allows auth uid owner when local user id differs',
+      () async {
+    await initDomainLayer();
+    final identity = UserIdentityService();
+    await identity.setCurrentUserId('owner-local');
+
+    final dog = await DomainDi.dogService(identityService: identity).createDog(
+      regNrInput: 'NO999/45',
+      name: 'Mio',
+    );
+
+    const authOwnerUid = 'firebase-owner-uid-1234567890';
+    final authOwnerMembership = DogMembership(
+      dogKey: dog.dogKey,
+      userId: authOwnerUid,
+      role: Role.owner,
+      status: Status.active,
+      addedAt: DateTime.now(),
+      addedByUserId: 'owner-local',
+    );
+    await dogMembershipsBox().put(
+      '${dog.dogKey}::$authOwnerUid',
+      authOwnerMembership,
+    );
+
+    await identity.setCurrentUserId('different-local-user');
+    final sharing = SharingService(
+      identityService: identity,
+      inviteRepository: DomainDi.inviteRepository(),
+      membershipRepository: DomainDi.membershipRepository(),
+      dogRepository: DomainDi.dogRepository(),
+      currentAuthUserIdProvider: () => authOwnerUid,
+    );
+
+    final invite = await sharing.createShareInvite(
+      dogKey: dog.dogKey,
+      recipientEmail: 'new.user@example.com',
+    );
+
+    expect(invite.status, Status.pending);
+    expect(invite.dogKey, dog.dogKey);
+  });
+
+  test('create invite allows owner by email match when ids differ', () async {
+    await initDomainLayer();
+    final identity = UserIdentityService();
+    await identity.setCurrentUserId('local-owner-id');
+
+    final dog = await DomainDi.dogService(identityService: identity).createDog(
+      regNrInput: 'NO998/45',
+      name: 'Saga',
+    );
+
+    await DomainDi.dogRepository().upsertDog(
+      dog.copyWith(ownerEmail: 'owner@example.com'),
+    );
+
+    await identity.setCurrentUserId('different-local-id');
+    final sharing = SharingService(
+      identityService: identity,
+      inviteRepository: DomainDi.inviteRepository(),
+      membershipRepository: DomainDi.membershipRepository(),
+      dogRepository: DomainDi.dogRepository(),
+      currentAuthUserIdProvider: () => null,
+      currentAuthUserEmailProvider: () => 'owner@example.com',
+    );
+
+    final invite = await sharing.createShareInvite(
+      dogKey: dog.dogKey,
+      recipientEmail: 'invitee@example.com',
+    );
+
+    expect(invite.status, Status.pending);
+    expect(invite.dogKey, dog.dogKey);
   });
 }
 

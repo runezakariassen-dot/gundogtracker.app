@@ -13,6 +13,10 @@ Map<String, dynamic> shareInvitationToJson(ShareInvitation invite) {
     'recipientEmail': invite.recipientEmail,
     'recipientUserId': invite.recipientUserId,
     'createdByUserId': invite.createdByUserId,
+    'cloudDogId': invite.cloudDogId,
+    'senderDisplayName': invite.senderDisplayName,
+    'senderEmail': invite.senderEmail,
+    'dogName': invite.dogName,
   };
 }
 
@@ -28,6 +32,10 @@ ShareInvitation shareInvitationFromJson(Map<String, dynamic> json) {
     recipientEmail: _normalizeEmail(json['recipientEmail'] as String?),
     recipientUserId: json['recipientUserId'] as String?,
     createdByUserId: json['createdByUserId'] as String? ?? '',
+    cloudDogId: json['cloudDogId'] as String?,
+    senderDisplayName: json['senderDisplayName'] as String?,
+    senderEmail: _normalizeEmail(json['senderEmail'] as String?),
+    dogName: json['dogName'] as String?,
   );
 }
 

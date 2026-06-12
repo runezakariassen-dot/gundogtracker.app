@@ -4,8 +4,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../../data/hive_boxes.dart';
+import '../../domain/domain_constants.dart';
+import '../../domain/subscription/subscription_service.dart';
 import '../../domain/user/app_user.dart';
 import '../../l10n/app_localizations.dart';
+import '../../services/hive_lifecycle_service.dart';
+import '../../services/user_identity_service.dart';
+import '../../services/account_switch_data_clearer.dart';
+import '../../services/account_switch_rehydrator.dart';
 
 class AuthGate extends StatefulWidget {
   const AuthGate({
@@ -32,6 +39,7 @@ class _AuthGateState extends State<AuthGate> {
   bool _isWaitingForProfile = false;
   User? _lastUser;
   bool _signOutInProgress = false;
+  bool _userSwitchInProgress = false;
 
   void _clearProfileCache() {
     _cancelProfileSubscription();
@@ -126,6 +134,117 @@ class _AuthGateState extends State<AuthGate> {
     });
   }
 
+  void _scheduleUserSwitch(User user) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(_handleUserSwitch(user));
+    });
+  }
+
+  void _scheduleIdentitySync(User user) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(UserIdentityService().setCurrentUserId(user.uid));
+    });
+  }
+
+  String _storedIdentity() {
+    final settings = HiveLifecycleService.getBox<dynamic>(appSettingsBoxName);
+    return (settings.get(currentUserIdKey) as String?)?.trim() ?? '';
+  }
+
+  bool _isActualUserSwitch(User user) {
+    final previousAuthUid = _lastUser?.uid.trim();
+    if (previousAuthUid != null &&
+        previousAuthUid.isNotEmpty &&
+        previousAuthUid != user.uid) {
+      return true;
+    }
+
+    final storedIdentity = _storedIdentity();
+    if (storedIdentity.isEmpty) {
+      return false;
+    }
+    return storedIdentity != user.uid;
+  }
+
+  Future<void> _clearUserScopedAppSettings() async {
+    final settings = HiveLifecycleService.getBox<dynamic>(appSettingsBoxName);
+    const userScopedKeys = <String>[
+      currentUserDisplayNameKey,
+      profileNameKey,
+      profilePhoneKey,
+      profileEmailKey,
+      profileBirthDateKey,
+      profilePersonalStandGoalKey,
+      profileLastCelebratedStandGoalKey,
+      profileLastBirthdayGreetingShownDateKey,
+      subscriptionIsProKey,
+      'subscriptionEntitlementProductId',
+      'subscriptionEntitlementTransactionDate',
+      'subscriptionEntitlementExpiresAt',
+      'subscriptionEntitlementVerifiedAt',
+      'subscriptionEntitlementSource',
+    ];
+
+    for (final key in userScopedKeys) {
+      await settings.delete(key);
+    }
+  }
+
+  Future<void> _handleUserSwitch(User user) async {
+    final oldUid = _storedIdentity();
+    final newUid = user.uid.trim();
+    debugPrint('[AUTH] user switch detected: old uid=$oldUid new uid=$newUid');
+
+    if (mounted) {
+      setState(() => _userSwitchInProgress = true);
+    }
+
+    try {
+      await AccountSwitchDataClearer.clearUserScopedData(
+        oldUid: oldUid,
+        newUid: newUid,
+      );
+      debugPrint('[AUTH] user-specific caches cleared');
+    } catch (e) {
+      debugPrint('[AUTH] error clearing user-specific caches: $e');
+    }
+
+    try {
+      await UserIdentityService().setCurrentUserId(newUid);
+      debugPrint('[AUTH] updated local user identity to $newUid');
+    } catch (e) {
+      debugPrint('[AUTH] failed to update user identity: $e');
+    }
+
+    try {
+      await _clearUserScopedAppSettings();
+      debugPrint('[AUTH] cleared user-scoped app settings');
+    } catch (e) {
+      debugPrint('[AUTH] failed to clear user-scoped app settings: $e');
+    }
+
+    try {
+      await AccountSwitchRehydrator().rehydrateForCurrentUser();
+      debugPrint('[AUTH] rehydrated accessible data for new user');
+    } catch (e) {
+      debugPrint('[AUTH] failed to rehydrate accessible data: $e');
+      // Best-effort: don't block auth flow if fetch fails
+    }
+
+    try {
+      await SubscriptionService.instance.refresh();
+      debugPrint('[AUTH] refreshed subscription state for new user');
+    } catch (e) {
+      debugPrint('[AUTH] failed to refresh subscription state: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _userSwitchInProgress = false);
+      }
+    }
+  }
+
   void _requestSignOutForInvalidUser() {
     if (_signOutInProgress) return;
     _signOutInProgress = true;
@@ -179,10 +298,21 @@ class _AuthGateState extends State<AuthGate> {
             (!_isWaitingForProfile &&
                 _profile == null &&
                 _profileError == null)) {
+          if (_isActualUserSwitch(user)) {
+            debugPrint(
+              '[AUTH] identity switch detected from ${_lastUser?.uid} to ${user.uid}',
+            );
+            _scheduleUserSwitch(user);
+          } else if (_storedIdentity().isEmpty) {
+            _scheduleIdentitySync(user);
+          }
           _scheduleProfileLoad(user);
         }
 
         if (_profile != null) {
+          if (_userSwitchInProgress) {
+            return _AuthLoadingScreen(message: l10n.auth_loading_waiting);
+          }
           return widget.appBuilder(context);
         }
 

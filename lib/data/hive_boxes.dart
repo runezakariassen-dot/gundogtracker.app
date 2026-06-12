@@ -45,6 +45,15 @@ const String milestonePersonalGoalPointsKey = 'milestonePersonalGoalPoints';
 const String milestoneSeasonGoalAchievedKey = 'milestoneSeasonGoalAchieved';
 const String milestonePersonalGoalAchievedKey = 'milestonePersonalGoalAchieved';
 const String subscriptionIsProKey = 'subscriptionIsPro';
+const String profileNameKey = 'profileName';
+const String profilePhoneKey = 'profilePhone';
+const String profileEmailKey = 'profileEmail';
+const String profileBirthDateKey = 'profileBirthDate';
+const String profilePersonalStandGoalKey = 'profilePersonalStandGoal';
+const String profileLastCelebratedStandGoalKey =
+    'profileLastCelebratedStandGoal';
+const String profileLastBirthdayGreetingShownDateKey =
+    'profileLastBirthdayGreetingShownDate';
 
 Box<Dog> dogsBox() => HiveLifecycleService.getBox<Dog>(dogsBoxName);
 Box<HuntSession> sessionsBox() =>

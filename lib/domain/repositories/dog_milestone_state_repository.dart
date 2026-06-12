@@ -77,9 +77,10 @@ class DogMilestoneStateRepository {
 
       final state = await getOrCreate(dogId);
 
-      // Eksisterende data
-      final achieved = <String>{...state.achievedIds};
-      final achievedAt = Map<String, DateTime>.from(state.achievedAt);
+      final previousAchieved = <String>{...state.achievedIds};
+      final previousAchievedAt = Map<String, DateTime>.from(state.achievedAt);
+      final achieved = <String>{};
+      final achievedAt = <String, DateTime>{};
 
       // Løpende summer
       var totalSessions = 0;
@@ -88,9 +89,9 @@ class DogMilestoneStateRepository {
       var totalActiveSeconds = 0;
       var totalBirdsShot = 0;
 
-      var changed = false;
       int newIdsAdded = 0;
       var achievedAtFilled = 0;
+      var achievedAtMovedEarlier = 0;
 
       for (final session in dogSessions) {
         totalSessions += 1;
@@ -125,34 +126,33 @@ class DogMilestoneStateRepository {
         for (final def in reachedDefs) {
           final id = def.id;
 
-          if (!achieved.contains(id)) {
-            achieved.add(id);
+          if (!previousAchieved.contains(id) && !achieved.contains(id)) {
             newIdsAdded++;
-            changed = true;
           }
+          achieved.add(id);
 
-          // Første gang terskelen passeres: sett achievedAt
+          final previousDate = previousAchievedAt[id];
           if (!achievedAt.containsKey(id)) {
             achievedAt[id] = session.dateTime;
             achievedAtFilled++;
-            changed = true;
-
-            debugPrint(
-              '[MILESTONE] dogId=$dogId milestone=$id achievedAt=${session.dateTime.toIso8601String()} '
-              '(sessions=$totalSessions points=$totalPointsOrStands flushes=$totalFlushes activeSec=$totalActiveSeconds)',
-            );
           }
+          if (previousDate != null && session.dateTime.isBefore(previousDate)) {
+            achievedAtMovedEarlier++;
+          }
+
+          debugPrint(
+            '[MILESTONE] dogId=$dogId milestone=$id achievedAt=${achievedAt[id]!.toIso8601String()} '
+            '(sessions=$totalSessions points=$totalPointsOrStands flushes=$totalFlushes activeSec=$totalActiveSeconds)',
+          );
         }
 
-        final highestBirdIndex =
-            birdMilestoneIds.lastIndexWhere((id) => achieved.contains(id));
-        if (highestBirdIndex >= 0) {
-          for (var idx = 0; idx < highestBirdIndex; idx++) {
-            final id = birdMilestoneIds[idx];
-            if (achieved.contains(id)) continue;
-            achieved.add(id);
+        final ensuredAchieved = completeBirdMilestones(achieved);
+        for (final id in ensuredAchieved) {
+          if (!previousAchieved.contains(id) && !achieved.contains(id)) {
             newIdsAdded++;
-            changed = true;
+          }
+          if (!achieved.contains(id)) {
+            achieved.add(id);
             if (!achievedAt.containsKey(id)) {
               achievedAt[id] = session.dateTime;
               achievedAtFilled++;
@@ -160,6 +160,9 @@ class DogMilestoneStateRepository {
           }
         }
       }
+
+      final changed = !_setEquals(achieved, previousAchieved) ||
+          !_dateMapEquals(achievedAt, previousAchievedAt);
 
       if (changed) {
         await save(
@@ -171,7 +174,7 @@ class DogMilestoneStateRepository {
 
         debugPrint(
           '[MILESTONE] Backfill saved dogId=$dogId '
-          'totalAchieved=${achieved.length} newIds=$newIdsAdded achievedAtFilled=$achievedAtFilled '
+          'totalAchieved=${achieved.length} newIds=$newIdsAdded achievedAtFilled=$achievedAtFilled achievedAtMovedEarlier=$achievedAtMovedEarlier '
           'finalSessions=$totalSessions finalPoints=$totalPointsOrStands finalFlushes=$totalFlushes',
         );
       } else {
@@ -210,6 +213,19 @@ class DogMilestoneStateRepository {
       achievedAt: normalizedAchievedAt,
     );
   }
+}
+
+bool _setEquals(Set<String> a, Set<String> b) {
+  if (a.length != b.length) return false;
+  return a.containsAll(b);
+}
+
+bool _dateMapEquals(Map<String, DateTime> a, Map<String, DateTime> b) {
+  if (a.length != b.length) return false;
+  for (final entry in a.entries) {
+    if (b[entry.key] != entry.value) return false;
+  }
+  return true;
 }
 
 class BackfillResult {

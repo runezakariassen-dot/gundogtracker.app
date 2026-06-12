@@ -52,6 +52,72 @@
   "home": "Hjem",
   "sessions": "Sessioner",
   "statistics": "Statistik",
+  "advanced_statistics": "Avanceret statistik",
+  "advanced_statistics_overview": "Oversigt",
+  "advanced_statistics_progress": "Udvikling",
+  "advanced_statistics_season": "Sæson",
+  "advanced_statistics_comparison": "Sammenligning",
+  "advanced_statistics_export": "Eksport",
+  "advanced_statistics_no_progress_data": "Ingen udviklingsdata tilgængelige",
+  "advanced_statistics_no_season_data": "Ingen sæsondata tilgængelige",
+  "advanced_statistics_need_two_dogs": "Kræver mindst 2 hunde til sammenligning",
+  "advanced_statistics_exporting": "Eksporterer...",
+  "advanced_statistics_export_stats": "Eksportér statistik",
+  "advanced_statistics_export_sessions": "Eksportér sessioner",
+  "advanced_statistics_generate_text_report": "Generér tekstrapport",
+  "advanced_statistics_key_metrics_for": "Nøgletal for {dogName}",
+  "@advanced_statistics_key_metrics_for": {
+    "placeholders": {
+      "dogName": {}
+    }
+  },
+  "advanced_statistics_stand_rate_per_hour": "Stand pr. time",
+  "advanced_statistics_bird_contacts_per_session": "Fuglekontakter pr. session",
+  "advanced_statistics_average_flushes_per_session": "Gennemsnitlige stød pr. session",
+  "advanced_statistics_success_rate": "Succesrate",
+  "advanced_statistics_totals": "Totaler",
+  "advanced_statistics_sessions_total": "Sessioner i alt",
+  "advanced_statistics_active_time": "Aktiv tid",
+  "advanced_statistics_total_points": "Samlet antal point",
+  "advanced_statistics_total_flushes": "Samlet antal stød",
+  "advanced_statistics_bird_contacts": "Fuglekontakter",
+  "advanced_statistics_birds_shot": "Fugle skudt",
+  "advanced_statistics_progress_over_time": "Udvikling over tid - {dogName}",
+  "@advanced_statistics_progress_over_time": {
+    "placeholders": {
+      "dogName": {}
+    }
+  },
+  "advanced_statistics_average_points_per_session_over_time": "Gennemsnitlige point pr. session over tid",
+  "advanced_statistics_trend_analysis": "Trendanalyse",
+  "advanced_statistics_improvement": "Forbedring!",
+  "advanced_statistics_declining": "Tilbagegang",
+  "advanced_statistics_stable": "Stabil",
+  "advanced_statistics_seasonal_analysis": "Sæsonanalyse - {dogName}",
+  "@advanced_statistics_seasonal_analysis": {
+    "placeholders": {
+      "dogName": {}
+    }
+  },
+  "advanced_statistics_sessions": "Sessioner",
+  "advanced_statistics_points": "Point",
+  "advanced_statistics_points_per_hour": "Point pr. time",
+  "advanced_statistics_dog_comparison": "Hundesammenligning",
+  "advanced_statistics_success_rate_percent": "Succesrate (%)",
+  "advanced_statistics_export_reports": "Eksport af rapporter",
+  "advanced_statistics_export_statistics_csv": "Eksportér statistik som CSV",
+  "advanced_statistics_contains_comparison_all_dogs": "Indeholder sammenligning af alle hunde med nøgletal.",
+  "advanced_statistics_export_sessions_csv": "Eksportér alle sessionsdata som CSV",
+  "advanced_statistics_sessions_csv_description": "Detaljeret oversigt over alle jagtsessioner med alle felter.",
+  "advanced_statistics_generate_text_report_description": "Generér et tekstresumé af al statistik.",
+  "advanced_statistics_export_session_data": "Eksportér sessionsdata",
+  "advanced_statistics_text_report_for": "Tekstrapport for {dogName}",
+  "@advanced_statistics_text_report_for": {
+    "placeholders": {
+      "dogName": {}
+    }
+  },
+  "advanced_statistics_generate_readable_text_report": "Generér en læsbar tekstrapport med al statistik.",
 
   "home_startNewSession": "Start ny tur",
   "chooseDog": "Vælg hund",
@@ -71,10 +137,27 @@
   "home_empty_offline_note": "Du kan bruge appen helt offline. Alle data gemmes lokalt på din telefon.",
   "home_first_session_title": "Klar til dit første pas?",
   "home_first_session_body": "Du har registreret din hund. Næste trin er at logge et pas – så begynder din historik og statistik at vokse.",
+  "home_dashboard_goal_title": "Personligt mål",
+  "home_dashboard_goal_prompt": "Sæt et personligt mål i Indstillinger for at følge din standudvikling.",
+  "home_dashboard_latest_session_title": "Seneste session",
+  "home_dashboard_latest_session_empty": "Ingen sessioner registreret endnu.",
+  "home_dashboard_latest_session_unknown_dog": "Ukendt hund",
+  "home_dashboard_quick_action_title": "Hurtig handling",
+  "home_dashboard_quick_action_body": "Klar til næste session? Start logningen med ét tryk.",
 
   "home_visible_empty_title": "Ingen hunde tilgængelige",
   "home_visible_empty_body": "Denne konto har ingen hunde endnu. Tjek invitationer eller bed nogen om at dele en hund med dig.",
   "home_visible_empty_button": "Åbn invitationer",
+  "home_pendingInvitationsTitle": "{count, plural, =1{Du har en hundeinvitation} other{Du har {count} hundeinvitationer}}",
+  "@home_pendingInvitationsTitle": {
+    "description": "Bannertekst på forsiden når brugeren har ventende hundeinvitationer.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "home_pendingInvitationsButton": "Se invitation",
 
   "home_endActiveSessionButton": "Afslut aktiv session",
   "home_endActiveSessionConfirmTitle": "Afslut aktiv session?",
@@ -201,9 +284,9 @@
       "count": { "type": "int" }
     }
   },
-  "flushesCount": "{count, plural, =0{0 støkk} one{1 støkk} other{{count} støkk}}",
-  "birdContactsCount": "{count, plural, =0{0 fuglkontakter} one{1 fuglkontakt} other{{count} fuglkontakter}}",
-  "sessionsCount": "{count, plural, =0{0 økter} one{1 økt} other{{count} økter}}",
+  "flushesCount": "{count, plural, =0{0 stød} one{1 stød} other{{count} stød}}",
+  "birdContactsCount": "{count, plural, =0{0 fuglekontakter} one{1 fuglekontakt} other{{count} fuglekontakter}}",
+  "sessionsCount": "{count, plural, =0{0 sessioner} one{1 session} other{{count} sessioner}}",
 
   "home_top10_birds_title": "Top 10 fugle",
   "home_top10_birds_empty": "Ingen fugle registreret endnu.",
@@ -246,6 +329,9 @@
   "stats_period_weekly": "Ugentligt",
   "stats_period_monthly": "Månedligt",
   "stats_no_sessions_registered": "Ingen sessioner registreret endnu",
+  "stats_no_sessions_empty_body": "Registrer din første session for at se tendenser og statistik over tid.",
+  "stats_no_sessions_empty_cta": "Start en session",
+  "statistics_no_dogs_body": "Tilføj en hund for at se statistik her.",
   "stats_filter_all_dogs": "Alle hunde",
   "stats_filter_dynamic_period": "Dynamisk periode",
   "stats_trendline_title": "Trendlinje",
@@ -291,6 +377,12 @@
   "dog_editor_deleting": "Sletter…",
   "dog_editor_delete_dog_title": "Slet hund",
   "dog_editor_delete_dog_body": "Vil du slette hunden? Det kan ikke fortrydes.",
+  "dog_editor_remove_shared_dog": "Fjern fra mine hunde",
+  "dog_editor_removing_shared_dog": "Fjerner…",
+  "dog_editor_remove_shared_dog_title": "Fjern fra mine hunde",
+  "dog_editor_remove_shared_dog_body": "Vil du fjerne denne delte hund fra din liste?",
+  "dog_editor_remove_shared_dog_explanation": "Hunden fjernes kun for dig. Ejeren og andre delte brugere beholder adgang.",
+  "dog_editor_remove_shared_dog_confirm": "Fjern",
   "dog_editor_discard_changes_title": "Forkast ændringer?",
   "dog_editor_discard_changes_body": "Dine ændringer er ikke gemt endnu.",
   "dog_editor_discard_changes_confirm": "Forkast",
@@ -329,6 +421,8 @@
   "dog_editor_section_lifecycle_title": "Livsløb",
   "dog_editor_death_date_label": "Dødsdato",
   "dog_editor_death_date_picker_hint": "Vælg dato",
+  "dog_memorial_story_label": "Historie / minder",
+  "dog_memorial_story_hint": "Skriv mere om hunden, jagtminder, præmier eller personlighed",
 
   "dog_detail_snackbar_invite_accepted": "Invitation accepteret",
   "dog_detail_snackbar_invite_declined": "Invitation afvist",
@@ -372,6 +466,31 @@
 
   "dog_detail_next_milestones_title": "Næste milepæle",
   "dog_detail_next_milestone_title": "Næste milepæl",
+  "dog_heat_cycle_section_title": "Løbetid",
+  "dog_heat_cycle_add_button": "Tilføj løbetid",
+  "dog_heat_cycle_add_title": "Ny løbetid",
+  "dog_heat_cycle_edit_title": "Rediger løbetid",
+  "dog_heat_cycle_start_date_label": "Startdato",
+  "dog_heat_cycle_end_date_label": "Slutdato (valgfri)",
+  "dog_heat_cycle_end_not_set": "Ikke angivet",
+  "dog_heat_cycle_note_label": "Note (valgfri)",
+  "dog_heat_cycle_note_hint": "Skriv en note",
+  "dog_heat_cycle_empty": "Ingen løbetid registreret endnu.",
+  "dog_heat_cycle_period_value": "{start} - {end}",
+  "@dog_heat_cycle_period_value": {
+    "placeholders": { "start": {}, "end": {} }
+  },
+  "dog_heat_cycle_edit_button": "Rediger",
+  "dog_heat_cycle_delete_button": "Slet",
+  "dog_heat_cycle_delete_title": "Slet løbetid",
+  "dog_heat_cycle_delete_body": "Vil du slette denne løbetid?",
+  "dog_heat_cycle_info_title": "Info om løbetid",
+  "dog_heat_cycle_info_line_1": "Løbetid hos tæver kommer ofte ca. 1-2 gange om året, men varierer mellem individer.",
+  "dog_heat_cycle_info_line_2": "Varigheden er ofte omkring 2-3 uger, men kan variere.",
+  "dog_heat_cycle_info_line_3": "Under løbetid kan tæven være mere ukoncentreret, ændre adfærd eller præstere anderledes til træning/jagt.",
+  "dog_heat_cycle_info_line_4": "Vær ekstra opmærksom omkring andre hunde.",
+  "dog_heat_cycle_info_line_5": "Tilpas træning efter hundens form og adfærd.",
+  "dog_heat_cycle_info_line_6": "Kontakt dyrlæge ved unormal blødning, smerter, sygdomstegn eller bekymring.",
 
   "milestone_first_session_title": "Første session gennemført",
   "milestone_first_session_subtitle": "Første session med {dogName}",
@@ -410,15 +529,32 @@
     "description": "Statustekst, der inkluderer den kanoniske rolle.",
     "placeholders": { "role": {} }
   },
+  "invitation_summary_with_sender_and_dog": "{sender} inviterede dig til {dogName}.",
+  "@invitation_summary_with_sender_and_dog": {
+    "description": "Invitationstekst, der viser afsender og hund.",
+    "placeholders": { "sender": {}, "dogName": {} }
+  },
+  "invitation_summary_with_dog": "Du er inviteret til {dogName}.",
+  "@invitation_summary_with_dog": {
+    "description": "Invitationstekst, der viser hund, når afsender mangler.",
+    "placeholders": { "dogName": {} }
+  },
+  "invitation_summary_generic": "Du har fået en hundeinvitation.",
 
   "invite_accept": "Accepter",
   "invite_decline": "Afslå",
 
   "dog_share_section_title": "Delt med",
   "dog_detail_access_section_title": "Adgang til denne hund",
+  "dog_detail_member_action_change_role": "Skift rolle",
   "dog_detail_member_action_set_reader": "Sæt som læser",
   "dog_detail_member_action_set_user": "Sæt som bruger",
   "dog_detail_member_action_remove_access": "Fjern adgang",
+  "dog_detail_role_dialog_title": "Rediger rolle",
+  "dog_detail_role_dialog_label": "Rolle",
+  "dog_detail_role_confirm_admin_title": "Giv administratorrolle?",
+  "dog_detail_role_confirm_admin_message":
+      "Administratorer kan administrere adgang til denne hund.",
 
   "share_role_owner": "Ejer",
   "share_role_admin": "Administrator",
@@ -449,6 +585,15 @@
   "share_error_already_invited": "Denne e-mail er allerede blevet inviteret.",
   "share_error_invalid_role": "Ugyldig rolle.",
   "share_error_invalid_email": "Ugyldig e-mailadresse.",
+  "membership_role_error_not_authorized":
+      "Du har ikke tilladelse til at ændre denne rolle.",
+  "membership_role_error_membership_not_found": "Medlem blev ikke fundet.",
+  "membership_role_error_cannot_edit_self":
+      "Du kan ikke ændre din egen rolle.",
+  "membership_role_error_owner_locked":
+      "Ejerrollen kan kun ændres via overførsel af ejerskab.",
+  "membership_role_error_cannot_promote_to_admin":
+      "Administratorer kan ikke tildele eller ændre administratorroller.",
   "share_error_dog_not_found_title": "Hund ikke fundet",
   "share_error_dog_not_found_detail": "Ingen hund matcher den kode.",
 
@@ -564,6 +709,7 @@
   "session_summary_total_secondary_points_label": "Sekundering i alt:",
   "session_summary_total_tomstand_label": "Tomstand i alt:",
   "session_summary_total_flushes_label": "Stød i alt:",
+  "session_summary_total_tomstand_label": "Tomstand i alt:",
 
   "session_action_add_new_session": "Tilføj ny session",
   "session_action_cancel": "Annuller",
@@ -576,6 +722,7 @@
   "session_field_active_time_minutes": "Aktiv tid (min)",
   "session_field_bird_contacts": "Fuglekontakter",
   "session_field_points": "Stand",
+  "session_field_tomstand": "Tomstand",
   "session_field_secondary_points": "Sekundering",
   "session_field_tomstand": "Tomstand",
   "session_field_flushes": "Stød",
@@ -638,6 +785,7 @@
 
   "session_media_section_title": "Media",
   "session_media_add_photo_video": "Tilføj billede/video",
+  "session_media_importing": "Importerer medier ...",
   "session_media_gallery_label": "Billede fra galleri",
   "session_media_camera_label": "Tag billede",
   "session_media_video_label": "Video fra galleri",
@@ -756,6 +904,7 @@
   "session_detail_field_secondary_points_label": "Sekundering",
   "session_detail_field_tomstand_label": "Tomstand",
   "session_detail_field_flushes_label": "Stød",
+  "session_detail_field_tomstand_label": "Tomstand",
   "session_detail_field_notes_label": "Note",
 
   "session_detail_version_build": " (build {buildNumber})",
@@ -803,6 +952,8 @@
 
   "session_detail_stats_total_flushes": "Stød i alt: {count}",
   "@session_detail_stats_total_flushes": { "placeholders": { "count": { "type": "int" } } },
+  "session_detail_stats_total_tomstand": "Tomstand i alt: {count}",
+  "@session_detail_stats_total_tomstand": { "placeholders": { "count": { "type": "int" } } },
 
   "session_detail_button_select_date": "Vælg dato",
   "session_detail_button_select_time": "Tidspunkt",
@@ -880,6 +1031,7 @@
   "hunt_session_field_secondary_points_label": "Sekundering",
   "hunt_session_field_tomstand_label": "Tomstand",
   "hunt_session_field_flushes_label": "Stød",
+  "hunt_session_field_tomstand_label": "Tomstand",
   "hunt_session_field_notes_label": "Note",
   "hunt_session_action_save": "Gem",
   "hunt_session_action_cancel": "Annuller",
@@ -893,6 +1045,10 @@
   "session_detail_session_menu_exporting": "Eksporterer…",
   "session_detail_session_menu_edit": "Rediger session",
   "session_detail_session_menu_delete": "Slet session",
+  "session_detail_confirm_delete_title": "Slet session?",
+  "session_detail_confirm_delete_body": "Denne handling kan ikke fortrydes.",
+  "session_detail_media_delete_title": "Fjern vedhæftning?",
+  "session_detail_media_delete_body": "Vedhæftningen fjernes permanent fra sessionen.",
 
   "session_detail_detail_title": "Detaljer",
   "session_detail_detail_label_date": "Dato",
@@ -903,6 +1059,7 @@
   "session_detail_detail_label_secondary_points": "Sekundering",
   "session_detail_detail_label_tomstand": "Tomstand",
   "session_detail_detail_label_flushes": "Stød",
+  "session_detail_detail_label_tomstand": "Tomstand",
 
   "session_detail_label_bird_species": "Fuglearter",
   "session_detail_label_gps_track": "GPS-spor",
@@ -1039,6 +1196,69 @@
   "gpx_exporting_ellipsis": "Eksporterer…",
 
   "settings_title": "Indstillinger",
+  "settings_section_profile": "Profil",
+  "settings_profile_name_label": "Navn",
+  "settings_profile_phone_label": "Telefonnummer",
+  "settings_profile_email_label": "E-mailadresse",
+  "settings_profile_email_invalid": "Indtast en gyldig e-mailadresse",
+  "settings_profile_personal_goal_stands_label": "Personligt mål for stande",
+  "settings_profile_personal_goal_section_title": "Fremdrift",
+  "settings_profile_personal_goal_prompt": "{count} stande registreret i alt. Sæt et personligt mål for at følge din fremdrift.",
+  "@settings_profile_personal_goal_prompt": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "settings_profile_personal_goal_progress": "{current} / {goal} stande",
+  "@settings_profile_personal_goal_progress": {
+    "placeholders": {
+      "current": {},
+      "goal": {}
+    }
+  },
+  "settings_profile_personal_goal_percent": "{percent}% fuldført",
+  "@settings_profile_personal_goal_percent": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
+  "settings_profile_personal_goal_celebration_generic": "Tillykke! Du har nået dit mål 🎉",
+  "settings_profile_personal_goal_celebration_named": "Tillykke {name}! Du har nået dit mål 🎉",
+  "@settings_profile_personal_goal_celebration_named": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "settings_profile_birthday_greeting_and": "og",
+  "settings_profile_birthday_greeting_generic": "Tillykke med fødselsdagen 🎉",
+  "settings_profile_birthday_greeting_named": "Tillykke med fødselsdagen, {name}! 🎉",
+  "@settings_profile_birthday_greeting_named": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "settings_profile_birthday_greeting_dogs_generic": "Tillykke med fødselsdagen! Hilsen {dogs} 🎉",
+  "@settings_profile_birthday_greeting_dogs_generic": {
+    "placeholders": {
+      "dogs": {}
+    }
+  },
+  "settings_profile_birthday_greeting_dogs_named": "Tillykke med fødselsdagen, {name}! Hilsen {dogs} 🎉",
+  "@settings_profile_birthday_greeting_dogs_named": {
+    "placeholders": {
+      "name": {},
+      "dogs": {}
+    }
+  },
+  "settings_notification_birthday_title": "Tillykke med fødselsdagen!",
+  "settings_notification_birthday_body": "Vi ønsker dig en fantastisk dag 🎉",
+  "settings_notification_goal_title": "Du har nået dit mål!",
+  "settings_notification_goal_body": "Flot arbejde - fortsæt sådan 🎯",
+  "settings_profile_birth_date_label": "Fødselsdato / fødselsdag",
+  "settings_profile_birth_date_empty": "Ikke angivet",
+  "settings_profile_birth_date_clear": "Fjern dato",
+  "settings_profile_saved": "Profil gemt",
+  "settings_profile_saving": "Gemmer profil…",
   "settings_section_general": "Generelt",
   "settings_section_milestones": "Milepæle",
   "milestones_category_firsts": "Første gang",
@@ -1327,7 +1547,8 @@
 
   "subscription_title": "Abonnement",
   "subscription_status_label": "Status",
-  "subscription_status_active": "Aktivt",
+  "subscription_status_active": "Pro aktiv",
+  "subscription_active_compact_title": "GundogTracker Pro aktiv",
   "subscription_status_inactive": "Ikke aktivt",
   "subscription_status_unknown": "Ukendt",
   "subscription_product_title": "Fuglehund Pro",
@@ -1426,5 +1647,45 @@
   "dog_editor_intro_title": "Tilføj din hund",
   "dog_editor_intro_body": "Du kan begynde enkelt nu. Et navn er nok for at komme i gang, og flere detaljer kan tilføjes senere.",
   "home_empty_next_step": "Begynd med at tilføje din hund. Derefter kan du logge den første session, når I er klar.",
-  "session_form_no_dogs_help": "Tilføj en hund først, så kan du starte din første session."
+  "session_form_no_dogs_help": "Tilføj en hund først, så kan du starte din første session.",
+  "session_field_session_button": "Start felttur",
+  "@session_field_session_button": {
+    "description": "Button label for starting a field session (auto-start)."
+  },
+  "session_field_session_help": "For at logge mens du er ude med din hund",
+  "@session_field_session_help": {
+    "description": "Help text explaining field session is for logging while out with the dog."
+  },
+  "session_manual_registration_button": "Registrer session manuelt",
+  "@session_manual_registration_button": {
+    "description": "Button label for manual session registration."
+  },
+  "session_options_info_tooltip": "Hvad betyder valgene?",
+  "@session_options_info_tooltip": {
+    "description": "Tooltip for the info button that explains session start options."
+  },
+  "session_options_info_title": "Hvad betyder valgene?",
+  "@session_options_info_title": {
+    "description": "Title in the info dialog that explains session start options."
+  },
+  "session_options_info_field_body": "Brug dette når du er ude med din hund og vil starte logning med det samme.",
+  "@session_options_info_field_body": {
+    "description": "Explanation text for starting a field session immediately."
+  },
+  "session_options_info_manual_body": "Brug dette når du vil tilføje en tidligere træning, jagt eller prøve.",
+  "@session_options_info_manual_body": {
+    "description": "Explanation text for manual session registration."
+  },
+  "settings_section_account": "Konto",
+  "@settings_section_account": {
+    "description": "Section title for account information."
+  },
+  "settings_signed_in_as": "Logget ind som",
+  "@settings_signed_in_as": {
+    "description": "Label for showing which account is currently signed in."
+  },
+  "settings_not_signed_in": "Ikke logget ind",
+  "@settings_not_signed_in": {
+    "description": "Message shown when no user is currently signed in."
+  }
 }

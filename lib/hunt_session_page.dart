@@ -34,7 +34,6 @@ import 'package:jakthund_app/models/hunt_session.dart';
 import 'package:jakthund_app/models/session_type.dart';
 import 'package:jakthund_app/models/track.dart';
 import 'package:jakthund_app/pages/dog_editor_page.dart';
-import 'package:jakthund_app/pages/dog_detail_page.dart';
 import 'package:jakthund_app/pages/session_map_page.dart';
 import 'package:jakthund_app/pages/session_media_image_helper.dart';
 import 'package:jakthund_app/pages/session_media_video_helper.dart';
@@ -47,6 +46,7 @@ import 'package:jakthund_app/services/gpx_importer.dart';
 import 'package:jakthund_app/services/hive_lifecycle_service.dart';
 import 'package:jakthund_app/services/media_permission_service.dart';
 import 'package:jakthund_app/services/media_storage.dart';
+import 'package:jakthund_app/services/user_identity_service.dart';
 import 'package:jakthund_app/ui/components/meta_chip.dart';
 import 'package:jakthund_app/ui/milestones/milestone_celebration_presenter.dart';
 import 'package:jakthund_app/l10n/app_localizations.dart';
@@ -96,33 +96,47 @@ bool canAddMediaInSessionContext({
   if (hasMediaAccess) {
     return true;
   }
+  if (selectedDogId == null) {
+    return false;
+  }
   if (!isEditMode) {
-    return false;
+    return true;
   }
-  if (editingSessionDogId == null || selectedDogId == null) {
-    return false;
-  }
+  if (editingSessionDogId == null) return false;
   return editingSessionDogId == selectedDogId;
 }
 
-List<Dog> visibleSessionDogsForUser({
+List<Dog> visibleDogsForSessionPage({
   required Iterable<Dog> dogs,
   required Iterable<DogMembership> memberships,
   required String? currentUserId,
+  required Iterable<String> currentUserIds,
 }) {
-  final activeMemberships = currentUserId == null
-      ? const <DogMembership>[]
+  final normalizedUserIds = <String>{};
+  final current = currentUserId?.trim();
+  if (current != null && current.isNotEmpty) {
+    normalizedUserIds.add(current);
+  }
+  for (final userId in currentUserIds) {
+    final trimmed = userId.trim();
+    if (trimmed.isNotEmpty) {
+      normalizedUserIds.add(trimmed);
+    }
+  }
+
+  final currentMemberships = normalizedUserIds.isEmpty
+      ? <DogMembership>[]
       : memberships
-          .where(
-            (membership) =>
-                membership.userId.trim() == currentUserId &&
-                membership.status == Status.active,
-          )
+          .where((membership) =>
+              normalizedUserIds.contains(membership.userId.trim()) &&
+              membership.status == Status.active)
           .toList(growable: false);
+
   return filterVisibleDogs(
     dogs: dogs,
-    memberships: activeMemberships,
+    memberships: currentMemberships,
     currentUserId: currentUserId,
+    currentUserIds: normalizedUserIds,
   );
 }
 
@@ -243,9 +257,11 @@ class _HuntSessionPageState extends State<HuntSessionPage>
   bool _isApplyingControllerState = false;
   bool _showNewSessionForm = false;
   static const int _kMaxGpxPoints = 50000;
+  static const int _kMaxLocationSuggestions = 10;
 
   // Controllers
   final _locationController = TextEditingController();
+  final FocusNode _locationFocusNode = FocusNode();
   final _durationController = TextEditingController();
   final _birdsController = TextEditingController();
   final _pointsController = TextEditingController();
@@ -274,6 +290,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
   String? _pendingMediaSessionId;
   String? _sessionMediaId;
   final ImagePicker _imagePicker = ImagePicker();
+  final UserIdentityService _identityService = UserIdentityService();
   final MediaPermissionService _mediaPermissionService =
       MediaPermissionService();
   HuntSession? _editingSession;
@@ -299,10 +316,15 @@ class _HuntSessionPageState extends State<HuntSessionPage>
   bool _isStartingGps = false;
   bool _isStoppingGps = false;
   bool _isExportingGpx = false;
+  bool _isImportingMedia = false;
 
   bool get _gpsBusy => _isStartingGps || _isStoppingGps;
   bool get _anyBusy =>
-      _isSavingSession || _gpsBusy || _isPickingGpx || _isExportingGpx;
+      _isSavingSession ||
+      _gpsBusy ||
+      _isPickingGpx ||
+      _isExportingGpx ||
+      _isImportingMedia;
 
   Future<void> _hapticSuccess() async {
     // Only call on actual success.
@@ -610,25 +632,53 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     return null;
   }
 
-  String? _currentUserIdOrNull() {
-    try {
-      final uid = FirebaseAuth.instance.currentUser?.uid.trim();
-      return uid == null || uid.isEmpty ? null : uid;
-    } catch (_) {
-      return null;
-    }
+  List<Dog> _activeDogs() {
+    final currentUserIds = _currentUserIds();
+    final currentUid = _currentUserIdOrNull();
+    return visibleDogsForSessionPage(
+      dogs: _dogsBox.values,
+      memberships: _membershipBox.values,
+      currentUserId: currentUid,
+      currentUserIds: currentUserIds,
+    );
   }
-
-  List<Dog> _activeDogs() => visibleSessionDogsForUser(
-        dogs: _dogsBox.values,
-        memberships: _membershipBox.values,
-        currentUserId: _currentUserIdOrNull(),
-      );
 
   List<HuntSession> _visibleSessions() => filterVisibleSessions(
         sessions: _sessionsBox.values,
         dogs: _activeDogs(),
       );
+
+  String? _currentUserIdOrNull() {
+    try {
+      final authUid = FirebaseAuth.instance.currentUser?.uid.trim();
+      if (authUid != null && authUid.isNotEmpty) {
+        return authUid;
+      }
+    } catch (_) {
+      // Fall through to local identity.
+    }
+    final localUid = _identityService.getCurrentUserId().trim();
+    return localUid.isEmpty ? null : localUid;
+  }
+
+  Set<String> _currentUserIds() {
+    final ids = <String>{};
+    final localUid = _identityService.getCurrentUserId().trim();
+    if (localUid.isNotEmpty) {
+      ids.add(localUid);
+    }
+
+    try {
+      final authUid = FirebaseAuth.instance.currentUser?.uid.trim();
+      if (authUid != null && authUid.isNotEmpty) {
+        ids.add(authUid);
+      }
+    } catch (_) {
+      // Keep local identity fallback only.
+    }
+
+    return ids;
+  }
 
   Future<void> _openAddDogEditor() async {
     final created = await Navigator.push<bool>(
@@ -687,9 +737,89 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     }
   }
 
+  void _resetNewSessionFormState({bool keepSelectedDog = true}) {
+    if (_isEditMode) {
+      return;
+    }
+
+    final dogs = _activeDogs();
+    String? nextDogId;
+    if (keepSelectedDog && _selectedDogId != null) {
+      final stillVisible = dogs.any((dog) => dog.id == _selectedDogId);
+      if (stillVisible) {
+        nextDogId = _selectedDogId;
+      }
+    }
+    nextDogId ??= dogs.isNotEmpty ? dogs.first.id : null;
+
+    _isApplyingControllerState = true;
+
+    _locationController.clear();
+    _durationController.clear();
+    _birdsController.clear();
+    _pointsController.clear();
+    _secondaryPointsController.clear();
+    _tomstandController.clear();
+    _flushesController.clear();
+    _notesController.clear();
+
+    _selectedBirdSpecies.clear();
+    _mediaPaths.clear();
+    _pendingMediaSessionId = null;
+    _sessionMediaId = null;
+
+    _sessionType = SessionType.training;
+    _birdsShotCount = 0;
+    _birdsShotSpecies = null;
+
+    _currentTrack.clear();
+    _importedTrackPreview = [];
+    _importedTrackId = null;
+    _importedTrackPoints = 0;
+    _durationFromTrack = false;
+    _settingDurationProgrammatically = false;
+
+    _setSelectedDogId(nextDogId, notify: false);
+    _setSelectedDateTime(DateTime.now(), notify: false);
+
+    _activeSessionController.setLocationName('');
+    _activeSessionController.setActiveMinutes(0);
+    _activeSessionController.setBirdCount(0);
+    _activeSessionController.setStandCount(0);
+    _activeSessionController.setTomstandCount(0);
+    _activeSessionController.setFlushCount(0);
+    _activeSessionController.setNotes('');
+    _activeSessionController.setTrackId(null);
+
+    _isApplyingControllerState = false;
+  }
+
   String _selectedDateLabel(AppLocalizations l10n) {
     final value = _selectedDateTime ?? DateTime.now();
     return DateFormat.yMd(l10n.localeName).format(value);
+  }
+
+  List<String> _locationSuggestions(String query, {int max = 10}) {
+    final normalizedQuery = query.trim().toLowerCase();
+    final sortedSessions = _sessionsBox.values
+        .where((session) => !session.isDeleted)
+        .toList(growable: false)
+      ..sort((a, b) => b.dateTime.compareTo(a.dateTime));
+
+    final byNormalized = <String, String>{};
+    for (final session in sortedSessions) {
+      final trimmed = session.location.trim();
+      if (trimmed.isEmpty) continue;
+      final key = trimmed.toLowerCase();
+      byNormalized.putIfAbsent(key, () => trimmed);
+    }
+
+    final suggestions = byNormalized.values.where((location) {
+      if (normalizedQuery.isEmpty) return true;
+      return location.toLowerCase().contains(normalizedQuery);
+    }).take(max);
+
+    return suggestions.toList(growable: false);
   }
 
   String _selectedTimeLabel(AppLocalizations l10n) {
@@ -736,7 +866,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     final date = await showDatePicker(
       context: context,
       initialDate: _selectedDateTime ?? now,
-      firstDate: DateTime(2020),
+      firstDate: DateTime(1970),
       lastDate: DateTime(2100),
     );
     if (date == null) return;
@@ -964,7 +1094,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                 title: Text(l10n.session_media_gallery_label),
                 onTap: () {
                   Navigator.pop(ctx);
-                  _pickImage(ImageSource.gallery, sessionKey: sessionKey);
+                  _pickImagesFromGallery(sessionKey: sessionKey);
                 },
               ),
               ListTile(
@@ -980,7 +1110,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                 title: Text(l10n.session_media_video_label),
                 onTap: () {
                   Navigator.pop(ctx);
-                  _pickVideo(sessionKey: sessionKey);
+                  _pickVideosFromGallery(sessionKey: sessionKey);
                 },
               ),
             ],
@@ -1004,7 +1134,16 @@ class _HuntSessionPageState extends State<HuntSessionPage>
           await _imagePicker.pickImage(source: source, imageQuality: 90);
       if (file == null) return;
       FocusManager.instance.primaryFocus?.unfocus();
-      await _storePickedFile(file, sessionKey: sessionKey);
+      setState(() => _isImportingMedia = true);
+      try {
+        await _storePickedFile(file, sessionKey: sessionKey);
+      } finally {
+        if (mounted) {
+          setState(() => _isImportingMedia = false);
+        } else {
+          _isImportingMedia = false;
+        }
+      }
     } catch (_) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.session_error_photo_add)),
@@ -1012,14 +1151,53 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     }
   }
 
-  Future<void> _pickVideo({int? sessionKey}) async {
+  Future<void> _pickImagesFromGallery({int? sessionKey}) async {
     if (_anyBusy) return;
     final l10n = AppLocalizations.of(context)!;
     try {
-      final file = await _imagePicker.pickVideo(source: ImageSource.gallery);
-      if (file == null) return;
+      final files = await _imagePicker.pickMultiImage(imageQuality: 90);
+      if (files.isEmpty) return;
       FocusManager.instance.primaryFocus?.unfocus();
-      await _storePickedFile(file, sessionKey: sessionKey);
+      setState(() => _isImportingMedia = true);
+      try {
+        for (final file in files) {
+          if (!mounted) return;
+          await _storePickedFile(file, sessionKey: sessionKey);
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isImportingMedia = false);
+        } else {
+          _isImportingMedia = false;
+        }
+      }
+    } catch (_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.session_error_photo_add)),
+      );
+    }
+  }
+
+  Future<void> _pickVideosFromGallery({int? sessionKey}) async {
+    if (_anyBusy) return;
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final files = await _imagePicker.pickMultiVideo();
+      if (files.isEmpty) return;
+      FocusManager.instance.primaryFocus?.unfocus();
+      setState(() => _isImportingMedia = true);
+      try {
+        for (final file in files) {
+          if (!mounted) return;
+          await _storePickedFile(file, sessionKey: sessionKey);
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isImportingMedia = false);
+        } else {
+          _isImportingMedia = false;
+        }
+      }
     } catch (_) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.session_error_video_add)),
@@ -1728,9 +1906,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
       await _hapticSuccess();
 
       if (mounted) {
+        _resetNewSessionFormState(keepSelectedDog: true);
         setState(() {
           _showNewSessionForm = false;
-          _pendingMediaSessionId = null;
         });
         await _presentMilestoneFeedback(
           dogId: session.dogId,
@@ -1739,10 +1917,6 @@ class _HuntSessionPageState extends State<HuntSessionPage>
           fallbackMessage: savedMessage,
         );
         if (!mounted) return;
-        if (!_isEditMode && !widget.detailMode) {
-          await _navigateToDogDetail(selectedDog);
-          return;
-        }
       }
     } finally {
       if (mounted) {
@@ -1818,15 +1992,6 @@ class _HuntSessionPageState extends State<HuntSessionPage>
       SnackBar(content: Text(fallbackMessage)),
     );
     return false;
-  }
-
-  Future<void> _navigateToDogDetail(Dog dog) async {
-    if (!mounted) return;
-    await Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => DogDetailPage(dog: dog),
-      ),
-    );
   }
 
   void _openMapForNewSession() {
@@ -2031,7 +2196,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                               final d = await showDatePicker(
                                 context: ctx,
                                 initialDate: dt,
-                                firstDate: DateTime(2020),
+                                firstDate: DateTime(1970),
                                 lastDate: DateTime(2100),
                               );
                               if (d == null) return;
@@ -2098,11 +2263,11 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                 .hunt_session_field_secondary_points_label),
                         keyboardType: TextInputType.number),
                     TextField(
-                      controller: tms,
-                      decoration: InputDecoration(
-                        labelText:
-                          dialogL10n.hunt_session_field_tomstand_label),
-                      keyboardType: TextInputType.number),
+                        controller: tms,
+                        decoration: InputDecoration(
+                            labelText:
+                                dialogL10n.hunt_session_field_tomstand_label),
+                        keyboardType: TextInputType.number),
                     TextField(
                         controller: fls,
                         decoration: InputDecoration(
@@ -2304,6 +2469,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     WidgetsBinding.instance.removeObserver(this);
     _autosaveService.dispose();
     _activeSessionController.dispose();
+    _locationFocusNode.dispose();
     _locationController.dispose();
     _durationController.dispose();
     _birdsController.dispose();
@@ -2409,7 +2575,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     final dogs = _activeDogs();
     final sessions = _visibleSessions();
     final activeDogIds = dogs.map((dog) => dog.id).toSet();
-    final sessionEntries = _sessionsBox
+    final sessionEntries = (_sessionsBox
         .toMap()
         .entries
         .where((entry) =>
@@ -2420,7 +2586,8 @@ class _HuntSessionPageState extends State<HuntSessionPage>
             entry.value,
           ),
         )
-        .toList(growable: false);
+        .toList())
+      ..sort((a, b) => b.value.dateTime.compareTo(a.value.dateTime));
     final latestSessionEntry = sessionEntries.isEmpty
         ? null
         : (List<MapEntry<int, HuntSession>>.from(sessionEntries)
@@ -2452,7 +2619,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     final totalSecondaryPoints =
         dogSessions.fold<int>(0, (sum, s) => sum + s.secondaryPoints);
     final totalTomstand =
-      dogSessions.fold<int>(0, (sum, s) => sum + s.tomstandCount);
+        dogSessions.fold<int>(0, (sum, s) => sum + s.tomstandCount);
     final totalFlushes = dogSessions.fold<int>(0, (sum, s) => sum + s.flushes);
 
     if (widget.homeCompact &&
@@ -2698,6 +2865,116 @@ class _HuntSessionPageState extends State<HuntSessionPage>
         children: [
           if (widget.showNewSessionSection && !_isEditMode && !showForm) ...[
             Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: IconButton.filledTonal(
+                  tooltip: l10n.session_options_info_tooltip,
+                  onPressed: () {
+                    showDialog<void>(
+                      context: context,
+                      builder: (dialogContext) => AlertDialog(
+                        title: Text(l10n.session_options_info_title),
+                        content: SingleChildScrollView(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.session_field_session_button,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.w700),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(l10n.session_options_info_field_body),
+                              const SizedBox(height: 12),
+                              Text(
+                                l10n.session_manual_registration_button,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.w700),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(l10n.session_options_info_manual_body),
+                            ],
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(dialogContext).pop(),
+                            child: Text(l10n.common_close),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.info_outline),
+                ),
+              ),
+            ),
+            // Field session section
+            if (dogs.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primaryContainer
+                        .withOpacity(0.35),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Theme.of(context).dividerColor.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        l10n.session_field_session_button,
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        l10n.session_field_session_help,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                              height: 1.35,
+                            ),
+                      ),
+                      const SizedBox(height: 12),
+                      FilledButton.icon(
+                        onPressed: _anyBusy
+                            ? null
+                            : () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const HuntSessionPage(
+                                      autoStartNow: true,
+                                    ),
+                                  ),
+                                );
+                              },
+                        icon: const Icon(Icons.play_arrow_rounded),
+                        label: Text(l10n.session_field_session_button),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+            // Manual registration section
+            Padding(
               padding: const EdgeInsets.only(bottom: 16),
               child: Center(
                 child: SizedBox(
@@ -2708,6 +2985,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                         : (dogs.isEmpty
                             ? _openAddDogEditor
                             : () => setState(() {
+                                  _resetNewSessionFormState(
+                                    keepSelectedDog: true,
+                                  );
                                   _showNewSessionForm = true;
                                 })),
                     style: FilledButton.styleFrom(
@@ -2720,7 +3000,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                     child: Text(
                       dogs.isEmpty
                           ? l10n.home_addDog_button
-                          : l10n.home_startNewSession,
+                          : l10n.session_manual_registration_button,
                     ),
                   ),
                 ),
@@ -2908,7 +3188,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                     Text(
                         '${l10n.session_summary_total_secondary_points_label} $totalSecondaryPoints'),
                     Text(
-                      '${l10n.session_summary_total_tomstand_label} $totalTomstand'),
+                        '${l10n.session_summary_total_tomstand_label} $totalTomstand'),
                     Text(
                         '${l10n.session_summary_total_flushes_label} $totalFlushes'),
                   ],
@@ -3229,11 +3509,66 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                       ],
                     ),
                     const SizedBox(height: 8),
-                    TextField(
-                      controller: _locationController,
-                      decoration: InputDecoration(
-                          labelText: l10n.hunt_session_field_location_label),
-                      enabled: !_anyBusy,
+                    RawAutocomplete<String>(
+                      textEditingController: _locationController,
+                      focusNode: _locationFocusNode,
+                      optionsBuilder: (textEditingValue) {
+                        if (_anyBusy) return const Iterable<String>.empty();
+                        return _locationSuggestions(
+                          textEditingValue.text,
+                          max: _kMaxLocationSuggestions,
+                        );
+                      },
+                      onSelected: (selection) {
+                        _locationController.value = TextEditingValue(
+                          text: selection,
+                          selection:
+                              TextSelection.collapsed(offset: selection.length),
+                        );
+                        _activeSessionController.setLocationName(selection);
+                      },
+                      fieldViewBuilder:
+                          (context, controller, focusNode, onFieldSubmitted) {
+                        return TextField(
+                          controller: controller,
+                          focusNode: focusNode,
+                          decoration: InputDecoration(
+                            labelText: l10n.hunt_session_field_location_label,
+                          ),
+                          enabled: !_anyBusy,
+                          textInputAction: TextInputAction.done,
+                          onSubmitted: (_) => onFieldSubmitted(),
+                        );
+                      },
+                      optionsViewBuilder: (context, onSelected, options) {
+                        final optionList = options.toList(growable: false);
+                        if (optionList.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+                        return Align(
+                          alignment: Alignment.topLeft,
+                          child: Material(
+                            elevation: 4,
+                            borderRadius: BorderRadius.circular(8),
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxHeight: 240),
+                              child: ListView.builder(
+                                padding: EdgeInsets.zero,
+                                shrinkWrap: true,
+                                itemCount: optionList.length,
+                                itemBuilder: (context, index) {
+                                  final option = optionList[index];
+                                  return ListTile(
+                                    dense: true,
+                                    title: Text(option),
+                                    onTap: () => onSelected(option),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                     TextField(
                       controller: _durationController,
@@ -3351,6 +3686,25 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                       label: Text(l10n.session_media_add_photo_video),
                     ),
                     const SizedBox(height: 8),
+                    if (_isImportingMedia) ...[
+                      Row(
+                        children: [
+                          const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              l10n.session_media_importing,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                    ],
                     if (_mediaPaths.isNotEmpty)
                       Column(
                         children: [
@@ -3526,6 +3880,31 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                   },
                                 ),
                                 const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Chip(
+                                      label: Text(
+                                        filteredEntries[i].value.sessionType ==
+                                                SessionType.hunting
+                                            ? l10n.session_type_hunt
+                                            : l10n.session_type_training,
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                      avatar: Icon(
+                                        filteredEntries[i].value.sessionType ==
+                                                SessionType.hunting
+                                            ? Icons.gps_fixed
+                                            : Icons.fitness_center,
+                                        size: 14,
+                                      ),
+                                      visualDensity: VisualDensity.compact,
+                                      materialTapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
+                                      padding: EdgeInsets.zero,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
                                 Text(
                                   '📅 ${DateFormat('dd.MM.yyyy HH:mm').format(filteredEntries[i].value.dateTime)}\n'
                                   '⏱ ${l10n.session_unit_min}: ${filteredEntries[i].value.durationMinutes}\n'
@@ -3553,6 +3932,62 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                     ),
                                   ],
                                 ),
+                                if (filteredEntries[i]
+                                    .value
+                                    .notes
+                                    .trim()
+                                    .isNotEmpty) ...[
+                                  const SizedBox(height: 10),
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 10,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .surfaceContainerHighest
+                                          .withValues(alpha: 0.55),
+                                      border: Border(
+                                        left: BorderSide(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                          width: 3,
+                                        ),
+                                      ),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          l10n.session_detail_field_notes_label,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .labelMedium
+                                              ?.copyWith(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          filteredEntries[i].value.notes.trim(),
+                                          maxLines: 3,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                                 _buildSessionMediaPreview(
                                   filteredEntries[i].value.mediaPaths,
                                 ),
@@ -3867,6 +4302,12 @@ class _HuntSessionPageState extends State<HuntSessionPage>
       initiallyExpanded: false,
       childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
       children: [
+        _buildDetailRow(
+          l10n.session_type_title,
+          session.sessionType == SessionType.hunting
+              ? l10n.session_type_hunt
+              : l10n.session_type_training,
+        ),
         _buildDetailRow(l10n.session_detail_detail_label_date, dateText),
         _buildDetailRow(
           l10n.session_detail_detail_label_location,

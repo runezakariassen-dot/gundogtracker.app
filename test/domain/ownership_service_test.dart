@@ -23,6 +23,11 @@ void main() {
   late Box<SyncTask> syncTasksBox;
   late Box<dynamic> settingsBox;
 
+  Future<void> seedMembership(DogMembership membership) async {
+    await dogMembershipsBox()
+        .put('${membership.dogKey}::${membership.userId}', membership);
+  }
+
   void registerAdapter<T>(TypeAdapter<T> adapter) {
     if (!Hive.isAdapterRegistered(adapter.typeId)) {
       Hive.registerAdapter<T>(adapter);
@@ -83,8 +88,7 @@ void main() {
     await identity.setCurrentUserId('new-owner');
     await service.acceptTransfer(transfer.transferId);
 
-    final updatedDog = dogsBox
-        .values
+    final updatedDog = dogsBox.values
         .firstWhere((entry) => entry.dogKey == dog.dogKey, orElse: () => dog);
     expect(updatedDog.ownerUserId, 'new-owner');
 
@@ -209,5 +213,312 @@ void main() {
     final stored = ownershipTransfersBox().get(transfer.transferId);
     expect(stored, isNotNull);
     expect(stored!.status, Status.cancelled);
+  });
+
+  test('owner can change another member role and it persists after reload',
+      () async {
+    final identity = UserIdentityService();
+    await identity.setCurrentUserId('owner');
+
+    const dogKey = 'NO400-45';
+    await seedMembership(
+      DogMembership(
+        dogKey: dogKey,
+        userId: 'owner',
+        role: Role.owner,
+        status: Status.active,
+        addedAt: DateTime(2024, 1, 1),
+        addedByUserId: 'owner',
+      ),
+    );
+    await seedMembership(
+      DogMembership(
+        dogKey: dogKey,
+        userId: 'member',
+        role: Role.admin,
+        status: Status.active,
+        addedAt: DateTime(2024, 1, 1),
+        addedByUserId: 'owner',
+      ),
+    );
+
+    final service = DomainDi.ownershipService(identityService: identity);
+    final updated = await service.updateMembershipRole(
+      dogKey: dogKey,
+      targetUserId: 'member',
+      role: Role.viewer,
+    );
+
+    expect(updated.role, Role.viewer);
+    expect(
+      dogMembershipsBox().get('$dogKey::member')?.role,
+      Role.viewer,
+    );
+
+    await membershipsBox.close();
+    membershipsBox = await Hive.openBox<DogMembership>(dogMembershipsBoxName);
+
+    expect(
+      membershipsBox.get('$dogKey::member')?.role,
+      Role.viewer,
+    );
+  });
+
+  test('owner can set member role to administrator', () async {
+    final identity = UserIdentityService();
+    await identity.setCurrentUserId('owner');
+
+    const dogKey = 'NO404-45';
+    await seedMembership(
+      DogMembership(
+        dogKey: dogKey,
+        userId: 'owner',
+        role: Role.owner,
+        status: Status.active,
+        addedAt: DateTime(2024, 1, 1),
+        addedByUserId: 'owner',
+      ),
+    );
+    await seedMembership(
+      DogMembership(
+        dogKey: dogKey,
+        userId: 'member',
+        role: Role.viewer,
+        status: Status.active,
+        addedAt: DateTime(2024, 1, 1),
+        addedByUserId: 'owner',
+      ),
+    );
+
+    final service = DomainDi.ownershipService(identityService: identity);
+    final updated = await service.updateMembershipRole(
+      dogKey: dogKey,
+      targetUserId: 'member',
+      role: Role.admin,
+    );
+
+    expect(updated.role, Role.admin);
+    expect(dogMembershipsBox().get('$dogKey::member')?.role, Role.admin);
+  });
+
+  test('owner can set administrator back to user role', () async {
+    final identity = UserIdentityService();
+    await identity.setCurrentUserId('owner');
+
+    const dogKey = 'NO405-45';
+    await seedMembership(
+      DogMembership(
+        dogKey: dogKey,
+        userId: 'owner',
+        role: Role.owner,
+        status: Status.active,
+        addedAt: DateTime(2024, 1, 1),
+        addedByUserId: 'owner',
+      ),
+    );
+    await seedMembership(
+      DogMembership(
+        dogKey: dogKey,
+        userId: 'member',
+        role: Role.admin,
+        status: Status.active,
+        addedAt: DateTime(2024, 1, 1),
+        addedByUserId: 'owner',
+      ),
+    );
+
+    final service = DomainDi.ownershipService(identityService: identity);
+    final updated = await service.updateMembershipRole(
+      dogKey: dogKey,
+      targetUserId: 'member',
+      role: Role.viewer,
+    );
+
+    expect(updated.role, Role.viewer);
+    expect(dogMembershipsBox().get('$dogKey::member')?.role, Role.viewer);
+  });
+
+  test('administrator cannot set role to owner', () async {
+    final identity = UserIdentityService();
+    await identity.setCurrentUserId('admin');
+
+    const dogKey = 'NO406-45';
+    await seedMembership(
+      DogMembership(
+        dogKey: dogKey,
+        userId: 'admin',
+        role: Role.admin,
+        status: Status.active,
+        addedAt: DateTime(2024, 1, 1),
+        addedByUserId: 'owner',
+      ),
+    );
+    await seedMembership(
+      DogMembership(
+        dogKey: dogKey,
+        userId: 'member',
+        role: Role.viewer,
+        status: Status.active,
+        addedAt: DateTime(2024, 1, 1),
+        addedByUserId: 'owner',
+      ),
+    );
+
+    final service = DomainDi.ownershipService(identityService: identity);
+
+    await expectLater(
+      service.updateMembershipRole(
+        dogKey: dogKey,
+        targetUserId: 'member',
+        role: Role.owner,
+      ),
+      throwsA(
+        isA<MembershipRoleException>().having(
+          (e) => e.code,
+          'code',
+          MembershipRoleError.ownerRoleLocked,
+        ),
+      ),
+    );
+  });
+
+  test('administrator can change viewer and editor roles but not assign admin',
+      () async {
+    final identity = UserIdentityService();
+    await identity.setCurrentUserId('admin');
+
+    const dogKey = 'NO401-45';
+    await seedMembership(
+      DogMembership(
+        dogKey: dogKey,
+        userId: 'admin',
+        role: Role.admin,
+        status: Status.active,
+        addedAt: DateTime(2024, 1, 1),
+        addedByUserId: 'owner',
+      ),
+    );
+    await seedMembership(
+      DogMembership(
+        dogKey: dogKey,
+        userId: 'member',
+        role: Role.viewer,
+        status: Status.active,
+        addedAt: DateTime(2024, 1, 1),
+        addedByUserId: 'owner',
+      ),
+    );
+
+    final service = DomainDi.ownershipService(identityService: identity);
+    final updated = await service.updateMembershipRole(
+      dogKey: dogKey,
+      targetUserId: 'member',
+      role: Role.editor,
+    );
+
+    expect(updated.role, Role.editor);
+
+    await expectLater(
+      service.updateMembershipRole(
+        dogKey: dogKey,
+        targetUserId: 'member',
+        role: Role.admin,
+      ),
+      throwsA(
+        isA<MembershipRoleException>().having(
+          (e) => e.code,
+          'code',
+          MembershipRoleError.cannotPromoteToAdmin,
+        ),
+      ),
+    );
+  });
+
+  test('user without access cannot change role', () async {
+    final identity = UserIdentityService();
+    await identity.setCurrentUserId('member');
+
+    const dogKey = 'NO402-45';
+    await seedMembership(
+      DogMembership(
+        dogKey: dogKey,
+        userId: 'member',
+        role: Role.viewer,
+        status: Status.active,
+        addedAt: DateTime(2024, 1, 1),
+        addedByUserId: 'owner',
+      ),
+    );
+    await seedMembership(
+      DogMembership(
+        dogKey: dogKey,
+        userId: 'other',
+        role: Role.viewer,
+        status: Status.active,
+        addedAt: DateTime(2024, 1, 1),
+        addedByUserId: 'owner',
+      ),
+    );
+
+    final service = DomainDi.ownershipService(identityService: identity);
+
+    await expectLater(
+      service.updateMembershipRole(
+        dogKey: dogKey,
+        targetUserId: 'other',
+        role: Role.editor,
+      ),
+      throwsA(
+        isA<MembershipRoleException>().having(
+          (e) => e.code,
+          'code',
+          MembershipRoleError.notAuthorized,
+        ),
+      ),
+    );
+  });
+
+  test('owner role cannot be downgraded', () async {
+    final identity = UserIdentityService();
+    await identity.setCurrentUserId('owner');
+
+    const dogKey = 'NO403-45';
+    await seedMembership(
+      DogMembership(
+        dogKey: dogKey,
+        userId: 'owner',
+        role: Role.owner,
+        status: Status.active,
+        addedAt: DateTime(2024, 1, 1),
+        addedByUserId: 'owner',
+      ),
+    );
+    await seedMembership(
+      DogMembership(
+        dogKey: dogKey,
+        userId: 'co-owner',
+        role: Role.owner,
+        status: Status.active,
+        addedAt: DateTime(2024, 1, 1),
+        addedByUserId: 'owner',
+      ),
+    );
+
+    final service = DomainDi.ownershipService(identityService: identity);
+
+    await expectLater(
+      service.updateMembershipRole(
+        dogKey: dogKey,
+        targetUserId: 'co-owner',
+        role: Role.editor,
+      ),
+      throwsA(
+        isA<MembershipRoleException>().having(
+          (e) => e.code,
+          'code',
+          MembershipRoleError.ownerRoleLocked,
+        ),
+      ),
+    );
   });
 }

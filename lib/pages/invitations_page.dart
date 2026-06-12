@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -7,6 +10,7 @@ import '../domain/domain_errors.dart';
 import '../models/dog.dart';
 import '../models/dog_membership.dart';
 import '../models/share_invitation.dart';
+import '../services/cloud/firestore_share_invitation_sync_service.dart';
 import '../services/sharing_service.dart';
 import '../l10n/app_localizations.dart';
 
@@ -22,12 +26,17 @@ class _InvitationsPageState extends State<InvitationsPage> {
   late final Box<Dog> _dogsBox;
   final Set<String> _processingInvites = <String>{};
   final SharingService _sharingService = SharingService();
+  final FirestoreShareInvitationSyncService _cloudInviteSyncService =
+      FirestoreShareInvitationSyncService.instance;
 
   @override
   void initState() {
     super.initState();
     _shareBox = shareInvitesBox();
     _dogsBox = dogsBox();
+    if (Firebase.apps.isNotEmpty) {
+      unawaited(_pullIncomingInvites());
+    }
   }
 
   @override
@@ -36,16 +45,18 @@ class _InvitationsPageState extends State<InvitationsPage> {
     return ValueListenableBuilder(
       valueListenable: _shareBox.listenable(),
       builder: (context, Box<ShareInvitation> box, _) {
-        final currentEmail =
-            FirebaseAuth.instance.currentUser?.email?.trim().toLowerCase();
-        final invites = currentEmail == null
-            ? <ShareInvitation>[]
-            : box.values
-                .where((invite) =>
-                    invite.status == Status.pending &&
-                    invite.recipientEmail == currentEmail)
-                .toList()
-              ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+        final currentEmail = _currentUserEmail();
+        final currentUid = _currentUserId();
+        final invites = box.values
+            .where((invite) =>
+                invite.status == Status.pending &&
+                ((currentEmail != null &&
+                        currentEmail.isNotEmpty &&
+                        invite.recipientEmail == currentEmail) ||
+                    ((currentUid?.isNotEmpty ?? false) &&
+                        invite.recipientUserId == currentUid)))
+            .toList()
+          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
         return Scaffold(
           appBar: AppBar(title: Text(l10n.invitations_title)),
@@ -60,19 +71,23 @@ class _InvitationsPageState extends State<InvitationsPage> {
                   separatorBuilder: (_, __) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final invite = invites[index];
-                    final dog = _dogsBox.get(invite.dogKey);
-                    final trimmedName = dog?.name.trim();
-                    final dogName = (trimmedName?.isNotEmpty ?? false)
-                        ? trimmedName!
-                        : l10n.dog_unnamed;
+                    final dog = _findDogByDogKey(invite.dogKey);
+                    final dogName = _resolveDogName(invite, dog);
+                    final senderName = _resolveSenderName(invite);
                     final isProcessing =
                         _processingInvites.contains(invite.inviteId);
 
                     return Card(
                       child: ListTile(
-                        title: Text(dogName),
+                        title: Text(
+                          _inviteSummary(
+                            l10n,
+                            senderName: senderName,
+                            dogName: dogName,
+                          ),
+                        ),
                         subtitle: Text(l10n.invite_status_invited_as_user(
-                          l10n.share_role_user,
+                          _roleLabel(l10n, invite.role),
                         )),
                         trailing: SizedBox(
                           width: 160,
@@ -173,6 +188,93 @@ class _InvitationsPageState extends State<InvitationsPage> {
         return l10n.share_error_invalid_role;
       case ShareError.invalidEmail:
         return l10n.share_error_invalid_email;
+    }
+  }
+
+  Future<void> _pullIncomingInvites() async {
+    final count = await _cloudInviteSyncService
+        .pullPendingInvitesForCurrentUserIntoLocalBox();
+    if (!mounted) return;
+    debugPrint('[INVITES] pulled incoming invites from cloud: $count');
+  }
+
+  String? _currentUserEmail() {
+    try {
+      final email = FirebaseAuth.instance.currentUser?.email?.trim();
+      if (email != null && email.isNotEmpty) {
+        return email.toLowerCase();
+      }
+    } catch (_) {
+      // Firebase may be unavailable in local-only startup/tests.
+    }
+    return null;
+  }
+
+  String? _currentUserId() {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid.trim();
+      if (uid != null && uid.isNotEmpty) {
+        return uid;
+      }
+    } catch (_) {
+      // Firebase may be unavailable in local-only startup/tests.
+    }
+    return null;
+  }
+
+  Dog? _findDogByDogKey(String dogKey) {
+    for (final dog in _dogsBox.values) {
+      if (dog.dogKey == dogKey) {
+        return dog;
+      }
+    }
+    return null;
+  }
+
+  String? _resolveDogName(ShareInvitation invite, Dog? dog) {
+    final inviteDogName = invite.dogName?.trim();
+    if (inviteDogName != null && inviteDogName.isNotEmpty) {
+      return inviteDogName;
+    }
+    final localDogName = dog?.displayName.trim();
+    if (localDogName != null && localDogName.isNotEmpty) {
+      return localDogName;
+    }
+    return null;
+  }
+
+  String? _resolveSenderName(ShareInvitation invite) {
+    final displayName = invite.senderDisplayName?.trim();
+    if (displayName != null && displayName.isNotEmpty) {
+      return displayName;
+    }
+    final email = invite.senderEmail?.trim();
+    if (email != null && email.isNotEmpty) {
+      return email;
+    }
+    return null;
+  }
+
+  String _inviteSummary(
+    AppLocalizations l10n, {
+    required String? senderName,
+    required String? dogName,
+  }) {
+    if (dogName == null || dogName.isEmpty) {
+      return l10n.invitation_summary_generic;
+    }
+    if (senderName == null || senderName.isEmpty) {
+      return l10n.invitation_summary_with_dog(dogName);
+    }
+    return l10n.invitation_summary_with_sender_and_dog(senderName, dogName);
+  }
+
+  String _roleLabel(AppLocalizations l10n, Role role) {
+    switch (role.canonical) {
+      case CanonicalRole.admin:
+        return l10n.share_role_admin;
+      case CanonicalRole.user:
+        return l10n.share_role_user;
     }
   }
 }

@@ -1,7 +1,5 @@
 // ignore_for_file: depend_on_referenced_packages
 
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:hive/hive.dart';
@@ -12,6 +10,7 @@ import '../../models/hunt_session.dart';
 import '../../services/hive_lifecycle_service.dart';
 import '../components/app_scaffold.dart';
 import '../components/meta_chip.dart';
+import 'stats_trend_calculator.dart';
 import '../theme/app_theme.dart';
 
 class StatsScreen extends StatefulWidget {
@@ -23,7 +22,7 @@ class StatsScreen extends StatefulWidget {
 
 class _StatsScreenState extends State<StatsScreen> {
   late final Box<HuntSession> _sessionsBox;
-  _TrendResult? _trendResult;
+  StatsTrendResult? _trendResult;
   bool _loading = true;
 
   @override
@@ -34,105 +33,20 @@ class _StatsScreenState extends State<StatsScreen> {
   }
 
   void _computeTrend() {
-    final sessions = _sessionsBox.values
-        .where((session) => !session.isDeleted)
-        .toList(growable: false);
-    final result = _buildTrendResult(sessions);
+    final result = StatsTrendCalculator.calculate(_sessionsBox.values);
     setState(() {
       _trendResult = result;
       _loading = false;
     });
   }
 
-  _TrendResult? _buildTrendResult(List<HuntSession> sessions) {
-    if (sessions.isEmpty) return null;
-    sessions.sort((a, b) => a.dateTime.compareTo(b.dateTime));
-    final now = DateTime.now();
-    final earliest = DateTime(
-      sessions.first.dateTime.year,
-      sessions.first.dateTime.month,
-      sessions.first.dateTime.day,
-    );
-    if (earliest.isAfter(now)) return null;
-
-    final span = now.difference(earliest);
-    final bucket = _selectBucket(span);
-    final bucketStarts = _bucketStarts(earliest, now, bucket);
-    if (bucketStarts.isEmpty) return null;
-
-    final points = bucketStarts
-        .map((start) => _TrendPoint(start: start, count: 0))
-        .toList();
-
-    for (final session in sessions) {
-      final idx = bucketStarts.lastIndexWhere(
-        (bucketStart) => !session.dateTime.isBefore(bucketStart),
-      );
-      if (idx >= 0) {
-        points[idx].count += 1;
-      }
-    }
-
-    return _TrendResult(
-      start: earliest,
-      bucket: bucket,
-      points: points,
-    );
-  }
-
-  _Bucket _selectBucket(Duration span) {
-    final days = span.inDays;
-    if (days <= 60) return _Bucket.daily;
-    if (days <= 30 * 18) return _Bucket.weekly;
-    return _Bucket.monthly;
-  }
-
-  List<DateTime> _bucketStarts(DateTime start, DateTime end, _Bucket bucket) {
-    final starts = <DateTime>[];
-    var cursor = _normalizeToBucket(start, bucket);
-    while (!cursor.isAfter(end)) {
-      starts.add(cursor);
-      cursor = _advanceCursor(cursor, bucket);
-    }
-    return starts;
-  }
-
-  DateTime _normalizeToBucket(DateTime date, _Bucket bucket) {
+  String _bucketLabel(StatsTrendBucket bucket, AppLocalizations l10n) {
     switch (bucket) {
-      case _Bucket.daily:
-      case _Bucket.weekly:
-      case _Bucket.monthly:
-        return DateTime(date.year, date.month, date.day);
-    }
-  }
-
-  DateTime _advanceCursor(DateTime cursor, _Bucket bucket) {
-    switch (bucket) {
-      case _Bucket.daily:
-        return cursor.add(const Duration(days: 1));
-      case _Bucket.weekly:
-        return cursor.add(const Duration(days: 7));
-      case _Bucket.monthly:
-        return _addMonths(cursor, 1);
-    }
-  }
-
-  DateTime _addMonths(DateTime snapshot, int months) {
-    final totalMonths = snapshot.month - 1 + months;
-    final year = snapshot.year + totalMonths ~/ 12;
-    final month = totalMonths % 12 + 1;
-    final lastDay = DateTime(year, month + 1, 0).day;
-    final day = math.min(snapshot.day, lastDay);
-    return DateTime(year, month, day);
-  }
-
-  String _bucketLabel(_Bucket bucket, AppLocalizations l10n) {
-    switch (bucket) {
-      case _Bucket.daily:
+      case StatsTrendBucket.daily:
         return l10n.stats_period_daily;
-      case _Bucket.weekly:
+      case StatsTrendBucket.weekly:
         return l10n.stats_period_weekly;
-      case _Bucket.monthly:
+      case StatsTrendBucket.monthly:
         return l10n.stats_period_monthly;
     }
   }
@@ -150,16 +64,16 @@ class _StatsScreenState extends State<StatsScreen> {
     return 1;
   }
 
-  String _formatPointLabel(_TrendPoint point, _Bucket bucket) {
+  String _formatPointLabel(StatsTrendPoint point, StatsTrendBucket bucket) {
     switch (bucket) {
-      case _Bucket.daily:
+      case StatsTrendBucket.daily:
         return DateFormat('d. MMM', 'nb_NO').format(point.start);
-      case _Bucket.weekly:
+      case StatsTrendBucket.weekly:
         final week = _weekNumberDigits(point.start);
         return week.isEmpty
             ? 'Uke ${DateFormat('w', 'nb_NO').format(point.start)}'
             : 'Uke $week';
-      case _Bucket.monthly:
+      case StatsTrendBucket.monthly:
         return DateFormat.MMM('nb_NO').format(point.start);
     }
   }
@@ -212,11 +126,29 @@ class _StatsScreenState extends State<StatsScreen> {
     final l10n = AppLocalizations.of(context)!;
     if (_trendResult == null) {
       return SizedBox(
-        height: 160,
-        child: Center(
-            child: Text(
-          l10n.stats_no_sessions_registered,
-        )),
+        height: 200,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.bar_chart_outlined,
+              size: 48,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              l10n.stats_no_sessions_registered,
+              style: Theme.of(context).textTheme.titleMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l10n.stats_no_sessions_empty_body,
+              style: Theme.of(context).textTheme.bodySmall,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       );
     }
 
@@ -280,28 +212,4 @@ class _StatsScreenState extends State<StatsScreen> {
       ],
     );
   }
-}
-
-enum _Bucket { daily, weekly, monthly }
-
-class _TrendResult {
-  const _TrendResult({
-    required this.start,
-    required this.bucket,
-    required this.points,
-  });
-
-  final DateTime start;
-  final _Bucket bucket;
-  final List<_TrendPoint> points;
-}
-
-class _TrendPoint {
-  _TrendPoint({
-    required this.start,
-    required this.count,
-  });
-
-  final DateTime start;
-  int count;
 }

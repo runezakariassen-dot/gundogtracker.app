@@ -7,7 +7,6 @@ import 'dog_stats.dart';
 import 'milestone_catalog.dart';
 import 'milestone_evaluator.dart';
 import 'milestone_helpers.dart';
-import 'milestone_models.dart';
 
 class MilestoneService {
   MilestoneService({
@@ -28,79 +27,20 @@ class MilestoneService {
     required DateTime sessionDateTime,
   }) async {
     final state = await _stateRepository.getOrCreate(dogId);
-    final stats = await _calculateStats(dogId);
-
-    // Normalize achieved set (defensive against duplicates / null-ish data).
-    final achieved = <String>{...state.achievedIds};
-
-    // Evaluate catalog, including stand thresholds.
-    final defs = _evaluateMilestones(stats: stats, achievedIds: achieved);
-
-    if (defs.isEmpty) {
-      // Still update evaluation timestamp.
-      await _stateRepository.save(
-        state.copyWith(lastEvaluatedAt: sessionDateTime),
-      );
-      return const [];
-    }
-
-    // Dedupe and stable ordering (use sortOrder, then id).
-    final byId = <String, MilestoneDef>{};
-    for (final d in defs) {
-      // If somehow the same id appears twice, keep the “best” (lowest sortOrder).
-      final existing = byId[d.id];
-      if (existing == null) {
-        byId[d.id] = d;
-      } else if (d.sortOrder < existing.sortOrder) {
-        byId[d.id] = d;
-      }
-    }
-
-    final newly = byId.values.where((d) => !achieved.contains(d.id)).toList()
-      ..sort((a, b) {
-        final c = a.sortOrder.compareTo(b.sortOrder);
-        return c != 0 ? c : a.id.compareTo(b.id);
-      });
-
-    if (newly.isEmpty) {
-      await _stateRepository.save(
-        state.copyWith(lastEvaluatedAt: sessionDateTime),
-      );
-      return const [];
-    }
-
-    // Union-merge to avoid duplicates and ensure idempotency.
-    final unionAchieved = <String>{...achieved, ...newly.map((d) => d.id)};
-    final ensuredAchieved = completeBirdMilestones(unionAchieved);
-    final helperNewIds = ensuredAchieved.difference(unionAchieved);
-
-    final updatedAchievedAt = Map<String, DateTime>.from(state.achievedAt);
-    for (final id in [...newly.map((d) => d.id), ...helperNewIds]) {
-      updatedAchievedAt.putIfAbsent(id, () => sessionDateTime);
-    }
+    final snapshot = await _calculateHistoricalSnapshot(dogId);
+    final previousAchieved = <String>{...state.achievedIds};
+    final newly = snapshot.achievedIds.difference(previousAchieved).toList()
+      ..sort(_compareMilestoneIds);
 
     final updated = state.copyWith(
-      achievedIds: ensuredAchieved.toList(growable: false),
+      achievedIds: snapshot.sortedAchievedIds,
       lastEvaluatedAt: sessionDateTime,
-      achievedAt: updatedAchievedAt,
+      achievedAt: snapshot.achievedAt,
     );
 
     await _stateRepository.save(updated);
 
-    final resultIds = <String>[
-      ...newly.map((d) => d.id),
-      ...helperNewIds,
-    ];
-    resultIds.sort((a, b) {
-      final defA = milestoneDefById(a);
-      final defB = milestoneDefById(b);
-      final orderA = defA?.sortOrder ?? 0;
-      final orderB = defB?.sortOrder ?? 0;
-      if (orderA != orderB) return orderA.compareTo(orderB);
-      return a.compareTo(b);
-    });
-
-    return resultIds;
+    return newly;
   }
 
   /// Evaluates milestone goals and returns which ones are newly achieved.
@@ -177,4 +117,100 @@ class MilestoneService {
       totalBirdsShot: totalBirdsShot,
     );
   }
+
+  Future<_HistoricalMilestoneSnapshot> _calculateHistoricalSnapshot(
+    String dogId,
+  ) async {
+    final sessions = (await _sessionRepository.listSessionsForDog(dogId))
+        .where((session) => !session.isDeleted)
+        .toList(growable: false)
+      ..sort((a, b) => a.dateTime.compareTo(b.dateTime));
+
+    final achieved = <String>{};
+    final achievedAt = <String, DateTime>{};
+
+    var totalSessions = 0;
+    var totalPoints = 0;
+    var totalFlushes = 0;
+    var totalBirdsShot = 0;
+    var totalActiveSeconds = 0;
+
+    for (final session in sessions) {
+      totalSessions += 1;
+      totalPoints += session.points;
+      totalFlushes += session.flushes;
+      totalActiveSeconds += session.durationMinutes * 60;
+      if (session.sessionType == SessionType.hunting) {
+        totalBirdsShot += session.birdsShotCount;
+      }
+
+      final stats = DogStats(
+        totalSessions: totalSessions,
+        totalPoints: totalPoints,
+        totalFlushes: totalFlushes,
+        totalActiveSeconds: totalActiveSeconds,
+        totalBirdsShot: totalBirdsShot,
+      );
+      final reachedDefs = _evaluateMilestones(
+        stats: stats,
+        achievedIds: const <String>{},
+      );
+
+      for (final def in reachedDefs) {
+        achieved.add(def.id);
+        achievedAt.putIfAbsent(def.id, () => session.dateTime);
+      }
+    }
+
+    final ensuredAchieved = completeBirdMilestones(achieved);
+    for (final id in ensuredAchieved) {
+      achievedAt.putIfAbsent(id, () => _fallbackAchievedAt(id, achievedAt));
+    }
+
+    final sorted = ensuredAchieved.toList(growable: false)
+      ..sort(_compareMilestoneIds);
+    return _HistoricalMilestoneSnapshot(
+      achievedIds: ensuredAchieved,
+      sortedAchievedIds: sorted,
+      achievedAt: achievedAt,
+    );
+  }
+
+  DateTime _fallbackAchievedAt(
+    String id,
+    Map<String, DateTime> achievedAt,
+  ) {
+    if (achievedAt[id] != null) {
+      return achievedAt[id]!;
+    }
+    DateTime? fallback;
+    for (final entry in achievedAt.entries) {
+      if (!birdMilestoneIds.contains(entry.key)) continue;
+      if (fallback == null || entry.value.isBefore(fallback)) {
+        fallback = entry.value;
+      }
+    }
+    return fallback ?? DateTime.fromMillisecondsSinceEpoch(0);
+  }
+}
+
+int _compareMilestoneIds(String a, String b) {
+  final defA = milestoneDefById(a);
+  final defB = milestoneDefById(b);
+  final orderA = defA?.sortOrder ?? 0;
+  final orderB = defB?.sortOrder ?? 0;
+  if (orderA != orderB) return orderA.compareTo(orderB);
+  return a.compareTo(b);
+}
+
+class _HistoricalMilestoneSnapshot {
+  const _HistoricalMilestoneSnapshot({
+    required this.achievedIds,
+    required this.sortedAchievedIds,
+    required this.achievedAt,
+  });
+
+  final Set<String> achievedIds;
+  final List<String> sortedAchievedIds;
+  final Map<String, DateTime> achievedAt;
 }

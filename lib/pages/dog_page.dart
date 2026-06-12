@@ -18,6 +18,7 @@ import 'package:jakthund_app/pages/settings_page.dart';
 import 'package:jakthund_app/pages/invitations_page.dart';
 import 'package:jakthund_app/domain/subscription/subscription_service.dart';
 import 'package:jakthund_app/services/hive_lifecycle_service.dart';
+import 'package:jakthund_app/services/user_identity_service.dart';
 import 'package:jakthund_app/utils/dog_image_path_resolver.dart';
 import 'package:jakthund_app/models/dog_membership.dart';
 import 'package:jakthund_app/ui/subscription/pro_upgrade_sheet.dart';
@@ -32,6 +33,7 @@ class DogPage extends StatefulWidget {
 class _DogPageState extends State<DogPage> {
   late final Box<Dog> _dogsBox;
   late final Box<DogMembership> _membershipBox;
+  final UserIdentityService _identityService = UserIdentityService();
 
   _WisdomService? _wisdomService;
   int? _wisdomIndex;
@@ -89,26 +91,31 @@ class _DogPageState extends State<DogPage> {
                 final dogs = dogBox.values.toList();
                 final activeDogs =
                     dogs.where((dog) => !dog.isDeleted).toList(growable: false);
+                final currentUserIds = _currentUserIds();
                 final currentUid = _currentUserIdOrNull();
-                final memberships = currentUid == null
+                final memberships = currentUserIds.isEmpty
                     ? <DogMembership>[]
                     : membershipBox.values
                         .where((membership) =>
-                            membership.userId == currentUid &&
+                      currentUserIds.contains(
+                        membership.userId.trim(),
+                      ) &&
                             membership.status == Status.active)
                         .toList();
                 final visibleDogs = filterVisibleDogs(
                   dogs: dogs,
                   memberships: memberships,
                   currentUserId: currentUid,
+                  currentUserIds: currentUserIds,
                 );
                 final allowedDogKeys =
                     memberships.map((membership) => membership.dogKey).toSet();
-                final fallbackOwnerCount = currentUid == null
+                final fallbackOwnerCount = currentUserIds.isEmpty
                     ? 0
                     : visibleDogs
                         .where((dog) =>
-                            dog.ownerUserId == currentUid &&
+                      currentUserIds
+                        .contains(dog.ownerUserId?.trim() ?? '') &&
                             !allowedDogKeys.contains(dog.dogKey))
                         .length;
                 if (kDebugMode) {
@@ -294,10 +301,34 @@ class _DogPageState extends State<DogPage> {
 
   String? _currentUserIdOrNull() {
     try {
-      return FirebaseAuth.instance.currentUser?.uid;
+      final authUid = FirebaseAuth.instance.currentUser?.uid.trim();
+      if (authUid != null && authUid.isNotEmpty) {
+        return authUid;
+      }
     } catch (_) {
-      return null;
+      // Fall through to local identity.
     }
+    final localUid = _identityService.getCurrentUserId().trim();
+    return localUid.isEmpty ? null : localUid;
+  }
+
+  Set<String> _currentUserIds() {
+    final ids = <String>{};
+    final localUid = _identityService.getCurrentUserId().trim();
+    if (localUid.isNotEmpty) {
+      ids.add(localUid);
+    }
+
+    try {
+      final authUid = FirebaseAuth.instance.currentUser?.uid.trim();
+      if (authUid != null && authUid.isNotEmpty) {
+        ids.add(authUid);
+      }
+    } catch (_) {
+      // Keep local identity fallback only.
+    }
+
+    return ids;
   }
 
   Widget _wisdomCard(BuildContext context, String text, IconData icon) {
@@ -430,18 +461,20 @@ class _DogPageState extends State<DogPage> {
   }
 
   void _onAddDogPressed() {
+    final currentUserIds = _currentUserIds();
     final currentUid = _currentUserIdOrNull();
-    final memberships = currentUid == null
+    final memberships = currentUserIds.isEmpty
         ? <DogMembership>[]
         : _membershipBox.values
             .where((membership) =>
-                membership.userId == currentUid &&
+                currentUserIds.contains(membership.userId.trim()) &&
                 membership.status == Status.active)
             .toList(growable: false);
     final dogLimitSnapshot = buildDogLimitCountSnapshot(
       dogs: _dogsBox.values,
       memberships: memberships,
       currentUserId: currentUid,
+      currentUserIds: currentUserIds,
     );
     final countedDogCount = dogLimitSnapshot.countedDogs.length;
     final limitReached = !SubscriptionService.instance.canCreateDog(

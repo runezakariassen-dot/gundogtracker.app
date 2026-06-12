@@ -24,6 +24,7 @@ void main() {
       sex: DogSex.female,
       deceasedAt: DateTime.utc(2025, 1, 10),
       memorialNote: 'Savnet hver dag',
+      memorialStory: 'Hun jaktet med stor ro og presisjon.',
       profileHeroTextAnchor: 'topLeft',
       profileHeroTextScale: 1.2,
       watermarkShowTitle: false,
@@ -41,6 +42,7 @@ void main() {
     );
 
     expect(payload['id'], 'cloud-dog-1');
+    expect(payload['dogKey'], 'DOG-1');
     expect(payload['name'], 'Birk');
     expect(payload['nickname'], 'Basse');
     expect(payload['breed'], 'Engelsk setter');
@@ -52,6 +54,7 @@ void main() {
     expect(payload['title'], 'JCH');
     expect(payload['sex'], 'female');
     expect(payload['memorialNote'], 'Savnet hver dag');
+    expect(payload['memorialStory'], 'Hun jaktet med stor ro og presisjon.');
     expect(payload['profileHeroTextAnchor'], 'topLeft');
     expect(payload['profileHeroTextScale'], 1.2);
     expect(payload['watermarkShowTitle'], isFalse);
@@ -64,5 +67,97 @@ void main() {
     expect(payload['updatedAt'], isA<Timestamp>());
     expect(payload['deletedAt'], isA<FieldValue>());
     expect(payload.containsKey('imagePath'), isFalse);
+  });
+
+  test('isActiveMembershipStatus allows active and legacy owner memberships',
+      () {
+    expect(
+      FirestoreDogSyncService.isActiveMembershipStatus(
+        <String, dynamic>{'status': 'active'},
+      ),
+      isTrue,
+    );
+    expect(
+      FirestoreDogSyncService.isActiveMembershipStatus(
+        <String, dynamic>{'status': 'revoked'},
+      ),
+      isFalse,
+    );
+    expect(
+      FirestoreDogSyncService.isActiveMembershipStatus(
+        <String, dynamic>{'status': 'pending'},
+      ),
+      isFalse,
+    );
+    expect(
+      FirestoreDogSyncService.isActiveMembershipStatus(
+        <String, dynamic>{'status': null},
+      ),
+      isFalse,
+    );
+    expect(
+      FirestoreDogSyncService.isActiveMembershipStatus(
+        <String, dynamic>{'role': 'owner', 'status': null},
+      ),
+      isTrue,
+    );
+    expect(
+      FirestoreDogSyncService.isActiveMembershipStatus(
+        <String, dynamic>{'role': 'editor', 'status': null},
+      ),
+      isFalse,
+    );
+  });
+
+  test('shouldIncludeDogForMembershipDocs rejects revoked non-owner membership',
+      () {
+    expect(
+      FirestoreDogSyncService.shouldIncludeDogForMembershipDocs(
+        <Map<String, dynamic>>[
+          <String, dynamic>{'role': 'editor', 'status': 'revoked'},
+        ],
+      ),
+      isFalse,
+    );
+  });
+
+  test(
+      'shouldIncludeDogForMembershipDocs keeps legacy owner null-status active',
+      () {
+    expect(
+      FirestoreDogSyncService.shouldIncludeDogForMembershipDocs(
+        <Map<String, dynamic>>[
+          <String, dynamic>{'role': 'owner', 'status': null},
+        ],
+      ),
+      isTrue,
+    );
+  });
+
+  test(
+      'shouldIncludeDogForMembershipDocs treats non-owner null-status as inactive',
+      () {
+    expect(
+      FirestoreDogSyncService.shouldIncludeDogForMembershipDocs(
+        <Map<String, dynamic>>[
+          <String, dynamic>{'role': 'editor', 'status': null},
+        ],
+      ),
+      isFalse,
+    );
+  });
+
+  test(
+      'shouldIncludeDogForMembershipDocs denies dog when active and revoked docs conflict',
+      () {
+    expect(
+      FirestoreDogSyncService.shouldIncludeDogForMembershipDocs(
+        <Map<String, dynamic>>[
+          <String, dynamic>{'role': 'editor', 'status': 'active'},
+          <String, dynamic>{'role': 'editor', 'status': 'revoked'},
+        ],
+      ),
+      isFalse,
+    );
   });
 }

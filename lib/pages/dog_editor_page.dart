@@ -20,6 +20,7 @@ import '../domain/models/active_session_draft.dart';
 import '../models/dog.dart';
 import '../models/dog_membership.dart';
 import '../models/dog_sex.dart';
+import '../pages/dog_detail_page.dart';
 import '../services/dog_photo_storage.dart';
 import '../services/cloud/firestore_dog_sync_service.dart';
 import '../services/hive_lifecycle_service.dart';
@@ -27,16 +28,97 @@ import '../services/user_identity_service.dart';
 import '../ui/subscription/pro_upgrade_sheet.dart';
 import '../utils/dog_image_path_resolver.dart';
 
+typedef RevokeSharedDogMembership = Future<bool> Function({
+  required Dog dog,
+  required DogMembership membership,
+});
+typedef UpsertDogMembershipForTesting = Future<void> Function(
+  DogMembership membership,
+);
+
 class DogEditorPage extends StatefulWidget {
   const DogEditorPage({
     super.key,
     this.initialDog,
+    this.revokeSharedDogMembership,
+    @visibleForTesting this.currentUserIdOverride,
+    @visibleForTesting this.upsertMembershipOverride,
   });
 
   final Dog? initialDog;
+  final RevokeSharedDogMembership? revokeSharedDogMembership;
+  final String? currentUserIdOverride;
+  final UpsertDogMembershipForTesting? upsertMembershipOverride;
 
   @override
   State<DogEditorPage> createState() => _DogEditorPageState();
+}
+
+@visibleForTesting
+bool canGloballyDeleteDog({
+  required Dog dog,
+  required Iterable<DogMembership> memberships,
+  required Iterable<String> userIds,
+}) {
+  final normalizedUserIds = userIds
+      .map((userId) => userId.trim())
+      .where((userId) => userId.isNotEmpty)
+      .toSet();
+  if (normalizedUserIds.isEmpty) {
+    return false;
+  }
+
+  final ownerUserId = dog.ownerUserId?.trim();
+  if (ownerUserId != null &&
+      ownerUserId.isNotEmpty &&
+      normalizedUserIds.contains(ownerUserId)) {
+    return true;
+  }
+
+  return memberships.any((membership) {
+    return membership.dogKey == dog.dogKey &&
+        normalizedUserIds.contains(membership.userId.trim()) &&
+        membership.status == Status.active &&
+        membership.role == Role.owner;
+  });
+}
+
+@visibleForTesting
+DogMembership? activeSharedMembershipForUser({
+  required Dog dog,
+  required Iterable<DogMembership> memberships,
+  required Iterable<String> userIds,
+  String? preferredUserId,
+}) {
+  final normalizedUserIds = userIds
+      .map((userId) => userId.trim())
+      .where((userId) => userId.isNotEmpty)
+      .toSet();
+  if (normalizedUserIds.isEmpty) {
+    return null;
+  }
+
+  final preferred = preferredUserId?.trim();
+  if (preferred != null && preferred.isNotEmpty) {
+    for (final membership in memberships) {
+      if (membership.dogKey == dog.dogKey &&
+          membership.userId.trim() == preferred &&
+          membership.status == Status.active &&
+          membership.role != Role.owner) {
+        return membership;
+      }
+    }
+  }
+
+  for (final membership in memberships) {
+    if (membership.dogKey == dog.dogKey &&
+        normalizedUserIds.contains(membership.userId.trim()) &&
+        membership.status == Status.active &&
+        membership.role != Role.owner) {
+      return membership;
+    }
+  }
+  return null;
 }
 
 class _DogEditorPageState extends State<DogEditorPage> {
@@ -66,6 +148,8 @@ class _DogEditorPageState extends State<DogEditorPage> {
   late final TextEditingController _pedigreeUrlController;
   final TextEditingController _newBreedController = TextEditingController();
   final TextEditingController _memorialController = TextEditingController();
+  final TextEditingController _memorialStoryController =
+      TextEditingController();
   late final TextEditingController _ownerEmailController;
 
   DateTime? _selectedBirthDate;
@@ -81,6 +165,7 @@ class _DogEditorPageState extends State<DogEditorPage> {
 
   bool _isSaving = false;
   bool _isDeletingDog = false;
+  bool _isRemovingSharedDog = false;
   bool _allowImmediatePop = false;
   late final _DogEditorSnapshot _initialSnapshot;
 
@@ -121,6 +206,7 @@ class _DogEditorPageState extends State<DogEditorPage> {
     _selectedBreed =
         (trimmedBreed != null && trimmedBreed.isNotEmpty) ? trimmedBreed : null;
     _memorialController.text = dog?.memorialNote ?? '';
+    _memorialStoryController.text = dog?.memorialStory ?? '';
     _ownerEmailController = TextEditingController(text: dog?.ownerEmail ?? '');
     _heroTextAnchor =
         profileHeroTextAnchorFromValue(dog?.profileHeroTextAnchor);
@@ -139,6 +225,7 @@ class _DogEditorPageState extends State<DogEditorPage> {
     _pedigreeUrlController.dispose();
     _newBreedController.dispose();
     _memorialController.dispose();
+    _memorialStoryController.dispose();
     _ownerEmailController.dispose();
     super.dispose();
   }
@@ -181,6 +268,10 @@ class _DogEditorPageState extends State<DogEditorPage> {
       final memorialText = _memorialController.text.trim();
       final memorialNote =
           (_registeredDead && memorialText.isNotEmpty) ? memorialText : null;
+      final memorialStoryText = _memorialStoryController.text.trim();
+      final memorialStory = (_registeredDead && memorialStoryText.isNotEmpty)
+          ? memorialStoryText
+          : null;
       final dog = widget.initialDog;
       String? ownerEmail;
       final ownerEmailInput = _selectedRole == Role.owner
@@ -213,6 +304,7 @@ class _DogEditorPageState extends State<DogEditorPage> {
           updatedAt: DateTime.now(),
           deceasedAt: deathDate,
           memorialNote: memorialNote,
+          memorialStory: memorialStory,
           profileHeroTextAnchor: _heroTextAnchor.name,
           profileHeroTextScale: _heroTextScale,
         );
@@ -250,7 +342,8 @@ class _DogEditorPageState extends State<DogEditorPage> {
           return;
         }
 
-        final ownerUserId = _selectedRole == Role.owner ? currentUserId : null;
+        final ownerUserId =
+            _selectedRole == Role.owner ? _currentMembershipUserId() : null;
         final created = Dog(
           id: _dogId,
           name: name,
@@ -264,6 +357,7 @@ class _DogEditorPageState extends State<DogEditorPage> {
           sex: _selectedSex,
           deceasedAt: deathDate,
           memorialNote: memorialNote,
+          memorialStory: memorialStory,
           profileHeroTextAnchor: _heroTextAnchor.name,
           profileHeroTextScale: _heroTextScale,
           nickname: nickname,
@@ -289,7 +383,7 @@ class _DogEditorPageState extends State<DogEditorPage> {
   }
 
   Future<void> _confirmDeleteDog() async {
-    if (!_isEditing || _isDeletingDog) {
+    if (!_isEditing || _isDeletingDog || !_canDeleteInitialDog) {
       return;
     }
 
@@ -320,9 +414,148 @@ class _DogEditorPageState extends State<DogEditorPage> {
     await _deleteDogCascade();
   }
 
+  Future<void> _confirmRemoveSharedDog() async {
+    if (!_isEditing ||
+        _isRemovingSharedDog ||
+        _isDeletingDog ||
+        !_canRemoveInitialDogForCurrentUser) {
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: Text(l10n.dog_editor_remove_shared_dog_title),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.dog_editor_remove_shared_dog_body),
+              const SizedBox(height: 8),
+              Text(l10n.dog_editor_remove_shared_dog_explanation),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(l10n.dog_editor_button_cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(l10n.dog_editor_remove_shared_dog_confirm),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+    await _removeSharedDogForCurrentUser();
+  }
+
+  Future<void> _removeSharedDogForCurrentUser() async {
+    final dog = widget.initialDog;
+    final membership = _activeSharedMembershipForCurrentUser;
+    if (dog == null || membership == null) {
+      return;
+    }
+
+    setState(() => _isRemovingSharedDog = true);
+    try {
+      String? activeUid;
+      try {
+        activeUid = FirebaseAuth.instance.currentUser?.uid.trim();
+      } catch (_) {
+        activeUid = null;
+      }
+      final targetCloudDogId = (dog.cloudId ?? '').trim();
+      final canonicalPath = activeUid != null &&
+              activeUid.isNotEmpty &&
+              targetCloudDogId.isNotEmpty
+          ? 'dogs/$targetCloudDogId/members/$activeUid'
+          : 'dogs/{missing-cloudId}/members/{missing-uid}';
+
+      if (kDebugMode) {
+        debugPrint(
+          '[SHARE][LEAVE] start '
+          'uid=${activeUid ?? 'null'} '
+          'dog=${dog.name} dogId=${dog.id} cloudId=${dog.cloudId} '
+          'dogKey=${dog.dogKey} cloudOwnerUid=${dog.cloudOwnerUid} '
+          'role=${membership.role.name}',
+        );
+        debugPrint(
+          '[SHARE][LEAVE] member path=$canonicalPath',
+        );
+      }
+
+      final revokedMembership = membership.copyWith(status: Status.revoked);
+      final revokeSharedDogMembership = widget.revokeSharedDogMembership ??
+          FirestoreDogSyncService
+              .instance.revokeCurrentUserMembershipBestEffort;
+      var cloudUpdated = false;
+      try {
+        cloudUpdated = await revokeSharedDogMembership(
+          dog: dog,
+          membership: revokedMembership,
+        );
+      } catch (error, stackTrace) {
+        if (kDebugMode) {
+          debugPrint('[SHARE][LEAVE] cloud revoke failed: $error');
+          debugPrint(stackTrace.toString());
+        }
+        cloudUpdated = false;
+      }
+      if (kDebugMode) {
+        debugPrint(
+          cloudUpdated
+              ? '[SHARE][LEAVE] cloud revoke success'
+              : '[SHARE][LEAVE] cloud revoke failed',
+        );
+      }
+
+      if (!cloudUpdated) {
+        if (kDebugMode) {
+          debugPrint(
+              '[SHARE][LEAVE] cloud revoke failed (continuing local leave)');
+        }
+      }
+
+      final upsertMembership = widget.upsertMembershipOverride ??
+          _membershipRepository.upsertMembership;
+      await upsertMembership(revokedMembership);
+      if (kDebugMode) {
+        debugPrint(
+          '[SHARE][LEAVE] local revoke success',
+        );
+      }
+
+      if (!mounted) {
+        return;
+      }
+      _allowImmediatePop = true;
+      Navigator.of(context).pop(true);
+    } finally {
+      if (mounted) {
+        setState(() => _isRemovingSharedDog = false);
+      }
+    }
+  }
+
   Future<void> _deleteDogCascade() async {
     final dog = widget.initialDog;
     if (dog == null) {
+      return;
+    }
+    if (!_canDeleteInitialDog) {
+      if (kDebugMode) {
+        debugPrint(
+          '[DOG][DELETE] blocked global delete for non-owner: ${dog.id}',
+        );
+      }
       return;
     }
 
@@ -381,7 +614,7 @@ class _DogEditorPageState extends State<DogEditorPage> {
     final picked = await showDatePicker(
       context: context,
       initialDate: initial,
-      firstDate: DateTime(1990),
+      firstDate: DateTime(1950),
       lastDate: DateTime(today.year + 1),
     );
     if (picked == null) {
@@ -408,7 +641,9 @@ class _DogEditorPageState extends State<DogEditorPage> {
   void _toggleRegisteredDead(bool value) {
     setState(() {
       _registeredDead = value;
-      if (!value) {
+      if (value) {
+        _selectedDeathDate ??= DateTime.now();
+      } else {
         _selectedDeathDate = null;
       }
     });
@@ -539,6 +774,17 @@ class _DogEditorPageState extends State<DogEditorPage> {
               labelText: l10n.dog_editor_memory_words_label,
             ),
             maxLines: 3,
+            textInputAction: TextInputAction.newline,
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _memorialStoryController,
+            decoration: InputDecoration(
+              labelText: l10n.dog_memorial_story_label,
+              hintText: l10n.dog_memorial_story_hint,
+            ),
+            maxLines: null,
+            minLines: 3,
             textInputAction: TextInputAction.newline,
           ),
         ],
@@ -1060,8 +1306,85 @@ class _DogEditorPageState extends State<DogEditorPage> {
     if (authUid != null && authUid.isNotEmpty) {
       return authUid;
     }
+    final overrideUid = widget.currentUserIdOverride?.trim();
+    if (overrideUid != null && overrideUid.isNotEmpty) {
+      return overrideUid;
+    }
     final localUid = _identityService.getCurrentUserId().trim();
     return localUid.isEmpty ? null : localUid;
+  }
+
+  Set<String> _currentMembershipUserIds() {
+    final ids = <String>{};
+    User? currentUser;
+    try {
+      currentUser = FirebaseAuth.instance.currentUser;
+    } catch (_) {
+      currentUser = null;
+    }
+    final authUid = currentUser?.uid.trim();
+    if (authUid != null && authUid.isNotEmpty) {
+      ids.add(authUid);
+    }
+    final overrideUid = widget.currentUserIdOverride?.trim();
+    if (overrideUid != null && overrideUid.isNotEmpty) {
+      ids.add(overrideUid);
+    }
+    final localUid = _identityService.getCurrentUserId().trim();
+    if (localUid.isNotEmpty) {
+      ids.add(localUid);
+    }
+    return ids;
+  }
+
+  String? _preferredMembershipUserId() {
+    User? currentUser;
+    try {
+      currentUser = FirebaseAuth.instance.currentUser;
+    } catch (_) {
+      currentUser = null;
+    }
+    final authUid = currentUser?.uid.trim();
+    if (authUid != null && authUid.isNotEmpty) {
+      return authUid;
+    }
+    final overrideUid = widget.currentUserIdOverride?.trim();
+    if (overrideUid != null && overrideUid.isNotEmpty) {
+      return overrideUid;
+    }
+    final localUid = _identityService.getCurrentUserId().trim();
+    return localUid.isEmpty ? null : localUid;
+  }
+
+  bool get _canDeleteInitialDog {
+    final dog = widget.initialDog;
+    if (dog == null) {
+      return false;
+    }
+    return canGloballyDeleteDog(
+      dog: dog,
+      memberships: _membershipBox.values,
+      userIds: _currentMembershipUserIds(),
+    );
+  }
+
+  DogMembership? get _activeSharedMembershipForCurrentUser {
+    final dog = widget.initialDog;
+    if (dog == null) {
+      return null;
+    }
+    return activeSharedMembershipForUser(
+      dog: dog,
+      memberships: _membershipBox.values,
+      userIds: _currentMembershipUserIds(),
+      preferredUserId: _preferredMembershipUserId(),
+    );
+  }
+
+  bool get _canRemoveInitialDogForCurrentUser {
+    return _isEditing &&
+        !_canDeleteInitialDog &&
+        _activeSharedMembershipForCurrentUser != null;
   }
 
   _DogEditorSnapshot _currentSnapshot() {
@@ -1078,6 +1401,7 @@ class _DogEditorPageState extends State<DogEditorPage> {
       breed: _selectedBreed?.trim(),
       registeredDead: _registeredDead,
       memorialNote: _memorialController.text.trim(),
+      memorialStory: _memorialStoryController.text.trim(),
       ownerEmail: _ownerEmailController.text.trim(),
       heroTextAnchor: _heroTextAnchor,
       heroTextScale: _heroTextScale,
@@ -1087,7 +1411,7 @@ class _DogEditorPageState extends State<DogEditorPage> {
   bool get _hasUnsavedChanges => _currentSnapshot() != _initialSnapshot;
 
   Future<bool> _confirmDiscardChanges() async {
-    if (_isSaving || _isDeletingDog) {
+    if (_isSaving || _isDeletingDog || _isRemovingSharedDog) {
       return false;
     }
 
@@ -1133,6 +1457,31 @@ class _DogEditorPageState extends State<DogEditorPage> {
     Navigator.of(context).pop(false);
   }
 
+  Future<void> _openShareDog() async {
+    final existingDog = widget.initialDog;
+    if (existingDog == null) {
+      return;
+    }
+
+    Dog? currentDog;
+    final hiveKey =
+        _findDogHiveKey(existingDog.id, fallbackDogKey: existingDog.dogKey);
+    if (hiveKey != null) {
+      currentDog = _dogsBox.get(hiveKey);
+    }
+    currentDog ??= existingDog;
+
+    if (!mounted) {
+      return;
+    }
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => DogDetailPage(dog: currentDog!),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -1154,6 +1503,14 @@ class _DogEditorPageState extends State<DogEditorPage> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(title),
+          actions: [
+            if (_isEditing)
+              TextButton.icon(
+                onPressed: _openShareDog,
+                icon: const Icon(Icons.share),
+                label: const Text('Del hund'),
+              ),
+          ],
         ),
         body: Padding(
           padding: const EdgeInsets.all(16),
@@ -1247,12 +1604,13 @@ class _DogEditorPageState extends State<DogEditorPage> {
               _buildLifeSection(),
               const SizedBox(height: 20),
               FilledButton(
-                onPressed: _isSaving ? null : _handleSave,
+                onPressed:
+                    (_isSaving || _isRemovingSharedDog) ? null : _handleSave,
                 child: Text(
                   _isSaving ? l10n.dog_editor_saving : l10n.dog_editor_save,
                 ),
               ),
-              if (_isEditing) ...[
+              if (_isEditing && _canDeleteInitialDog) ...[
                 const SizedBox(height: 16),
                 FilledButton.tonalIcon(
                   onPressed:
@@ -1262,6 +1620,22 @@ class _DogEditorPageState extends State<DogEditorPage> {
                     _isDeletingDog
                         ? l10n.dog_editor_deleting
                         : l10n.dog_editor_delete_dog,
+                  ),
+                  style: FilledButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.error,
+                  ),
+                ),
+              ] else if (_isEditing && _canRemoveInitialDogForCurrentUser) ...[
+                const SizedBox(height: 16),
+                FilledButton.tonalIcon(
+                  onPressed: (_isRemovingSharedDog || _isSaving)
+                      ? null
+                      : _confirmRemoveSharedDog,
+                  icon: const Icon(Icons.remove_circle_outline),
+                  label: Text(
+                    _isRemovingSharedDog
+                        ? l10n.dog_editor_removing_shared_dog
+                        : l10n.dog_editor_remove_shared_dog,
                   ),
                   style: FilledButton.styleFrom(
                     foregroundColor: Theme.of(context).colorScheme.error,
@@ -1382,6 +1756,7 @@ class _DogEditorSnapshot {
     required this.breed,
     required this.registeredDead,
     required this.memorialNote,
+    required this.memorialStory,
     required this.ownerEmail,
     required this.heroTextAnchor,
     required this.heroTextScale,
@@ -1399,6 +1774,7 @@ class _DogEditorSnapshot {
   final String? breed;
   final bool registeredDead;
   final String memorialNote;
+  final String memorialStory;
   final String ownerEmail;
   final ProfileHeroTextAnchor heroTextAnchor;
   final double heroTextScale;
@@ -1418,6 +1794,7 @@ class _DogEditorSnapshot {
         other.breed == breed &&
         other.registeredDead == registeredDead &&
         other.memorialNote == memorialNote &&
+        other.memorialStory == memorialStory &&
         other.ownerEmail == ownerEmail &&
         other.heroTextAnchor == heroTextAnchor &&
         other.heroTextScale == heroTextScale;
@@ -1437,6 +1814,7 @@ class _DogEditorSnapshot {
         breed,
         registeredDead,
         memorialNote,
+        memorialStory,
         ownerEmail,
         heroTextAnchor,
         heroTextScale,

@@ -153,6 +153,11 @@ class PullSyncService {
         debugPrint('[SYNC][PULL] equal/noop dog: $cloudId');
         break;
     }
+
+    // Guarantee a local membership record exists for every accessible dog.
+    // This closes the gap when restoreAccessibleDogsToHive failed to create
+    // a membership (e.g. a per-dog Hive error during the account switch restore).
+    await _dogSyncService.ensureLocalMembershipForDog(cloudDog);
   }
 
   Future<void> _applyCloudDogTombstone({

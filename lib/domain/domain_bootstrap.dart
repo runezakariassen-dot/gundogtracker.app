@@ -179,12 +179,12 @@ Future<void> _backfillDogKeyOwnershipIfNeeded() async {
   final alreadyBackfilled =
       settingsBox.get(dogKeyBackfillDoneKey) as bool? ?? false;
   if (alreadyBackfilled) {
-    debugPrint('[BACKFILL] Dog key/ownership already backfilled');
+    debugPrint('[BACKFILL] Skipping ownership backfill (already complete)');
     return;
   }
 
   final identity = UserIdentityService();
-  final currentUserId = identity.getCurrentUserId();
+  final currentUserId = identity.getCurrentUserId().trim();
   if (currentUserId.isEmpty) {
     debugPrint('[BACKFILL] Skipping ownership backfill (no current user)');
     return;
@@ -192,18 +192,27 @@ Future<void> _backfillDogKeyOwnershipIfNeeded() async {
 
   final box = dogsBox();
   final membershipBox = dogMembershipsBox();
-  final entries = box.toMap().entries.toList();
-  if (entries.isEmpty) {
+  final dogEntries = box.toMap().entries.toList();
+  if (dogEntries.isEmpty) {
     debugPrint('[BACKFILL] No dogs to process for ownership backfill');
+    await settingsBox.put(dogKeyBackfillDoneKey, true);
     return;
   }
 
+  final membershipEntries = membershipBox.toMap().entries.toList();
   var dogsUpdated = 0;
+  var deletedDogsSkipped = 0;
   var membershipsCreated = 0;
   var membershipsUpdated = 0;
+  var membershipsAlreadyValid = 0;
 
-  for (final entry in entries) {
+  for (final entry in dogEntries) {
     final dog = entry.value;
+    if (dog.isDeleted) {
+      deletedDogsSkipped++;
+      continue;
+    }
+
     var effectiveDogKey = dog.dogKey.trim();
     final hadEmptyKey = effectiveDogKey.isEmpty;
     var updatedDog = dog;
@@ -219,10 +228,10 @@ Future<void> _backfillDogKeyOwnershipIfNeeded() async {
     }
 
     MapEntry<dynamic, DogMembership>? membershipEntry;
-    for (final membershipRecord in membershipBox.toMap().entries) {
+    for (final membershipRecord in membershipEntries) {
       final membership = membershipRecord.value;
       if (membership.dogKey == effectiveDogKey &&
-          membership.userId == currentUserId) {
+          membership.userId.trim() == currentUserId) {
         membershipEntry = membershipRecord;
         break;
       }
@@ -237,6 +246,8 @@ Future<void> _backfillDogKeyOwnershipIfNeeded() async {
         );
         await membershipBox.put(membershipEntry.key, updatedMembership);
         membershipsUpdated++;
+      } else {
+        membershipsAlreadyValid++;
       }
       continue;
     }
@@ -256,7 +267,10 @@ Future<void> _backfillDogKeyOwnershipIfNeeded() async {
   await settingsBox.put(dogKeyBackfillDoneKey, true);
   debugPrint(
     '[BACKFILL] Dog key/ownership backfill complete '
-    '(dogsUpdated=$dogsUpdated, membershipsCreated=$membershipsCreated, '
-    'membershipsUpdated=$membershipsUpdated)',
+    '(alreadyBackfilled=$alreadyBackfilled, dogsUpdated=$dogsUpdated, '
+    'deletedDogsSkipped=$deletedDogsSkipped, '
+    'membershipsCreated=$membershipsCreated, '
+    'membershipsUpdated=$membershipsUpdated, '
+    'membershipsAlreadyValid=$membershipsAlreadyValid)',
   );
 }

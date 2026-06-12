@@ -27,4 +27,28 @@ void main() {
     final json = dog.toJson();
     expect(json['title'], 'NUCH');
   });
+
+  test('copyWith updates memorialStory', () {
+    final dog = Dog(
+      name: 'Fido',
+      dogKey: 'dog-key',
+      regNrDisplay: '123',
+      memorialStory: 'Original story',
+    );
+
+    final updated = dog.copyWith(memorialStory: 'Updated story');
+    expect(updated.memorialStory, 'Updated story');
+  });
+
+  test('toJson serializes memorialStory', () {
+    final dog = Dog(
+      name: 'Fido',
+      dogKey: 'dog-key',
+      regNrDisplay: '123',
+      memorialStory: 'A long memory text',
+    );
+
+    final json = dog.toJson();
+    expect(json['memorialStory'], 'A long memory text');
+  });
 }

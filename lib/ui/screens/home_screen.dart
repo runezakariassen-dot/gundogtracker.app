@@ -5,6 +5,7 @@ import 'dart:math';
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -22,16 +23,25 @@ import 'package:jakthund_app/ui/text/text_helpers.dart';
 import 'package:jakthund_app/models/dog.dart';
 import 'package:jakthund_app/models/dog_membership.dart';
 import 'package:jakthund_app/models/hunt_session.dart';
+import 'package:jakthund_app/models/share_invitation.dart';
 import 'package:jakthund_app/pages/dog_editor_page.dart';
 import 'package:jakthund_app/pages/dog_detail_page.dart';
+import 'package:jakthund_app/pages/invitations_page.dart';
 import 'package:jakthund_app/pages/settings_page.dart';
+import 'package:jakthund_app/services/cloud/firestore_share_invitation_sync_service.dart';
 import 'package:jakthund_app/services/hive_lifecycle_service.dart';
+import 'package:jakthund_app/services/user_identity_service.dart';
 import 'package:jakthund_app/ui/home/widgets/active_session_restore_banner.dart';
 import 'package:jakthund_app/ui/home/widgets/top10_points_card.dart';
 import '../../utils/dog_image_path_resolver.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({
+    super.key,
+    this.currentUserIdOverride,
+  });
+
+  final String? currentUserIdOverride;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -41,7 +51,10 @@ class _HomeScreenState extends State<HomeScreen> {
   late final Box<Dog> _dogsBox;
   late final Box<HuntSession> _sessionsBox;
   late final Box<DogMembership> _membershipBox;
+  late final Box<ShareInvitation> _shareInvitesBox;
+  late final Box<dynamic> _settingsBox;
   late final ActiveSessionDraftRepository _draftRepository;
+  final UserIdentityService _identityService = UserIdentityService();
 
   _WisdomService? _wisdomService;
   int? _wisdomIndex;
@@ -53,7 +66,16 @@ class _HomeScreenState extends State<HomeScreen> {
     _sessionsBox = HiveLifecycleService.getBox<HuntSession>(sessionsBoxName);
     _membershipBox =
         HiveLifecycleService.getBox<DogMembership>(dogMembershipsBoxName);
+    _shareInvitesBox =
+        HiveLifecycleService.getBox<ShareInvitation>(shareInvitesBoxName);
+    _settingsBox = HiveLifecycleService.getBox<dynamic>(appSettingsBoxName);
     _draftRepository = LocalActiveSessionDraftRepository();
+    if (Firebase.apps.isNotEmpty) {
+      unawaited(
+        FirestoreShareInvitationSyncService.instance
+            .pullPendingInvitesForCurrentUserIntoLocalBox(),
+      );
+    }
   }
 
   @override
@@ -96,101 +118,137 @@ class _HomeScreenState extends State<HomeScreen> {
             return ValueListenableBuilder(
               valueListenable: _membershipBox.listenable(),
               builder: (context, Box<DogMembership> membershipBox, _) {
-                final dogs = dogBox.values.toList(growable: false);
-                final activeDogs =
-                    dogs.where((dog) => !dog.isDeleted).toList(growable: false);
-                final currentUid = _currentUserIdOrNull();
-                final memberships = currentUid == null
-                    ? <DogMembership>[]
-                    : membershipBox.values
-                        .where((membership) =>
-                            membership.userId == currentUid &&
-                            membership.status == Status.active)
-                        .toList();
-                final visibleDogs = filterVisibleDogs(
-                  dogs: dogs,
-                  memberships: memberships,
-                  currentUserId: currentUid,
-                );
-                final allowedDogKeys =
-                    memberships.map((membership) => membership.dogKey).toSet();
-                final fallbackOwnerCount = currentUid == null
-                    ? 0
-                    : visibleDogs
-                        .where((dog) =>
-                            dog.ownerUserId == currentUid &&
-                            !allowedDogKeys.contains(dog.dogKey))
-                        .length;
-                final hasDogs = visibleDogs.isNotEmpty;
-                final visibleSessions = filterVisibleSessions(
-                  sessions: _sessionsBox.values,
-                  dogs: visibleDogs,
-                );
-                final hasSessions = visibleSessions.isNotEmpty;
-                if (kDebugMode) {
-                  debugPrint(
-                    '[TF][UI] home visibility uid=$currentUid dogs=${activeDogs.length} memberships=${memberships.length} visible=${visibleDogs.length}',
-                  );
-                  if (fallbackOwnerCount > 0) {
-                    debugPrint(
-                      '[TF][UI] home owner fallback count=$fallbackOwnerCount',
-                    );
-                  }
-                }
+                return ValueListenableBuilder(
+                  valueListenable: _shareInvitesBox.listenable(),
+                  builder: (context, Box<ShareInvitation> shareInvitesBox, _) {
+                    return ValueListenableBuilder(
+                      valueListenable: _settingsBox.listenable(),
+                      builder: (context, Box<dynamic> settingsBox, _) {
+                        final dogs = dogBox.values.toList(growable: false);
+                        final activeDogs = dogs
+                            .where((dog) => !dog.isDeleted)
+                            .toList(growable: false);
+                        final currentUserIds = _currentUserIds();
+                        final currentUid = _currentUserIdOrNull();
+                        final memberships = currentUserIds.isEmpty
+                            ? <DogMembership>[]
+                            : membershipBox.values
+                                .where((membership) =>
+                                    currentUserIds.contains(
+                                      membership.userId.trim(),
+                                    ) &&
+                                    membership.status == Status.active)
+                                .toList();
+                        final pendingInviteCount = _pendingInviteCount(
+                          shareInvitesBox.values,
+                          currentUserIds: currentUserIds,
+                        );
+                        final visibleDogs = filterVisibleDogs(
+                          dogs: dogs,
+                          memberships: memberships,
+                          currentUserId: currentUid,
+                          currentUserIds: currentUserIds,
+                        );
+                        final allowedDogKeys = memberships
+                            .map((membership) => membership.dogKey)
+                            .toSet();
+                        final fallbackOwnerCount = currentUserIds.isEmpty
+                            ? 0
+                            : visibleDogs
+                                .where((dog) =>
+                                    currentUserIds.contains(
+                                      dog.ownerUserId?.trim() ?? '',
+                                    ) &&
+                                    !allowedDogKeys.contains(dog.dogKey))
+                                .length;
+                        final hasDogs = visibleDogs.isNotEmpty;
+                        final visibleSessions = filterVisibleSessions(
+                          sessions: _sessionsBox.values,
+                          dogs: visibleDogs,
+                        );
+                        final latestSession =
+                            _latestVisibleSession(visibleSessions);
+                        final dogNamesById = {
+                          for (final dog in visibleDogs)
+                            dog.id: dog.displayName,
+                        };
 
-                return ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    _InlineWisdom(
-                      text: wisdomText,
-                      icon: wisdomIcon,
-                    ),
-                    const SizedBox(height: 16),
-                    ActiveSessionRestoreBanner(
-                      repository: _draftRepository,
-                      dogLookup: _findDogById,
-                      onContinue: _onContinueDraft,
-                      onDiscard: _onDiscardDraft,
-                    ),
-                    const SizedBox(height: 16),
-                    if (hasDogs) ...[
-                      _MyDogsCard(
-                        dogs: visibleDogs,
-                        onDogTap: (dog) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => DogDetailPage(dog: dog),
-                            ),
+                        if (kDebugMode) {
+                          debugPrint(
+                            '[TF][UI] home visibility uid=$currentUid dogs=${activeDogs.length} memberships=${memberships.length} visible=${visibleDogs.length}',
                           );
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      if (!hasSessions) ...[
-                        _HomeFirstSessionCard(
-                          onStartPressed: _openFirstSession,
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                    ],
-                    _Top10PointsSection(
-                      dogs: visibleDogs,
-                      sessionsBox: _sessionsBox,
-                      hideWhenNoDogs: !hasDogs,
-                    ),
-                    const SizedBox(height: 16),
-                    _Top10BirdsSection(
-                      dogs: visibleDogs,
-                      sessionsBox: _sessionsBox,
-                      hideWhenNoDogs: !hasDogs,
-                    ),
-                    if (!hasDogs) ...[
-                      const SizedBox(height: 16),
-                      _HomeEmptyStateCardIntroOnly(
-                        onAddDogPressed: _openAddDogEditor,
-                      ),
-                    ],
-                  ],
+                          if (fallbackOwnerCount > 0) {
+                            debugPrint(
+                              '[TF][UI] home owner fallback count=$fallbackOwnerCount',
+                            );
+                          }
+                        }
+
+                        return ListView(
+                          padding: const EdgeInsets.all(16),
+                          children: [
+                            _InlineWisdom(
+                              text: wisdomText,
+                              icon: wisdomIcon,
+                            ),
+                            if (pendingInviteCount > 0) ...[
+                              const SizedBox(height: 16),
+                              _PendingInvitationsBanner(
+                                count: pendingInviteCount,
+                                onPressed: _openInvitations,
+                              ),
+                            ],
+                            const SizedBox(height: 16),
+                            ActiveSessionRestoreBanner(
+                              repository: _draftRepository,
+                              dogLookup: _findDogById,
+                              onContinue: _onContinueDraft,
+                              onDiscard: _onDiscardDraft,
+                            ),
+                            const SizedBox(height: 16),
+                            if (hasDogs) ...[
+                              _MyDogsCard(
+                                dogs: visibleDogs,
+                                onDogTap: (dog) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => DogDetailPage(dog: dog),
+                                    ),
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+                            _HomeLatestSessionCard(
+                              session: latestSession,
+                              dogName: latestSession == null
+                                  ? null
+                                  : dogNamesById[latestSession.dogId],
+                            ),
+                            const SizedBox(height: 16),
+                            _Top10PointsSection(
+                              dogs: visibleDogs,
+                              sessionsBox: _sessionsBox,
+                              hideWhenNoDogs: !hasDogs,
+                            ),
+                            const SizedBox(height: 16),
+                            _Top10BirdsSection(
+                              dogs: visibleDogs,
+                              sessionsBox: _sessionsBox,
+                              hideWhenNoDogs: !hasDogs,
+                            ),
+                            if (!hasDogs) ...[
+                              const SizedBox(height: 16),
+                              _HomeEmptyStateCardIntroOnly(
+                                onAddDogPressed: _openAddDogEditor,
+                              ),
+                            ],
+                          ],
+                        );
+                      },
+                    );
+                  },
                 );
               },
             );
@@ -241,36 +299,293 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _openFirstSession() async {
+  Future<void> _openInvitations() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => const HuntSessionPage(autoStartNow: true),
-      ),
+      MaterialPageRoute(builder: (_) => const InvitationsPage()),
     );
   }
 
+  int _pendingInviteCount(
+    Iterable<ShareInvitation> invites, {
+    required Set<String> currentUserIds,
+  }) {
+    final currentEmail = _currentUserEmail();
+    return invites.where((invite) {
+      if (invite.status != Status.pending) {
+        return false;
+      }
+      final recipientEmail = invite.recipientEmail.trim().toLowerCase();
+      final recipientUserId = invite.recipientUserId?.trim();
+      final matchesEmail = currentEmail != null &&
+          currentEmail.isNotEmpty &&
+          recipientEmail == currentEmail;
+      final matchesUid = recipientUserId != null &&
+          recipientUserId.isNotEmpty &&
+          currentUserIds.contains(recipientUserId);
+      return matchesEmail || matchesUid;
+    }).length;
+  }
+
+  String? _currentUserEmail() {
+    try {
+      final email = FirebaseAuth.instance.currentUser?.email?.trim();
+      if (email != null && email.isNotEmpty) {
+        return email.toLowerCase();
+      }
+    } catch (_) {
+      // Local-only tests and offline startup may not have Firebase available.
+    }
+    return null;
+  }
+
   Dog? _findDogById(String dogId) {
+    final currentUserIds = _currentUserIds();
     final currentUid = _currentUserIdOrNull();
     final memberships = _membershipBox.values
         .where((membership) =>
-            membership.userId == currentUid &&
+            currentUserIds.contains(membership.userId.trim()) &&
             membership.status == Status.active)
         .toList(growable: false);
     return findVisibleDogById(
       dogs: _dogsBox.values,
       memberships: memberships,
       currentUserId: currentUid,
+      currentUserIds: currentUserIds,
       dogId: dogId,
     );
   }
 
-  String? _currentUserIdOrNull() {
+  Set<String> _currentUserIds() {
+    if (widget.currentUserIdOverride != null) {
+      final override = widget.currentUserIdOverride!.trim();
+      return override.isEmpty ? <String>{} : <String>{override};
+    }
+
+    final ids = <String>{};
+    final localUid = _identityService.getCurrentUserId().trim();
+    if (localUid.isNotEmpty) {
+      ids.add(localUid);
+    }
+
     try {
-      return FirebaseAuth.instance.currentUser?.uid;
+      final authUid = FirebaseAuth.instance.currentUser?.uid.trim();
+      if (authUid != null && authUid.isNotEmpty) {
+        ids.add(authUid);
+      }
     } catch (_) {
+      // Keep local identity fallback only.
+    }
+
+    return ids;
+  }
+
+  String? _currentUserIdOrNull() {
+    if (widget.currentUserIdOverride != null) {
+      final override = widget.currentUserIdOverride!.trim();
+      return override.isEmpty ? null : override;
+    }
+    try {
+      final authUid = FirebaseAuth.instance.currentUser?.uid.trim();
+      if (authUid != null && authUid.isNotEmpty) {
+        return authUid;
+      }
+    } catch (_) {
+      // Fall through to local identity.
+    }
+    final localUid = _identityService.getCurrentUserId().trim();
+    return localUid.isEmpty ? null : localUid;
+  }
+
+  HuntSession? _latestVisibleSession(List<HuntSession> sessions) {
+    if (sessions.isEmpty) {
       return null;
     }
+    final sorted = List<HuntSession>.from(sessions)
+      ..sort((a, b) => b.dateTime.compareTo(a.dateTime));
+    return sorted.first;
+  }
+}
+
+class _PendingInvitationsBanner extends StatelessWidget {
+  const _PendingInvitationsBanner({
+    required this.count,
+    required this.onPressed,
+  });
+
+  final int count;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Card(
+      color: colorScheme.primaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.mail_outline,
+              color: colorScheme.onPrimaryContainer,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                l10n.home_pendingInvitationsTitle(count),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: colorScheme.onPrimaryContainer,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            FilledButton(
+              onPressed: onPressed,
+              child: Text(l10n.home_pendingInvitationsButton),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeLatestSessionCard extends StatelessWidget {
+  const _HomeLatestSessionCard({
+    required this.session,
+    required this.dogName,
+  });
+
+  final HuntSession? session;
+  final String? dogName;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final materialL10n = MaterialLocalizations.of(context);
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.home_dashboard_latest_session_title,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 10),
+            if (session == null)
+              Text(
+                l10n.home_dashboard_latest_session_empty,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  height: 1.35,
+                ),
+              )
+            else ...[
+              Text(
+                dogName?.trim().isNotEmpty == true
+                    ? dogName!
+                    : l10n.home_dashboard_latest_session_unknown_dog,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                materialL10n.formatMediumDate(session!.dateTime),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              if (_summaryText(session!, l10n).isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Text(
+                  _summaryText(session!, l10n),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.35),
+                ),
+              ],
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _SessionMetaChip(label: l10n.standsCount(session!.points)),
+                  _SessionMetaChip(
+                    label: l10n.birdContactsCount(session!.birdsSeen),
+                  ),
+                  if (session!.location.trim().isNotEmpty)
+                    _SessionMetaChip(label: session!.location.trim()),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _summaryText(HuntSession session, AppLocalizations l10n) {
+    final note = session.notes.trim();
+    if (note.isNotEmpty) {
+      return note;
+    }
+
+    final parts = <String>[];
+    if (session.points > 0) {
+      parts.add(l10n.standsCount(session.points));
+    }
+    if (session.birdsSeen > 0) {
+      parts.add(l10n.birdContactsCount(session.birdsSeen));
+    }
+    if (session.location.trim().isNotEmpty) {
+      parts.add(session.location.trim());
+    }
+    return parts.join(' • ');
+  }
+}
+
+class _SessionMetaChip extends StatelessWidget {
+  const _SessionMetaChip({
+    required this.label,
+  });
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -620,73 +935,6 @@ class _HomeEmptyStateCardIntroOnly extends StatelessWidget {
                     ),
                   ),
                 ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _HomeFirstSessionCard extends StatelessWidget {
-  const _HomeFirstSessionCard({
-    required this.onStartPressed,
-  });
-
-  final VoidCallback onStartPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.flag_outlined,
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.home_first_session_title,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        l10n.home_first_session_body,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          height: 1.35,
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.82),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: onStartPressed,
-                icon: const Icon(Icons.play_arrow_rounded),
-                label: Text(l10n.home_startNewSession),
               ),
             ),
           ],

@@ -127,4 +127,28 @@ void main() {
     expect(storedVisible!.dateTime, DateTime(2024, 1, 1, 8, 0));
     expect(sessions.single.dateTime, DateTime(2024, 1, 1, 8, 0));
   });
+
+  test('session datetime is preserved after hive restart', () async {
+    await initDomainLayer();
+    final repo = LocalHuntSessionRepository();
+    final selectedDateTime = DateTime(2024, 5, 17, 19, 45);
+
+    final sessionId = await repo.createSession(
+      dogId: 'dog-1',
+      startedAt: selectedDateTime,
+      locationName: 'Myr',
+      timeActiveSeconds: 1800,
+    );
+
+    await Hive.close();
+    HiveLifecycleService.resetForTesting();
+    await HivePathService.init();
+    await initDomainLayer();
+
+    final reloadedRepo = LocalHuntSessionRepository();
+    final reloaded = await reloadedRepo.getSession(sessionId);
+
+    expect(reloaded, isNotNull);
+    expect(reloaded!.dateTime, selectedDateTime);
+  });
 }

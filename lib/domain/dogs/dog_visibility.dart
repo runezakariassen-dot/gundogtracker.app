@@ -31,23 +31,54 @@ List<Dog> filterVisibleDogs({
   required Iterable<Dog> dogs,
   required Iterable<DogMembership> memberships,
   required String? currentUserId,
+  Iterable<String>? currentUserIds,
 }) {
   final activeDogs = filterActiveDogs(dogs);
-  final allowedDogKeys = currentUserId == null
-      ? const <String>{}
-      : memberships
-          .where((membership) =>
-              membership.userId.trim() == currentUserId &&
-              membership.status == Status.active)
-          .map((membership) => membership.dogKey)
-          .toSet();
+  final normalizedUserIds = <String>{};
+  if (currentUserId != null && currentUserId.trim().isNotEmpty) {
+    normalizedUserIds.add(currentUserId.trim());
+  }
+  if (currentUserIds != null) {
+    for (final userId in currentUserIds) {
+      final trimmed = userId.trim();
+      if (trimmed.isNotEmpty) {
+        normalizedUserIds.add(trimmed);
+      }
+    }
+  }
+  final allowedDogKeys = memberships
+      .where((membership) =>
+          normalizedUserIds.contains(membership.userId.trim()) &&
+          membership.status == Status.active)
+      .map((membership) => membership.dogKey)
+      .toSet();
+
+  if (kDebugMode) {
+    debugPrint(
+      '[TF][VISIBILITY] currentUserId=$currentUserId '
+      'currentUserIds=${normalizedUserIds.toList()} '
+      'activeMembershipDogKeys=${allowedDogKeys.toList()}',
+    );
+  }
 
   return activeDogs.where((dog) {
     final hasMembership = allowedDogKeys.contains(dog.dogKey);
-    final isOwner = currentUserId != null &&
-        dog.ownerUserId != null &&
-        dog.ownerUserId == currentUserId;
-    return hasMembership || isOwner;
+    final ownerId = dog.ownerUserId?.trim();
+    final isOwner = ownerId != null &&
+        ownerId.isNotEmpty &&
+        normalizedUserIds.contains(ownerId);
+    final ownerFallback = isOwner && !hasMembership;
+    final visible = hasMembership || isOwner;
+
+    if (kDebugMode) {
+      debugPrint(
+        '[TF][VISIBILITY][DOG] name=${dog.name} dogKey=${dog.dogKey} '
+        'deletedAt=${dog.deletedAt} hasActiveMembership=$hasMembership '
+        'ownerFallback=$ownerFallback visible=$visible',
+      );
+    }
+
+    return visible;
   }).toList(growable: false);
 }
 
@@ -55,6 +86,7 @@ DogLimitCountSnapshot buildDogLimitCountSnapshot({
   required Iterable<Dog> dogs,
   required Iterable<DogMembership> memberships,
   required String? currentUserId,
+  Iterable<String>? currentUserIds,
 }) {
   // Log every dog currently in the box so we can see which ones survive
   // filterVisibleDogs vs which are unexpectedly still counted.
@@ -71,6 +103,7 @@ DogLimitCountSnapshot buildDogLimitCountSnapshot({
     dogs: dogs,
     memberships: memberships,
     currentUserId: currentUserId,
+    currentUserIds: currentUserIds,
   );
   for (final dog in visibleDogs) {
     // ignore: avoid_print
@@ -95,12 +128,14 @@ Dog? findVisibleDogById({
   required Iterable<Dog> dogs,
   required Iterable<DogMembership> memberships,
   required String? currentUserId,
+  Iterable<String>? currentUserIds,
   required String dogId,
 }) {
   final visibleDogs = filterVisibleDogs(
     dogs: dogs,
     memberships: memberships,
     currentUserId: currentUserId,
+    currentUserIds: currentUserIds,
   );
 
   for (final dog in visibleDogs) {

@@ -458,11 +458,16 @@ class _SessionDetailPageState extends State<SessionDetailPage>
     }
   }
 
-  List<Dog> _activeDogs() => visibleSessionDogsForUser(
-        dogs: _dogsBox.values,
-        memberships: _membershipBox.values,
-        currentUserId: _currentUserIdOrNull(),
-      );
+  List<Dog> _activeDogs() {
+    final currentUserId = _currentUserIdOrNull();
+    return visibleDogsForSessionPage(
+      dogs: _dogsBox.values,
+      memberships: _membershipBox.values,
+      currentUserId: currentUserId,
+      currentUserIds:
+          currentUserId == null ? const <String>{} : <String>{currentUserId},
+    );
+  }
 
   List<HuntSession> _visibleSessions() => filterVisibleSessions(
         sessions: _sessionsBox.values,
@@ -1531,19 +1536,15 @@ class _SessionDetailPageState extends State<SessionDetailPage>
                     builder: (dialogCtx) {
                       final dl10n = AppLocalizations.of(dialogCtx)!;
                       return AlertDialog(
-                        title:
-                            Text(dl10n.session_detail_confirm_delete_title),
-                        content:
-                            Text(dl10n.session_detail_confirm_delete_body),
+                        title: Text(dl10n.session_detail_confirm_delete_title),
+                        content: Text(dl10n.session_detail_confirm_delete_body),
                         actions: [
                           TextButton(
-                            onPressed: () =>
-                                Navigator.pop(dialogCtx, false),
+                            onPressed: () => Navigator.pop(dialogCtx, false),
                             child: Text(dl10n.common_cancel),
                           ),
                           TextButton(
-                            onPressed: () =>
-                                Navigator.pop(dialogCtx, true),
+                            onPressed: () => Navigator.pop(dialogCtx, true),
                             style: TextButton.styleFrom(
                               foregroundColor:
                                   Theme.of(dialogCtx).colorScheme.error,
@@ -1772,7 +1773,8 @@ class _SessionDetailPageState extends State<SessionDetailPage>
             ),
           ),
           IconButton(
-            onPressed: _anyBusy ? null : () => _confirmDeleteSessionMedia(index),
+            onPressed:
+                _anyBusy ? null : () => _confirmDeleteSessionMedia(index),
             icon: const Icon(Icons.close),
           ),
         ],
@@ -2082,7 +2084,7 @@ class _SessionDetailPageState extends State<SessionDetailPage>
     final totalSecondaryPoints =
         dogSessions.fold<int>(0, (sum, s) => sum + s.secondaryPoints);
     final totalTomstand =
-      dogSessions.fold<int>(0, (sum, s) => sum + s.tomstandCount);
+        dogSessions.fold<int>(0, (sum, s) => sum + s.tomstandCount);
     final totalFlushes = dogSessions.fold<int>(0, (sum, s) => sum + s.flushes);
 
     if (widget.homeCompact &&

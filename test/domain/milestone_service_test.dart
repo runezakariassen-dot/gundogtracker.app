@@ -115,12 +115,78 @@ void main() {
     expect(newIds, isNot(contains(MilestoneId.stands10)));
     expect(newIds, isNot(contains(MilestoneId.stands25)));
   });
+
+  test('MilestoneService moves achievedAt earlier when older session is added',
+      () async {
+    final laterDate = DateTime.utc(2024, 1, 10);
+    final earlierDate = DateTime.utc(2024, 1, 1);
+    final stateRepository = _InMemoryDogMilestoneStateRepository();
+    final sessionRepository = _FakeHuntSessionRepository([
+      HuntSession(
+        dogId: 'dog-4',
+        dateTime: laterDate,
+        location: '',
+        durationMinutes: 5,
+        birdsSeen: 0,
+        points: 1,
+        flushes: 0,
+        notes: '',
+      ),
+    ]);
+    final service = MilestoneService(
+      evaluator: evaluateMilestones,
+      milestoneStateRepository: stateRepository,
+      huntSessionRepository: sessionRepository,
+    );
+
+    final firstNewIds = await service.evaluateForDog(
+      'dog-4',
+      sessionDateTime: laterDate,
+    );
+    expect(firstNewIds, contains(MilestoneId.stands1));
+    expect(
+      stateRepository.stateFor('dog-4')!.achievedAt[MilestoneId.stands1],
+      laterDate,
+    );
+
+    sessionRepository.add(
+      HuntSession(
+        dogId: 'dog-4',
+        dateTime: earlierDate,
+        location: '',
+        durationMinutes: 5,
+        birdsSeen: 0,
+        points: 1,
+        flushes: 0,
+        notes: '',
+      ),
+    );
+
+    final secondNewIds = await service.evaluateForDog(
+      'dog-4',
+      sessionDateTime: earlierDate,
+    );
+
+    expect(secondNewIds, isEmpty);
+    expect(
+      stateRepository.stateFor('dog-4')!.achievedAt[MilestoneId.stands1],
+      earlierDate,
+    );
+    expect(
+      stateRepository.stateFor('dog-4')!.achievedAt[MilestoneId.sessions1],
+      earlierDate,
+    );
+  });
 }
 
 class _FakeHuntSessionRepository implements HuntSessionRepository {
   _FakeHuntSessionRepository(this._sessions);
 
   final List<HuntSession> _sessions;
+
+  void add(HuntSession session) {
+    _sessions.add(session);
+  }
 
   @override
   Future<String> createSession({
@@ -178,6 +244,8 @@ class _FakeHuntSessionRepository implements HuntSessionRepository {
 class _InMemoryDogMilestoneStateRepository
     implements DogMilestoneStateRepository {
   final Map<String, DogMilestoneState> _store = {};
+
+  DogMilestoneState? stateFor(String dogId) => _store[dogId];
 
   @override
   Future<BackfillResult> backfillFromSessionHistory({

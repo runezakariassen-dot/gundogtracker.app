@@ -5,10 +5,12 @@ import 'package:hive/hive.dart';
 import 'package:jakthund_app/data/local/sync_outbox_service.dart';
 import 'package:jakthund_app/data/local/sync_state_store.dart';
 import 'package:jakthund_app/models/dog.dart';
+import 'package:jakthund_app/models/dog_membership.dart';
 import 'package:jakthund_app/models/dog_sex.dart';
 import 'package:jakthund_app/models/hunt_session.dart';
 import 'package:jakthund_app/models/session_type.dart';
 import 'package:jakthund_app/models/session_type_adapter.dart';
+import 'package:jakthund_app/models/share_invitation.dart';
 import 'package:jakthund_app/models/sync_state.dart';
 import 'package:jakthund_app/models/sync_task.dart';
 import 'package:jakthund_app/services/cloud/firestore_dog_sync_service.dart';
@@ -46,12 +48,33 @@ class FakeFirestoreDogSyncService implements FirestoreDogSyncService {
   }
 
   @override
+  Future<void> ensureLocalMembershipForDog(Dog dog) async {
+    return;
+  }
+
+  @override
+  Future<bool> revokeCurrentUserMembershipBestEffort({
+    required Dog dog,
+    required DogMembership membership,
+  }) async {
+    throw UnimplementedError();
+  }
+
+  @override
   Future<void> tombstoneDog(Dog dog) async {
     throw UnimplementedError();
   }
 
   @override
   Future<void> tombstoneDogBestEffort(Dog dog) async {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<bool> upsertShareInviteMembershipBestEffort({
+    required ShareInvitation invite,
+    required DogMembership membership,
+  }) async {
     throw UnimplementedError();
   }
 
@@ -433,6 +456,49 @@ void main() {
 
     expect(sessionBox.length, 1);
     expect(sessionBox.get('session-3')?.notes, 'new remote session');
+  });
+
+  test('member pulls sessions created by other active members', () async {
+    final dog = _buildDog(updatedAt: DateTime.utc(2024, 1, 1, 9));
+    final ownerSession = _buildSession(
+      dogId: dog.id,
+      updatedAt: DateTime.utc(2024, 1, 2, 9),
+      notes: 'owner session',
+    ).copyWith(createdByUserId: 'owner-a');
+    final otherMemberSession = _buildSession(
+      dogId: dog.id,
+      updatedAt: DateTime.utc(2024, 1, 2, 10),
+      notes: 'member-c session',
+    ).copyWith(createdByUserId: 'member-c');
+
+    fakeDogSync = FakeFirestoreDogSyncService(dogsToReturn: <Dog>[dog]);
+    fakeSessionSync = FakeFirestoreSessionSyncService(
+      fullEntries: <String, List<MapEntry<String, HuntSession>>>{
+        dog.cloudId!: <MapEntry<String, HuntSession>>[
+          MapEntry<String, HuntSession>('session-owner', ownerSession),
+          MapEntry<String, HuntSession>('session-member-c', otherMemberSession),
+        ],
+      },
+    );
+
+    final service = PullSyncService(
+      dogSyncService: fakeDogSync,
+      sessionSyncService: fakeSessionSync,
+      networkAwarenessService: fakeNetwork,
+      syncStateStore: syncStateStore,
+      outboxService: outboxService,
+      dogBox: dogBox,
+      sessionBox: sessionBox,
+      now: () => DateTime.utc(2024, 1, 2, 12),
+    );
+
+    await service.pullAllVisibleData();
+
+    expect(sessionBox.length, 2);
+    expect(sessionBox.get('session-owner')?.notes, 'owner session');
+    expect(sessionBox.get('session-owner')?.dogId, dog.id);
+    expect(sessionBox.get('session-member-c')?.notes, 'member-c session');
+    expect(sessionBox.get('session-member-c')?.dogId, dog.id);
   });
 
   test('older cloud session does not overwrite newer local session', () async {
