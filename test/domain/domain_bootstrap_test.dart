@@ -7,6 +7,7 @@ import 'package:jakthund_app/data/hive_boxes.dart';
 import 'package:jakthund_app/data/hive_path_service.dart';
 import 'package:jakthund_app/domain/domain_bootstrap.dart';
 import 'package:jakthund_app/domain/domain_constants.dart' as dc;
+import 'package:jakthund_app/models/dog.dart';
 import 'package:jakthund_app/models/dog_membership.dart';
 import 'package:jakthund_app/models/ownership_transfer.dart';
 import 'package:jakthund_app/models/share_invitation.dart';
@@ -95,5 +96,45 @@ void main() {
     expect(invitesBox.isEmpty, isTrue);
     expect(transfersBox.isEmpty, isTrue);
     expect(settingsBox.get(dc.domainSchemaVersionKey), dc.domainSchemaVersion);
+  });
+
+  test('ownership backfill does not grant new user access after completion',
+      () async {
+    await initDomainLayer();
+
+    final settingsBox = Hive.box<dynamic>(appSettingsBoxName);
+    final dogs = dogsBox();
+    final memberships = dogMembershipsBox();
+
+    await settingsBox.put(dc.currentUserIdKey, 'user-b');
+    await settingsBox.put(dc.dogKeyBackfillDoneKey, true);
+    await dogs.add(
+      Dog(
+        id: 'dog-a',
+        name: 'Dog A',
+        dogKey: 'NO123-45',
+        regNrDisplay: 'NO12345/20',
+        ownerUserId: 'user-a',
+      ),
+    );
+    await memberships.add(
+      DogMembership(
+        dogKey: 'NO123-45',
+        userId: 'user-a',
+        role: Role.owner,
+        status: Status.active,
+        addedAt: DateTime(2024),
+        addedByUserId: 'user-a',
+      ),
+    );
+
+    resetDomainBootstrapForTesting();
+    await initDomainLayer();
+
+    final userBMemberships = memberships.values.where(
+      (membership) =>
+          membership.dogKey == 'NO123-45' && membership.userId == 'user-b',
+    );
+    expect(userBMemberships, isEmpty);
   });
 }

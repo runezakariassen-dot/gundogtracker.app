@@ -177,6 +177,10 @@ class ActiveSessionController extends ChangeNotifier {
     _updateState(_state.copyWith(flushCount: _state.flushCount + 1));
   }
 
+  void incrementTomstand() {
+    _updateState(_state.copyWith(tomstandCount: _state.tomstandCount + 1));
+  }
+
   void incrementBird() {
     _updateState(_state.copyWith(birdCount: _state.birdCount + 1));
   }

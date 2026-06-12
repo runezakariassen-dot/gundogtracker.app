@@ -663,6 +663,24 @@ abstract class AppLocalizations {
   /// **'No sessions registered yet'**
   String get stats_no_sessions_registered;
 
+  /// No description provided for @stats_no_sessions_empty_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Log your first session to see trends and statistics over time.'**
+  String get stats_no_sessions_empty_body;
+
+  /// No description provided for @stats_no_sessions_empty_cta.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a session'**
+  String get stats_no_sessions_empty_cta;
+
+  /// No description provided for @statistics_no_dogs_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a dog to see statistics here.'**
+  String get statistics_no_dogs_body;
+
   /// No description provided for @stats_filter_all_dogs.
   ///
   /// In en, this message translates to:
@@ -788,6 +806,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Do you want to delete the dog? This can\'t be undone.'**
   String get dog_editor_delete_dog_body;
+
+  /// No description provided for @dog_editor_remove_shared_dog.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from my dogs'**
+  String get dog_editor_remove_shared_dog;
+
+  /// No description provided for @dog_editor_removing_shared_dog.
+  ///
+  /// In en, this message translates to:
+  /// **'Removing…'**
+  String get dog_editor_removing_shared_dog;
+
+  /// No description provided for @dog_editor_remove_shared_dog_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from my dogs'**
+  String get dog_editor_remove_shared_dog_title;
+
+  /// No description provided for @dog_editor_remove_shared_dog_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to remove this shared dog from your list?'**
+  String get dog_editor_remove_shared_dog_body;
+
+  /// No description provided for @dog_editor_remove_shared_dog_explanation.
+  ///
+  /// In en, this message translates to:
+  /// **'The dog will only be removed for you. The owner and other shared users will keep access.'**
+  String get dog_editor_remove_shared_dog_explanation;
+
+  /// No description provided for @dog_editor_remove_shared_dog_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get dog_editor_remove_shared_dog_confirm;
 
   /// No description provided for @dog_editor_discard_changes_title.
   ///
@@ -1029,6 +1083,18 @@ abstract class AppLocalizations {
   /// **'Select date'**
   String get dog_editor_death_date_picker_hint;
 
+  /// No description provided for @dog_memorial_story_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Story / memories'**
+  String get dog_memorial_story_label;
+
+  /// No description provided for @dog_memorial_story_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write more about the dog, hunting memories, awards or personality'**
+  String get dog_memorial_story_hint;
+
   /// No description provided for @dog_detail_snackbar_invite_accepted.
   ///
   /// In en, this message translates to:
@@ -1215,6 +1281,24 @@ abstract class AppLocalizations {
   /// **'Invited as {role}'**
   String invite_status_invited_as_user(Object role);
 
+  /// Invitation text showing sender and dog.
+  ///
+  /// In en, this message translates to:
+  /// **'{sender} invited you to {dogName}.'**
+  String invitation_summary_with_sender_and_dog(Object sender, Object dogName);
+
+  /// Invitation text showing dog when sender is missing.
+  ///
+  /// In en, this message translates to:
+  /// **'You were invited to {dogName}.'**
+  String invitation_summary_with_dog(Object dogName);
+
+  /// No description provided for @invitation_summary_generic.
+  ///
+  /// In en, this message translates to:
+  /// **'You have received a dog invitation.'**
+  String get invitation_summary_generic;
+
   /// No description provided for @invite_accept.
   ///
   /// In en, this message translates to:
@@ -1239,6 +1323,12 @@ abstract class AppLocalizations {
   /// **'Access to this dog'**
   String get dog_detail_access_section_title;
 
+  /// No description provided for @dog_detail_member_action_change_role.
+  ///
+  /// In en, this message translates to:
+  /// **'Change role'**
+  String get dog_detail_member_action_change_role;
+
   /// No description provided for @dog_detail_member_action_set_reader.
   ///
   /// In en, this message translates to:
@@ -1256,6 +1346,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove access'**
   String get dog_detail_member_action_remove_access;
+
+  /// No description provided for @dog_detail_role_dialog_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit role'**
+  String get dog_detail_role_dialog_title;
+
+  /// No description provided for @dog_detail_role_dialog_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get dog_detail_role_dialog_label;
+
+  /// No description provided for @dog_detail_role_confirm_admin_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant administrator role?'**
+  String get dog_detail_role_confirm_admin_title;
+
+  /// No description provided for @dog_detail_role_confirm_admin_message.
+  ///
+  /// In en, this message translates to:
+  /// **'Administrators can manage access for this dog.'**
+  String get dog_detail_role_confirm_admin_message;
 
   /// No description provided for @share_role_owner.
   ///
@@ -1382,6 +1496,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Invalid email address.'**
   String get share_error_invalid_email;
+
+  /// No description provided for @membership_role_error_not_authorized.
+  ///
+  /// In en, this message translates to:
+  /// **'You do not have permission to change this role.'**
+  String get membership_role_error_not_authorized;
+
+  /// No description provided for @membership_role_error_membership_not_found.
+  ///
+  /// In en, this message translates to:
+  /// **'Member not found.'**
+  String get membership_role_error_membership_not_found;
+
+  /// No description provided for @membership_role_error_cannot_edit_self.
+  ///
+  /// In en, this message translates to:
+  /// **'You cannot change your own role.'**
+  String get membership_role_error_cannot_edit_self;
+
+  /// No description provided for @membership_role_error_owner_locked.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner role can only be changed through ownership transfer.'**
+  String get membership_role_error_owner_locked;
+
+  /// No description provided for @membership_role_error_cannot_promote_to_admin.
+  ///
+  /// In en, this message translates to:
+  /// **'Administrators cannot assign or change administrator roles.'**
+  String get membership_role_error_cannot_promote_to_admin;
 
   /// No description provided for @share_error_dog_not_found_title.
   ///
@@ -1779,6 +1923,138 @@ abstract class AppLocalizations {
   /// **'Next milestone'**
   String get dog_detail_next_milestone_title;
 
+  /// No description provided for @dog_heat_cycle_section_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Heat cycle'**
+  String get dog_heat_cycle_section_title;
+
+  /// No description provided for @dog_heat_cycle_add_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Add heat cycle'**
+  String get dog_heat_cycle_add_button;
+
+  /// No description provided for @dog_heat_cycle_add_title.
+  ///
+  /// In en, this message translates to:
+  /// **'New heat cycle'**
+  String get dog_heat_cycle_add_title;
+
+  /// No description provided for @dog_heat_cycle_edit_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit heat cycle'**
+  String get dog_heat_cycle_edit_title;
+
+  /// No description provided for @dog_heat_cycle_start_date_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Start date'**
+  String get dog_heat_cycle_start_date_label;
+
+  /// No description provided for @dog_heat_cycle_end_date_label.
+  ///
+  /// In en, this message translates to:
+  /// **'End date (optional)'**
+  String get dog_heat_cycle_end_date_label;
+
+  /// No description provided for @dog_heat_cycle_end_not_set.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get dog_heat_cycle_end_not_set;
+
+  /// No description provided for @dog_heat_cycle_note_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional)'**
+  String get dog_heat_cycle_note_label;
+
+  /// No description provided for @dog_heat_cycle_note_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a note'**
+  String get dog_heat_cycle_note_hint;
+
+  /// No description provided for @dog_heat_cycle_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No heat cycle has been logged yet.'**
+  String get dog_heat_cycle_empty;
+
+  /// No description provided for @dog_heat_cycle_period_value.
+  ///
+  /// In en, this message translates to:
+  /// **'{start} - {end}'**
+  String dog_heat_cycle_period_value(Object start, Object end);
+
+  /// No description provided for @dog_heat_cycle_edit_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get dog_heat_cycle_edit_button;
+
+  /// No description provided for @dog_heat_cycle_delete_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get dog_heat_cycle_delete_button;
+
+  /// No description provided for @dog_heat_cycle_delete_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete heat cycle'**
+  String get dog_heat_cycle_delete_title;
+
+  /// No description provided for @dog_heat_cycle_delete_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to delete this heat cycle entry?'**
+  String get dog_heat_cycle_delete_body;
+
+  /// No description provided for @dog_heat_cycle_info_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Heat cycle info'**
+  String get dog_heat_cycle_info_title;
+
+  /// No description provided for @dog_heat_cycle_info_line_1.
+  ///
+  /// In en, this message translates to:
+  /// **'Heat cycles in female dogs often happen around 1-2 times per year, but this varies between individuals.'**
+  String get dog_heat_cycle_info_line_1;
+
+  /// No description provided for @dog_heat_cycle_info_line_2.
+  ///
+  /// In en, this message translates to:
+  /// **'The duration is often around 2-3 weeks, but can vary.'**
+  String get dog_heat_cycle_info_line_2;
+
+  /// No description provided for @dog_heat_cycle_info_line_3.
+  ///
+  /// In en, this message translates to:
+  /// **'During heat, the dog may be less focused, show behavior changes, or perform differently in training/hunting.'**
+  String get dog_heat_cycle_info_line_3;
+
+  /// No description provided for @dog_heat_cycle_info_line_4.
+  ///
+  /// In en, this message translates to:
+  /// **'Be extra attentive around other dogs.'**
+  String get dog_heat_cycle_info_line_4;
+
+  /// No description provided for @dog_heat_cycle_info_line_5.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust training based on the dog\'s condition and behavior.'**
+  String get dog_heat_cycle_info_line_5;
+
+  /// No description provided for @dog_heat_cycle_info_line_6.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact a veterinarian if there is unusual bleeding, pain, signs of illness, or concern.'**
+  String get dog_heat_cycle_info_line_6;
+
   /// No description provided for @milestone_first_session_title.
   ///
   /// In en, this message translates to:
@@ -1923,6 +2199,48 @@ abstract class AppLocalizations {
   /// **'You can use the app completely offline. All data is stored locally on your phone.'**
   String get home_empty_offline_note;
 
+  /// No description provided for @home_dashboard_goal_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal goal'**
+  String get home_dashboard_goal_title;
+
+  /// No description provided for @home_dashboard_goal_prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a personal goal in Settings to track your stands progress.'**
+  String get home_dashboard_goal_prompt;
+
+  /// No description provided for @home_dashboard_latest_session_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest session'**
+  String get home_dashboard_latest_session_title;
+
+  /// No description provided for @home_dashboard_latest_session_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No sessions registered yet.'**
+  String get home_dashboard_latest_session_empty;
+
+  /// No description provided for @home_dashboard_latest_session_unknown_dog.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown dog'**
+  String get home_dashboard_latest_session_unknown_dog;
+
+  /// No description provided for @home_dashboard_quick_action_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick action'**
+  String get home_dashboard_quick_action_title;
+
+  /// No description provided for @home_dashboard_quick_action_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready for the next session? Start logging with one tap.'**
+  String get home_dashboard_quick_action_body;
+
   /// Title shown when filtered dog list is empty.
   ///
   /// In en, this message translates to:
@@ -1940,6 +2258,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open invitations'**
   String get home_visible_empty_button;
+
+  /// Home banner text shown when the user has pending dog invitations.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{You have a dog invitation} other{You have {count} dog invitations}}'**
+  String home_pendingInvitationsTitle(int count);
+
+  /// No description provided for @home_pendingInvitationsButton.
+  ///
+  /// In en, this message translates to:
+  /// **'View invitation'**
+  String get home_pendingInvitationsButton;
 
   /// No description provided for @home_noDogsRegistered.
   ///
@@ -1994,6 +2324,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, one{point} other{points}}'**
   String top10_points_unit(int count);
+
+  /// No description provided for @flushesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{0 flushes} one{1 flush} other{{count} flushes}}'**
+  String flushesCount(num count);
+
+  /// No description provided for @birdContactsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{0 bird contacts} one{1 bird contact} other{{count} bird contacts}}'**
+  String birdContactsCount(num count);
+
+  /// No description provided for @sessionsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{0 sessions} one{1 session} other{{count} sessions}}'**
+  String sessionsCount(num count);
 
   /// No description provided for @home_top10_birds_title.
   ///
@@ -2298,7 +2646,7 @@ abstract class AppLocalizations {
   /// No description provided for @session_summary_total_tomstand_label.
   ///
   /// In en, this message translates to:
-  /// **'Tomstand total:'**
+  /// **'Total tomstand:'**
   String get session_summary_total_tomstand_label;
 
   /// No description provided for @session_summary_total_flushes_label.
@@ -2361,17 +2709,17 @@ abstract class AppLocalizations {
   /// **'Points'**
   String get session_field_points;
 
-  /// No description provided for @session_field_secondary_points.
-  ///
-  /// In en, this message translates to:
-  /// **'Secondary points'**
-  String get session_field_secondary_points;
-
   /// No description provided for @session_field_tomstand.
   ///
   /// In en, this message translates to:
   /// **'Tomstand'**
   String get session_field_tomstand;
+
+  /// No description provided for @session_field_secondary_points.
+  ///
+  /// In en, this message translates to:
+  /// **'Secondary points'**
+  String get session_field_secondary_points;
 
   /// No description provided for @session_field_flushes.
   ///
@@ -2408,6 +2756,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No species selected'**
   String get session_birds_none_selected;
+
+  /// No description provided for @species_picker_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Select bird species'**
+  String get species_picker_title;
+
+  /// No description provided for @species_picker_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No species saved yet'**
+  String get species_picker_empty;
+
+  /// No description provided for @species_picker_add_button.
+  ///
+  /// In en, this message translates to:
+  /// **'New bird'**
+  String get species_picker_add_button;
+
+  /// No description provided for @species_picker_done_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get species_picker_done_button;
+
+  /// No description provided for @species_picker_new_title.
+  ///
+  /// In en, this message translates to:
+  /// **'New bird species'**
+  String get species_picker_new_title;
+
+  /// No description provided for @species_picker_name_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get species_picker_name_label;
 
   /// No description provided for @session_species_picker_title.
   ///
@@ -2576,6 +2960,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add photo/video'**
   String get session_media_add_photo_video;
+
+  /// No description provided for @session_media_importing.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing media ...'**
+  String get session_media_importing;
 
   /// No description provided for @session_media_gallery_label.
   ///
@@ -3162,19 +3552,19 @@ abstract class AppLocalizations {
   /// No description provided for @session_detail_confirm_delete_body.
   ///
   /// In en, this message translates to:
-  /// **'This removes the session from the dog.'**
+  /// **'This action cannot be undone.'**
   String get session_detail_confirm_delete_body;
 
   /// No description provided for @session_detail_media_delete_title.
   ///
   /// In en, this message translates to:
-  /// **'Delete media?'**
+  /// **'Remove attachment?'**
   String get session_detail_media_delete_title;
 
   /// No description provided for @session_detail_media_delete_body.
   ///
   /// In en, this message translates to:
-  /// **'This removes the selected media from the session.'**
+  /// **'The attachment will be permanently removed from the session.'**
   String get session_detail_media_delete_body;
 
   /// Summary line for saved session entries.
@@ -3242,6 +3632,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New bird'**
   String get session_detail_bird_species_new;
+
+  /// No description provided for @session_notes_field_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get session_notes_field_label;
 
   /// No description provided for @session_detail_action_done.
   ///
@@ -4575,6 +4971,162 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get settings_title;
 
+  /// No description provided for @settings_section_profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get settings_section_profile;
+
+  /// No description provided for @settings_profile_name_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get settings_profile_name_label;
+
+  /// No description provided for @settings_profile_phone_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number'**
+  String get settings_profile_phone_label;
+
+  /// No description provided for @settings_profile_email_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Email address'**
+  String get settings_profile_email_label;
+
+  /// No description provided for @settings_profile_email_invalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email address'**
+  String get settings_profile_email_invalid;
+
+  /// No description provided for @settings_profile_personal_goal_stands_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal stands goal'**
+  String get settings_profile_personal_goal_stands_label;
+
+  /// No description provided for @settings_profile_personal_goal_section_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get settings_profile_personal_goal_section_title;
+
+  /// No description provided for @settings_profile_personal_goal_prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} stands registered in total. Set a personal goal to track your progress.'**
+  String settings_profile_personal_goal_prompt(Object count);
+
+  /// No description provided for @settings_profile_personal_goal_progress.
+  ///
+  /// In en, this message translates to:
+  /// **'{current} / {goal} stands'**
+  String settings_profile_personal_goal_progress(Object current, Object goal);
+
+  /// No description provided for @settings_profile_personal_goal_percent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% complete'**
+  String settings_profile_personal_goal_percent(Object percent);
+
+  /// No description provided for @settings_profile_personal_goal_celebration_generic.
+  ///
+  /// In en, this message translates to:
+  /// **'Congratulations! You reached your goal 🎉'**
+  String get settings_profile_personal_goal_celebration_generic;
+
+  /// No description provided for @settings_profile_personal_goal_celebration_named.
+  ///
+  /// In en, this message translates to:
+  /// **'Congratulations {name}! You reached your goal 🎉'**
+  String settings_profile_personal_goal_celebration_named(Object name);
+
+  /// No description provided for @settings_profile_birthday_greeting_and.
+  ///
+  /// In en, this message translates to:
+  /// **'and'**
+  String get settings_profile_birthday_greeting_and;
+
+  /// No description provided for @settings_profile_birthday_greeting_generic.
+  ///
+  /// In en, this message translates to:
+  /// **'Happy birthday 🎉'**
+  String get settings_profile_birthday_greeting_generic;
+
+  /// No description provided for @settings_profile_birthday_greeting_named.
+  ///
+  /// In en, this message translates to:
+  /// **'Happy birthday, {name}! 🎉'**
+  String settings_profile_birthday_greeting_named(Object name);
+
+  /// No description provided for @settings_profile_birthday_greeting_dogs_generic.
+  ///
+  /// In en, this message translates to:
+  /// **'Happy birthday! Greetings from {dogs} 🎉'**
+  String settings_profile_birthday_greeting_dogs_generic(Object dogs);
+
+  /// No description provided for @settings_profile_birthday_greeting_dogs_named.
+  ///
+  /// In en, this message translates to:
+  /// **'Happy birthday, {name}! Greetings from {dogs} 🎉'**
+  String settings_profile_birthday_greeting_dogs_named(Object name, Object dogs);
+
+  /// No description provided for @settings_notification_birthday_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Happy birthday!'**
+  String get settings_notification_birthday_title;
+
+  /// No description provided for @settings_notification_birthday_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Wishing you a wonderful day 🎉'**
+  String get settings_notification_birthday_body;
+
+  /// No description provided for @settings_notification_goal_title.
+  ///
+  /// In en, this message translates to:
+  /// **'You reached your goal!'**
+  String get settings_notification_goal_title;
+
+  /// No description provided for @settings_notification_goal_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Great work - keep it up 🎯'**
+  String get settings_notification_goal_body;
+
+  /// No description provided for @settings_profile_birth_date_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Birth date / birthday'**
+  String get settings_profile_birth_date_label;
+
+  /// No description provided for @settings_profile_birth_date_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get settings_profile_birth_date_empty;
+
+  /// No description provided for @settings_profile_birth_date_clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear date'**
+  String get settings_profile_birth_date_clear;
+
+  /// No description provided for @settings_profile_saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile saved'**
+  String get settings_profile_saved;
+
+  /// No description provided for @settings_profile_saving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving profile…'**
+  String get settings_profile_saving;
+
   /// No description provided for @settings_section_general.
   ///
   /// In en, this message translates to:
@@ -5670,8 +6222,14 @@ abstract class AppLocalizations {
   /// No description provided for @subscription_status_active.
   ///
   /// In en, this message translates to:
-  /// **'Active'**
+  /// **'Pro active'**
   String get subscription_status_active;
+
+  /// No description provided for @subscription_active_compact_title.
+  ///
+  /// In en, this message translates to:
+  /// **'GundogTracker Pro active'**
+  String get subscription_active_compact_title;
 
   /// No description provided for @subscription_status_inactive.
   ///
@@ -5990,6 +6548,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =0{0 birds down} one{1 bird down} other{{count} birds down}}'**
   String birdsDownCount(num count);
+
+  /// Button label for starting a field session (auto-start).
+  ///
+  /// In en, this message translates to:
+  /// **'Start field session'**
+  String get session_field_session_button;
+
+  /// Help text explaining field session is for logging while out with the dog.
+  ///
+  /// In en, this message translates to:
+  /// **'For logging while you are out with your dog'**
+  String get session_field_session_help;
+
+  /// Button label for manual session registration.
+  ///
+  /// In en, this message translates to:
+  /// **'Register session manually'**
+  String get session_manual_registration_button;
+
+  /// Tooltip for the info button that explains session start options.
+  ///
+  /// In en, this message translates to:
+  /// **'What do the options mean?'**
+  String get session_options_info_tooltip;
+
+  /// Title in the info dialog that explains session start options.
+  ///
+  /// In en, this message translates to:
+  /// **'What do the options mean?'**
+  String get session_options_info_title;
+
+  /// Explanation text for starting a field session immediately.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this when you are out with your dog and want to start logging right away.'**
+  String get session_options_info_field_body;
+
+  /// Explanation text for manual session registration.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this when you want to add a previous training session, hunt, or trial.'**
+  String get session_options_info_manual_body;
+
+  /// Section title for account information.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get settings_section_account;
+
+  /// Label for showing which account is currently signed in.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as'**
+  String get settings_signed_in_as;
+
+  /// Message shown when no user is currently signed in.
+  ///
+  /// In en, this message translates to:
+  /// **'Not signed in'**
+  String get settings_not_signed_in;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

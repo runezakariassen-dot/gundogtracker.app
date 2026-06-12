@@ -1,10 +1,11 @@
 // ignore_for_file: control_flow_in_finally, deprecated_member_use, use_build_context_synchronously
 
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter/services.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:jakthund_app/l10n/app_localizations.dart';
@@ -14,6 +15,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../config/community_links.dart';
 import 'package:jakthund_app/data/hive_boxes.dart';
+import '../domain/settings/birthday_greeting.dart';
+import '../domain/settings/personal_stand_goal_celebration.dart';
+import '../domain/settings/personal_stand_goal_progress.dart';
+import '../domain/settings/settings_repository.dart';
 import '../domain/services/backup_export_service.dart';
 import '../domain/services/backup_restore_service.dart';
 import '../models/dog.dart';
@@ -26,20 +31,39 @@ import '../services/cloud/sync_outbox_processor.dart';
 import '../data/local/sync_outbox_service.dart';
 import '../services/dog_photo_storage.dart';
 import '../services/hive_lifecycle_service.dart';
+import '../services/notification_service.dart';
 import '../ui/settings/feedback/feedback_service.dart';
 import '../ui/settings/subscription/subscription_section.dart';
 import '../ui/locale/locale_controller.dart';
 import '../ui/theme/season_theme_controller.dart';
 import '../pages/invitations_page.dart';
+import '../domain/subscription/subscription_service.dart';
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
+  const SettingsPage({
+    super.key,
+    this.subscriptionService,
+    this.notificationService,
+  });
+
+  final SubscriptionService? subscriptionService;
+  final AppNotificationService? notificationService;
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  static const Key _profileNameFieldKey = Key('settings_profile_name');
+  static const Key _profilePhoneFieldKey = Key('settings_profile_phone');
+  static const Key _profileEmailFieldKey = Key('settings_profile_email');
+  static const Key _profileStandGoalFieldKey =
+      Key('settings_profile_stand_goal');
+  static const Key _profileBirthDateTileKey =
+      Key('settings_profile_birth_date');
+  static const Key _profileClearBirthDateKey =
+      Key('settings_profile_birth_date_clear');
+  static const Key _profileSaveButtonKey = Key('settings_profile_save');
   static const Key _diagnosticsSectionKey = Key('settings_diagnostics_section');
   static const Key _diagnosticsExpandKey = Key('settings_diagnostics_expand');
   static const Key _debugDogRestoreKey = Key('settings_debug_dog_restore');
@@ -50,8 +74,6 @@ class _SettingsPageState extends State<SettingsPage> {
       Key('settings_debug_process_outbox');
   static const Key _debugRetryFailedOutboxKey =
       Key('settings_debug_retry_failed_outbox');
-
-  String? _versionText;
   final FeedbackService _feedbackService = FeedbackService();
   final SyncOutboxService _syncOutboxService =
       SyncOutboxService(enableAutoSync: false);
@@ -65,12 +87,24 @@ class _SettingsPageState extends State<SettingsPage> {
   String? _backupStatus;
   bool _isSigningOut = false;
   bool _isResettingPassword = false;
+  bool _isSavingProfile = false;
+  String? _profileEmailError;
+  DateTime? _profileBirthDate;
   late final Box<dynamic> _settingsBox;
+  late final SettingsRepository _settingsRepository;
   late final Box<HuntSession> _sessionsBox;
   late final Box<Dog> _dogsBox;
   late final Box<Track> _tracksBox;
   late final Box<GpsTrack> _gpsTracksBox;
   late final Box<String> _birdSpeciesBox;
+  final TextEditingController _profileNameController = TextEditingController();
+  final TextEditingController _profilePhoneController = TextEditingController();
+  final TextEditingController _profileEmailController = TextEditingController();
+  final TextEditingController _profileStandGoalController =
+      TextEditingController();
+  bool _isPersistingGoalCelebration = false;
+  bool _isPersistingBirthdayGreeting = false;
+  late final AppNotificationService _notificationService;
 
   Future<void> _triggerDebugDogRestore() async {
     if (!kDebugMode) return;
@@ -271,8 +305,16 @@ class _SettingsPageState extends State<SettingsPage> {
     return ListTile(
       key: tileKey,
       leading: Icon(icon),
-      title: Text(title),
-      subtitle: Text(subtitle),
+      title: Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: Text(
+        subtitle,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
       onTap: onTap,
     );
   }
@@ -321,9 +363,13 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  l10n.settings_diagnostics_outbox_label,
-                  style: textTheme.bodySmall,
+                Flexible(
+                  child: Text(
+                    l10n.settings_diagnostics_outbox_label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.bodySmall,
+                  ),
                 ),
               ],
             ),
@@ -414,6 +460,498 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  void _loadProfileDraft() {
+    final profile = _settingsRepository.getUserProfile();
+    _profileNameController.text = profile.name ?? '';
+    _profilePhoneController.text = profile.phone ?? '';
+    _profileEmailController.text = profile.email ?? '';
+    _profileStandGoalController.text =
+        profile.personalStandGoal?.toString() ?? '';
+    _profileBirthDate = profile.birthDate;
+    _profileEmailError = null;
+  }
+
+  bool _isValidEmail(String value) {
+    return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value);
+  }
+
+  String _formatProfileBirthDate(DateTime value) {
+    return MaterialLocalizations.of(context).formatShortDate(value);
+  }
+
+  Future<void> _pickProfileBirthDate() async {
+    final now = DateTime.now();
+    final initialDate = _profileBirthDate ?? DateTime(now.year - 18, 1, 1);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initialDate.isAfter(now) ? now : initialDate,
+      firstDate: DateTime(1900),
+      lastDate: now,
+    );
+    if (picked == null || !mounted) {
+      return;
+    }
+    setState(() {
+      _profileBirthDate = DateTime(picked.year, picked.month, picked.day);
+    });
+  }
+
+  void _clearProfileBirthDate() {
+    setState(() {
+      _profileBirthDate = null;
+    });
+  }
+
+  int? _parseProfileStandGoal(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+    final parsed = int.tryParse(trimmed);
+    if (parsed == null || parsed <= 0) {
+      return null;
+    }
+    return parsed;
+  }
+
+  Future<void> _saveProfile() async {
+    if (_isSavingProfile) return;
+    final l10n = AppLocalizations.of(context)!;
+    final email = _profileEmailController.text.trim();
+
+    if (email.isNotEmpty && !_isValidEmail(email)) {
+      setState(() {
+        _profileEmailError = l10n.settings_profile_email_invalid;
+      });
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _isSavingProfile = true;
+      _profileEmailError = null;
+    });
+
+    try {
+      await _settingsRepository.setUserProfile(
+        UserProfileSettings(
+          name: _profileNameController.text,
+          phone: _profilePhoneController.text,
+          email: email,
+          birthDate: _profileBirthDate,
+          personalStandGoal: _parseProfileStandGoal(
+            _profileStandGoalController.text,
+          ),
+        ),
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.settings_profile_saved)),
+      );
+      _scheduleBirthdayReminderNotification();
+      _schedulePersonalGoalCelebrationCheck();
+      _scheduleBirthdayGreetingCheck();
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isSavingProfile = false;
+      });
+    }
+  }
+
+  void _schedulePersonalGoalCelebrationCheck() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      _checkPersonalGoalCelebration();
+    });
+  }
+
+  Future<void> _checkPersonalGoalCelebration() async {
+    if (_isSavingProfile || _isPersistingGoalCelebration || !mounted) {
+      return;
+    }
+
+    final profile = _settingsRepository.getUserProfile();
+    final progress = PersonalStandGoalProgress.fromSessions(
+      sessions: _sessionsBox.values,
+      goal: profile.personalStandGoal,
+    );
+    final lastCelebratedGoal =
+        _settingsRepository.getLastCelebratedPersonalStandGoal();
+    if (!progress.shouldCelebrate(lastCelebratedGoal: lastCelebratedGoal)) {
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context)!;
+    final message = PersonalStandGoalCelebration.resolveMessage(
+      name: profile.name,
+      genericMessage: l10n.settings_profile_personal_goal_celebration_generic,
+      namedMessage: l10n.settings_profile_personal_goal_celebration_named,
+    );
+
+    _isPersistingGoalCelebration = true;
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+      await _notificationService.showGoalReachedNotification(
+        goal: progress.goal!,
+        title: l10n.settings_notification_goal_title,
+        body: l10n.settings_notification_goal_body,
+      );
+      await _settingsRepository.setLastCelebratedPersonalStandGoal(
+        progress.goal,
+      );
+    } finally {
+      _isPersistingGoalCelebration = false;
+    }
+  }
+
+  void _scheduleBirthdayGreetingCheck() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      _checkBirthdayGreeting();
+    });
+  }
+
+  void _scheduleBirthdayReminderNotification() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      _syncBirthdayReminderNotification();
+    });
+  }
+
+  Future<void> _syncBirthdayReminderNotification() async {
+    final l10n = AppLocalizations.of(context)!;
+    final profile = _settingsRepository.getUserProfile();
+
+    await _notificationService.scheduleBirthdayReminder(
+      birthDate: profile.birthDate,
+      title: l10n.settings_notification_birthday_title,
+      body: l10n.settings_notification_birthday_body,
+    );
+  }
+
+  Future<void> _checkBirthdayGreeting() async {
+    if (_isSavingProfile || _isPersistingBirthdayGreeting || !mounted) {
+      return;
+    }
+
+    final today = DateTime.now();
+    final birthdayDogs = _dogsBox.values
+        .where((dog) =>
+            !dog.isDeleted &&
+            BirthdayGreeting.isBirthdayToday(
+              birthDate: dog.birthDate,
+              today: today,
+            ))
+        .toList(growable: false);
+    if (birthdayDogs.isEmpty) {
+      return;
+    }
+
+    final lastShownDate =
+        _settingsRepository.getLastBirthdayGreetingShownDate();
+    final alreadyShownToday =
+        lastShownDate != null &&
+        lastShownDate.year == today.year &&
+        lastShownDate.month == today.month &&
+        lastShownDate.day == today.day;
+    if (alreadyShownToday) {
+      return;
+    }
+
+    _isPersistingBirthdayGreeting = true;
+    try {
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) {
+          final l10n = AppLocalizations.of(dialogContext)!;
+          final title = birthdayDogs.length == 1
+              ? '${l10n.settings_notification_birthday_title} ${birthdayDogs.first.displayName}'
+              : l10n.settings_notification_birthday_title;
+          final subtitle = birthdayDogs.length == 1
+              ? birthdayDogs.first.displayName
+              : BirthdayGreeting.formatDogNames(
+                    dogNames: birthdayDogs.map((dog) => dog.displayName),
+                    andWord: l10n.settings_profile_birthday_greeting_and,
+                  ) ??
+                  '';
+
+          return Dialog(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(dialogContext).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    subtitle,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(dialogContext).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  if (birthdayDogs.length == 1)
+                    _BirthdayHeroDogTile(dog: birthdayDogs.first)
+                  else
+                    _BirthdayDogGrid(dogs: birthdayDogs),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    child: Text(l10n.common_ok),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+      await _settingsRepository.setLastBirthdayGreetingShownDate(today);
+    } finally {
+      _isPersistingBirthdayGreeting = false;
+    }
+  }
+
+  Widget _buildAccountSection(TextStyle sectionStyle) {
+    final l10n = AppLocalizations.of(context)!;
+    final currentUser = _currentUserOrNull();
+    
+    String displayValue;
+    if (currentUser == null) {
+      displayValue = l10n.settings_not_signed_in;
+    } else {
+      displayValue = currentUser.email ??
+          currentUser.displayName ??
+          currentUser.uid;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l10n.settings_section_account, style: sectionStyle),
+        const SizedBox(height: 12),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.account_circle_outlined),
+            title: Text(l10n.settings_signed_in_as),
+            subtitle: Text(
+              displayValue,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProfileSection(TextStyle sectionStyle) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final goal = _parseProfileStandGoal(_profileStandGoalController.text);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l10n.settings_section_profile, style: sectionStyle),
+        const SizedBox(height: 12),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextField(
+                  key: _profileNameFieldKey,
+                  controller: _profileNameController,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.name],
+                  decoration: InputDecoration(
+                    labelText: l10n.settings_profile_name_label,
+                    prefixIcon: const Icon(Icons.person_outline),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  key: _profilePhoneFieldKey,
+                  controller: _profilePhoneController,
+                  textInputAction: TextInputAction.next,
+                  keyboardType: TextInputType.phone,
+                  autofillHints: const [AutofillHints.telephoneNumber],
+                  decoration: InputDecoration(
+                    labelText: l10n.settings_profile_phone_label,
+                    prefixIcon: const Icon(Icons.phone_outlined),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  key: _profileEmailFieldKey,
+                  controller: _profileEmailController,
+                  textInputAction: TextInputAction.done,
+                  keyboardType: TextInputType.emailAddress,
+                  autofillHints: const [AutofillHints.email],
+                  onChanged: (_) {
+                    if (_profileEmailError == null) return;
+                    setState(() {
+                      _profileEmailError = null;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    labelText: l10n.settings_profile_email_label,
+                    prefixIcon: const Icon(Icons.mail_outline),
+                    errorText: _profileEmailError,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  key: _profileStandGoalFieldKey,
+                  controller: _profileStandGoalController,
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.done,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                  ],
+                  onChanged: (_) => setState(() {}),
+                  decoration: InputDecoration(
+                    labelText: l10n.settings_profile_personal_goal_stands_label,
+                    prefixIcon: const Icon(Icons.flag_outlined),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: colorScheme.outlineVariant),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ListTile(
+                    key: _profileBirthDateTileKey,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    leading: const Icon(Icons.cake_outlined),
+                    title: Text(l10n.settings_profile_birth_date_label),
+                    subtitle: Text(
+                      _profileBirthDate == null
+                          ? l10n.settings_profile_birth_date_empty
+                          : _formatProfileBirthDate(_profileBirthDate!),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_profileBirthDate != null)
+                          IconButton(
+                            key: _profileClearBirthDateKey,
+                            onPressed: _clearProfileBirthDate,
+                            icon: const Icon(Icons.close),
+                            tooltip: l10n.settings_profile_birth_date_clear,
+                          ),
+                        const Icon(Icons.calendar_today_outlined),
+                      ],
+                    ),
+                    onTap: _pickProfileBirthDate,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ValueListenableBuilder(
+                  valueListenable: _sessionsBox.listenable(),
+                  builder: (context, Box<HuntSession> sessionsBox, _) {
+                    final progress = PersonalStandGoalProgress.fromSessions(
+                      sessions: sessionsBox.values,
+                      goal: goal,
+                    );
+
+                    return DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.settings_profile_personal_goal_section_title,
+                              style: theme.textTheme.titleSmall,
+                            ),
+                            const SizedBox(height: 8),
+                            if (!progress.hasGoal) ...[
+                              Text(
+                                l10n.settings_profile_personal_goal_prompt(
+                                  progress.totalStands,
+                                ),
+                              ),
+                            ] else ...[
+                              Text(
+                                l10n.settings_profile_personal_goal_progress(
+                                  progress.totalStands,
+                                  progress.goal!,
+                                ),
+                                style: theme.textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                l10n.settings_profile_personal_goal_percent(
+                                  progress.progressPercent,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              LinearProgressIndicator(
+                                value: progress.progressValue,
+                                minHeight: 10,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  key: _profileSaveButtonKey,
+                  onPressed: _isSavingProfile ? null : _saveProfile,
+                  icon: _isSavingProfile
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.save_outlined),
+                  label: Text(
+                    _isSavingProfile
+                        ? l10n.settings_profile_saving
+                        : l10n.common_save,
+                  ),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Future<void> _handleSignOut() async {
     if (_isSigningOut) return;
     final l10n = AppLocalizations.of(context)!;
@@ -483,30 +1021,19 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
+    _notificationService =
+        widget.notificationService ?? NotificationService.instance;
     _settingsBox = HiveLifecycleService.getBox<dynamic>(appSettingsBoxName);
+    _settingsRepository = SettingsRepository(_settingsBox);
     _sessionsBox = HiveLifecycleService.getBox<HuntSession>(sessionsBoxName);
     _dogsBox = HiveLifecycleService.getBox<Dog>(dogsBoxName);
     _tracksBox = HiveLifecycleService.getBox<Track>(tracksBoxName);
     _gpsTracksBox = HiveLifecycleService.getBox<GpsTrack>(gpsTracksBoxName);
     _birdSpeciesBox = HiveLifecycleService.getBox<String>(birdSpeciesBoxName);
-    _loadVersion();
-  }
-
-  Future<void> _loadVersion() async {
-    try {
-      final info = await PackageInfo.fromPlatform();
-      if (!mounted) return;
-      final base = 'v${info.version}';
-      final build = kDebugMode ? ' (build ${info.buildNumber})' : '';
-      setState(() {
-        _versionText = '$base$build';
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _versionText = null;
-      });
-    }
+    _loadProfileDraft();
+    _scheduleBirthdayReminderNotification();
+    _schedulePersonalGoalCelebrationCheck();
+    _scheduleBirthdayGreetingCheck();
   }
 
   Future<void> _exportBackupZip() async {
@@ -730,6 +1257,15 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   @override
+  void dispose() {
+    _profileNameController.dispose();
+    _profilePhoneController.dispose();
+    _profileEmailController.dispose();
+    _profileStandGoalController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<bool>(
       valueListenable: BackupRestoreService.isRestoring,
@@ -753,6 +1289,11 @@ class _SettingsPageState extends State<SettingsPage> {
                 themeSeasonOverrideKey,
                 soundOnAppStartKey,
                 soundOnMilestoneKey,
+                profileNameKey,
+                profilePhoneKey,
+                profileEmailKey,
+                profilePersonalStandGoalKey,
+                profileBirthDateKey,
               ],
             ),
             builder: (context, Box<dynamic> box, _) {
@@ -790,7 +1331,13 @@ class _SettingsPageState extends State<SettingsPage> {
               return ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  const SubscriptionSection(),
+                  SubscriptionSection(service: widget.subscriptionService),
+                  const SizedBox(height: 24),
+
+                  _buildAccountSection(sectionStyle),
+                  const SizedBox(height: 24),
+
+                  _buildProfileSection(sectionStyle),
                   const SizedBox(height: 24),
 
                   // Backup
@@ -870,9 +1417,19 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   const SizedBox(height: 8),
                   ListTile(
-                    title: Text(l10n.settings_season_title),
-                    subtitle: Text(l10n.settings_season_subtitle),
+                    title: Text(
+                      l10n.settings_season_title,
+                      maxLines: 1,
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      l10n.settings_season_subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     trailing: DropdownButton<String>(
+                      isDense: true,
                       value: seasonOverride,
                       onChanged: (value) {
                         if (value == null) return;
@@ -881,23 +1438,43 @@ class _SettingsPageState extends State<SettingsPage> {
                       items: [
                         DropdownMenuItem(
                           value: 'auto',
-                          child: Text(l10n.settings_season_auto),
+                          child: Text(
+                            l10n.settings_season_auto,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                         DropdownMenuItem(
                           value: 'spring',
-                          child: Text(l10n.settings_season_spring),
+                          child: Text(
+                            l10n.settings_season_spring,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                         DropdownMenuItem(
                           value: 'summer',
-                          child: Text(l10n.settings_season_summer),
+                          child: Text(
+                            l10n.settings_season_summer,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                         DropdownMenuItem(
                           value: 'autumn',
-                          child: Text(l10n.settings_season_autumn),
+                          child: Text(
+                            l10n.settings_season_autumn,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                         DropdownMenuItem(
                           value: 'winter',
-                          child: Text(l10n.settings_season_winter),
+                          child: Text(
+                            l10n.settings_season_winter,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),
@@ -1199,18 +1776,6 @@ class _SettingsPageState extends State<SettingsPage> {
                         LocaleController.instance.setPreferredLocaleCode('en'),
                   ),
 
-                  if (_versionText != null) ...[
-                    const SizedBox(height: 24),
-                    Center(
-                      child: Text(
-                        _versionText!,
-                        // Null-safe: bodySmall can be null.
-                        style:
-                            Theme.of(context).textTheme.bodySmall?.copyWith() ??
-                                const TextStyle(fontSize: 12),
-                      ),
-                    ),
-                  ],
                   if (kDebugMode) ...[
                     const SizedBox(height: 24),
                     _buildDiagnosticsSection(sectionStyle),
@@ -1223,6 +1788,98 @@ class _SettingsPageState extends State<SettingsPage> {
       },
     );
   }
+}
+
+class _BirthdayHeroDogTile extends StatelessWidget {
+  const _BirthdayHeroDogTile({required this.dog});
+
+  final Dog dog;
+
+  @override
+  Widget build(BuildContext context) {
+    final imageFile = _resolvedDogImage(dog.imagePath);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: SizedBox(
+            height: 220,
+            width: double.infinity,
+            child: imageFile != null
+                ? Image.file(imageFile, fit: BoxFit.cover)
+                : DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest,
+                    ),
+                    child: const Center(
+                      child: Icon(Icons.pets, size: 72),
+                    ),
+                  ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _BirthdayDogGrid extends StatelessWidget {
+  const _BirthdayDogGrid({required this.dogs});
+
+  final List<Dog> dogs;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: dogs
+          .map(
+            (dog) => SizedBox(
+              width: 92,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundImage: () {
+                      final file = _resolvedDogImage(dog.imagePath);
+                      return file != null ? FileImage(file) : null;
+                    }(),
+                    child: _resolvedDogImage(dog.imagePath) == null
+                        ? const Icon(Icons.pets)
+                        : null,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    dog.displayName,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+          )
+          .toList(growable: false),
+    );
+  }
+}
+
+File? _resolvedDogImage(String? imagePath) {
+  if (imagePath == null || imagePath.trim().isEmpty) {
+    return null;
+  }
+  final resolved = DogPhotoStorage.resolveAbsolutePath(imagePath.trim());
+  if (resolved == null) {
+    return null;
+  }
+  final file = File(resolved);
+  return file.existsSync() ? file : null;
 }
 
 class _SettingsRestorePendingView extends StatelessWidget {
@@ -1295,7 +1952,13 @@ class _MilestoneGoalSliderState extends State<_MilestoneGoalSlider> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(widget.label, style: theme.textTheme.bodyMedium),
+        Text(
+          widget.label,
+          maxLines: 1,
+          softWrap: false,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodyMedium,
+        ),
         const SizedBox(height: 6),
         Row(
           children: [
@@ -1312,11 +1975,13 @@ class _MilestoneGoalSliderState extends State<_MilestoneGoalSlider> {
                 },
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             SizedBox(
-              width: 60,
+              width: 68,
               child: Text(
                 '$_value',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.right,
                 style: theme.textTheme.bodyLarge,
               ),
@@ -1353,6 +2018,9 @@ class _ThemeTile extends StatelessWidget {
       ),
       title: Text(
         label,
+        maxLines: 1,
+        softWrap: false,
+        overflow: TextOverflow.ellipsis,
         style: theme.textTheme.bodyLarge?.copyWith(fontSize: 18),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -1385,6 +2053,9 @@ class _DebugCountItem extends StatelessWidget {
       children: [
         Text(
           '$value',
+          maxLines: 1,
+          softWrap: false,
+          overflow: TextOverflow.ellipsis,
           style: textTheme.titleMedium?.copyWith(
             color: color,
             fontWeight: FontWeight.w700,
@@ -1393,6 +2064,9 @@ class _DebugCountItem extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           label,
+          maxLines: 1,
+          softWrap: false,
+          overflow: TextOverflow.ellipsis,
           style: textTheme.bodySmall,
         ),
       ],

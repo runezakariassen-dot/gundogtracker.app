@@ -149,6 +149,53 @@ class OwnershipService {
     await _transferRepository.upsertTransfer(declined);
   }
 
+  Future<DogMembership> updateMembershipRole({
+    required String dogKey,
+    required String targetUserId,
+    required Role role,
+  }) async {
+    final currentUserId = _identityService.getCurrentUserId();
+    final actorMembership =
+        await _membershipRepository.getMembership(dogKey, currentUserId);
+    if (actorMembership == null || actorMembership.status != Status.active) {
+      throw MembershipRoleException(MembershipRoleError.notAuthorized);
+    }
+    if (currentUserId == targetUserId) {
+      throw MembershipRoleException(MembershipRoleError.cannotEditSelf);
+    }
+
+    final targetMembership =
+        await _membershipRepository.getMembership(dogKey, targetUserId);
+    if (targetMembership == null || targetMembership.status != Status.active) {
+      throw MembershipRoleException(MembershipRoleError.membershipNotFound);
+    }
+    final actorRole = actorMembership.role;
+    final targetRole = targetMembership.role;
+    final actorIsOwner = actorRole == Role.owner;
+    final actorIsAdmin = actorRole == Role.admin;
+
+    if (targetMembership.role == Role.owner) {
+      throw MembershipRoleException(MembershipRoleError.ownerRoleLocked);
+    }
+
+    if (role == Role.owner && !actorIsOwner) {
+      throw MembershipRoleException(MembershipRoleError.ownerRoleLocked);
+    }
+
+    if (!actorIsOwner && !actorIsAdmin) {
+      throw MembershipRoleException(MembershipRoleError.notAuthorized);
+    }
+
+    if (actorIsAdmin &&
+        (targetRole.isCanonicalAdmin || role.isCanonicalAdmin)) {
+      throw MembershipRoleException(MembershipRoleError.cannotPromoteToAdmin);
+    }
+
+    final updatedMembership = targetMembership.copyWith(role: role);
+    await _membershipRepository.upsertMembership(updatedMembership);
+    return updatedMembership;
+  }
+
   Future<void> _upsertMembership(
     String dogKey,
     String userId,

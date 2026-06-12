@@ -33,7 +33,8 @@ void main() {
     await tempDir.delete(recursive: true);
   });
 
-  test('backfill records achievedAt when milestone thresholds are hit', () async {
+  test('backfill records achievedAt when milestone thresholds are hit',
+      () async {
     final sessionBox = await Hive.openBox<HuntSession>('sessions_records');
     await sessionBox.add(
       HuntSession(
@@ -84,7 +85,8 @@ void main() {
     await stateBox.close();
   });
 
-  test('backfill retains existing achievedAt timestamps', () async {
+  test('backfill moves existing achievedAt to earliest historical session',
+      () async {
     final stateBox = await Hive.openBox<DogMilestoneState>('states_existing');
     final existingDate = DateTime.utc(2023, 1, 1);
     final existingState = DogMilestoneState(
@@ -115,7 +117,10 @@ void main() {
     );
 
     final state = await repository.getOrCreate('dog-2');
-    expect(state.achievedAt[MilestoneId.stands1], equals(existingDate));
+    expect(
+      state.achievedAt[MilestoneId.stands1],
+      equals(DateTime.utc(2023, 2, 1)),
+    );
     expect(state.achievedIds, contains(MilestoneId.stands10));
     expect(
       state.achievedAt[MilestoneId.stands10],

@@ -98,7 +98,7 @@ void main() {
   testWidgets('normal settings content still renders', (tester) async {
     await pumpSettingsPage(tester);
 
-    expect(find.text('Sikkerhetskopi'), findsOneWidget);
+    expect(find.text('Innlogget som'), findsOneWidget);
     await dragUntilTextVisible(tester, 'Utseende');
     expect(find.text('Utseende'), findsOneWidget);
     await dragUntilTextVisible(tester, 'Logg ut');

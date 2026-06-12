@@ -20,6 +20,14 @@ enum TransferError {
   cancelled,
 }
 
+enum MembershipRoleError {
+  notAuthorized,
+  membershipNotFound,
+  cannotEditSelf,
+  ownerRoleLocked,
+  cannotPromoteToAdmin,
+}
+
 class ShareException implements Exception {
   ShareException(this.code, {this.message});
 
@@ -40,4 +48,15 @@ class TransferException implements Exception {
   @override
   String toString() =>
       'TransferException($code${message == null ? '' : ': $message'})';
+}
+
+class MembershipRoleException implements Exception {
+  MembershipRoleException(this.code, {this.message});
+
+  final MembershipRoleError code;
+  final String? message;
+
+  @override
+  String toString() =>
+      'MembershipRoleException($code${message == null ? '' : ': $message'})';
 }

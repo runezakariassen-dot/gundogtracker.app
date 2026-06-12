@@ -431,7 +431,32 @@ class _StatisticsPageState extends State<StatisticsPage>
                       a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
                 if (dogs.isEmpty) {
-                  return Center(child: Text(l10n.home_no_dogs_title));
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.pets,
+                          size: 48,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          l10n.home_no_dogs_title,
+                          style: Theme.of(context).textTheme.titleMedium,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.statistics_no_dogs_body,
+                          style: Theme.of(context).textTheme.bodySmall,
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  );
                 }
 
                 final labelResolver = DogLabelResolver(dogs);

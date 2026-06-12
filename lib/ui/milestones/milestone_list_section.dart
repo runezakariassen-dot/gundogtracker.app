@@ -6,6 +6,7 @@ import 'package:jakthund_app/l10n/app_localizations.dart';
 
 import '../../domain/milestones/milestone_models.dart';
 import '../../domain/services/dog_milestone_display_service.dart';
+import '../../models/dog_sex.dart';
 import '../../widgets/animated_dog_widget.dart';
 import 'milestone_strings.dart';
 
@@ -15,11 +16,13 @@ class MilestoneListSection extends StatelessWidget {
     required this.milestones,
     this.dogName,
     this.dogBirthDate,
+    this.dogSex,
   });
 
   final List<DogMilestoneDisplay> milestones;
   final String? dogName;
   final DateTime? dogBirthDate;
+  final DogSex? dogSex;
 
   @override
   Widget build(BuildContext context) {
@@ -113,6 +116,7 @@ class MilestoneListSection extends StatelessWidget {
                 achievedAt: achievedAt,
                 dogName: dogName,
                 dogBirthDate: dogBirthDate,
+                dogSex: dogSex,
               )
             : null;
 
@@ -355,6 +359,7 @@ String _buildExplanation({
   required DateTime achievedAt,
   required String? dogName,
   required DateTime? dogBirthDate,
+  required DogSex? dogSex,
 }) {
   final l10n = AppLocalizations.of(context)!;
 
@@ -368,18 +373,22 @@ String _buildExplanation({
   final ageParts = (dogBirthDate != null)
       ? _calculateAgeParts(dogBirthDate, achievedAt)
       : null;
-
-  // Viktig: send ren aldertekst (uten separator), så styrer språket hele setningen.
-  final ageText =
-      (ageParts != null) ? _buildLocalizedAgeText(l10n, ageParts) : '';
   final milestoneLabel = milestoneTitle(context, milestone.def);
+  final base = "$hero oppnådde '$milestoneLabel' $dateText";
 
-  return l10n.milestone_achieved_sentence(
-    hero,
-    milestoneLabel,
-    dateText,
-    ageText,
-  );
+  if (ageParts == null) {
+    return '$base.';
+  }
+
+  final ageText = _buildLocalizedAgeText(l10n, ageParts);
+  final pronoun = switch (dogSex) {
+    DogSex.female => 'hun',
+    DogSex.male => 'han',
+    null => null,
+  };
+
+  final subject = pronoun ?? 'den';
+  return '$base da $subject var $ageText gammel.';
 }
 
 /// Privat liten type for “alder på milepæl”.

@@ -19,7 +19,20 @@ service cloud.firestore {
       return isSignedIn()
         && exists(
           /databases/$(database)/documents/dogs/$(dogId)/members/$(request.auth.uid)
-        );
+        )
+        && get(
+          /databases/$(database)/documents/dogs/$(dogId)/members/$(request.auth.uid)
+        ).data.status == 'active';
+    }
+
+    function isOwnerMemberCreate(dogId, memberId) {
+      return isSignedIn()
+        && memberId == request.auth.uid
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.role == 'owner'
+        && get(
+          /databases/$(database)/documents/dogs/$(dogId)
+        ).data.cloudOwnerUid == request.auth.uid;
     }
 
     function isOwnMemberDoc(memberId) {
@@ -28,6 +41,54 @@ service cloud.firestore {
 
     function isOwnMemberData() {
       return isSignedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    function isMemberResourceOwnedByCurrentUser() {
+      return isSignedIn()
+        && resource != null
+        && resource.data.uid == request.auth.uid;
+    }
+
+    function inviteAllowsSelfMembership(dogId) {
+      return isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == 'active'
+        && request.resource.data.role in ['editor', 'viewer']
+        && request.resource.data.acceptedInviteId is string
+        && exists(
+          /databases/$(database)/documents/shareInvites/$(request.resource.data.acceptedInviteId)
+        )
+        && (
+          get(
+            /databases/$(database)/documents/shareInvites/$(request.resource.data.acceptedInviteId)
+          ).data.recipientEmail == request.auth.token.email
+          || get(
+            /databases/$(database)/documents/shareInvites/$(request.resource.data.acceptedInviteId)
+          ).data.recipientUserId == request.auth.uid
+        )
+        && get(
+          /databases/$(database)/documents/shareInvites/$(request.resource.data.acceptedInviteId)
+        ).data.status in ['pending', 'accepted']
+        && (
+          get(
+            /databases/$(database)/documents/shareInvites/$(request.resource.data.acceptedInviteId)
+          ).data.cloudDogId == dogId
+          || get(
+            /databases/$(database)/documents/shareInvites/$(request.resource.data.acceptedInviteId)
+          ).data.dogKey == get(
+            /databases/$(database)/documents/dogs/$(dogId)
+          ).data.dogKey
+        );
+    }
+
+    function isSelfMembershipRevoke(memberId) {
+      return isSignedIn()
+        && (
+          memberId == request.auth.uid
+          || isMemberResourceOwnedByCurrentUser()
+        )
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == 'revoked';
     }
 
     match /users/{userId} {
@@ -45,42 +106,60 @@ service cloud.firestore {
       allow create: if isSignedIn()
         && request.resource.data.cloudOwnerUid == request.auth.uid;
 
-      allow update, delete: if isSignedIn() && isOwner(dogId);
+      allow update: if isDogMember(dogId);
+      allow delete: if isSignedIn() && isOwner(dogId);
 
       match /members/{memberId} {
         allow get: if isOwnMemberDoc(memberId)
           || isOwnMemberData()
           || isOwner(dogId);
 
-        allow list: if isOwnMemberData();
+        allow list: if isOwnMemberData() || isOwner(dogId);
 
         allow create: if isSignedIn()
           && memberId == request.auth.uid
-          && request.resource.data.role == 'owner';
+          && (
+            isOwnerMemberCreate(dogId, memberId)
+            || inviteAllowsSelfMembership(dogId)
+          );
 
         allow update: if isSignedIn()
           && (
             isOwner(dogId)
-            || (
-              memberId == request.auth.uid
-              && resource.data.uid == request.auth.uid
-              && request.resource.data.uid == request.auth.uid
-              && request.resource.data.status in ['revoked', 'left']
-              && request.resource.data.diff(resource.data).affectedKeys()
-                .hasOnly(['status', 'updatedAt'])
-            )
+            || (memberId == request.auth.uid && inviteAllowsSelfMembership(dogId))
+            || isSelfMembershipRevoke(memberId)
           );
 
         allow delete: if isSignedIn()
           && (
             isOwner(dogId)
             || memberId == request.auth.uid
+            || isMemberResourceOwnedByCurrentUser()
           );
       }
 
       match /sessions/{sessionId} {
         allow read, create, update: if isDogMember(dogId);
       }
+    }
+
+    match /shareInvites/{inviteId} {
+      allow create: if isSignedIn()
+        && request.resource.data.createdByAuthUid == request.auth.uid;
+
+      allow get, list: if isSignedIn()
+        && (
+          resource.data.createdByAuthUid == request.auth.uid
+          || resource.data.recipientEmail == request.auth.token.email
+          || resource.data.recipientUserId == request.auth.uid
+        );
+
+      allow update: if isSignedIn()
+        && (
+          resource.data.createdByAuthUid == request.auth.uid
+          || resource.data.recipientEmail == request.auth.token.email
+          || resource.data.recipientUserId == request.auth.uid
+        );
     }
   }
 }

@@ -141,8 +141,9 @@ class DogMilestoneDisplayService {
     for (final rawKey in state.achievedIds) {
       final def = _lookup(rawKey);
       if (def == null) continue;
-      displays.add(
-          DogMilestoneDisplay(def: def, achievedAt: state.lastEvaluatedAt));
+      final achievedAt = state.achievedAt[def.id] ?? state.achievedAt[rawKey];
+      if (achievedAt == null) continue;
+      displays.add(DogMilestoneDisplay(def: def, achievedAt: achievedAt));
     }
 
     displays.sort((a, b) {

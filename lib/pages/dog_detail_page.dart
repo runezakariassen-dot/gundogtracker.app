@@ -16,6 +16,7 @@ import '../data/dog_box_helpers.dart';
 import '../data/hive_boxes.dart';
 import '../domain/dog_milestone_backfill_bootstrap.dart';
 import '../domain/dogs/dog_visibility.dart';
+import '../domain/dogs/dog_heat_cycle_repository.dart';
 import '../domain/domain_errors.dart';
 import '../domain/milestones/milestone_catalog.dart';
 import '../domain/milestones/milestone_helpers.dart';
@@ -23,6 +24,7 @@ import '../domain/repositories/dog_milestone_state_repository.dart';
 import '../domain/sessions/session_visibility.dart';
 import '../domain/services/dog_milestone_display_service.dart';
 import '../models/dog.dart';
+import '../models/dog_heat_cycle_log.dart';
 import '../models/dog_membership.dart';
 import '../models/dog_sex.dart';
 import '../models/hunt_session.dart';
@@ -34,12 +36,16 @@ import '../services/hive_lifecycle_service.dart';
 import '../services/ownership_service.dart';
 import '../services/sharing_service.dart';
 import '../services/user_identity_service.dart';
+import '../ui/components/dog_access_roles_card.dart';
+import '../ui/components/member_role_edit_dialog.dart';
+import '../ui/components/role_chip.dart';
 import '../ui/milestones/milestone_list_section.dart';
 import '../ui/milestones/milestone_strings.dart';
 import '../ui/text/text_helpers.dart';
 import '../utils/dog_image_path_resolver.dart';
 import '../domain/user/app_user.dart';
 import 'dog_editor_page.dart';
+import 'dog_media_library_page.dart';
 
 @visibleForTesting
 Role? resolveHighestActiveRoleForUserIds({
@@ -84,6 +90,33 @@ int _globalRolePriority(Role role) {
   }
 }
 
+@visibleForTesting
+bool shouldShowHeatCycleSection(Dog dog) {
+  return dog.sex == DogSex.female;
+}
+
+@visibleForTesting
+List<Role> editableRolesForMembership({
+  required Role actorRole,
+  required Role targetRole,
+}) {
+  if (targetRole == Role.owner) {
+    return const <Role>[];
+  }
+  switch (actorRole) {
+    case Role.owner:
+      return const <Role>[Role.owner, Role.admin, Role.editor, Role.viewer];
+    case Role.admin:
+      if (targetRole.isCanonicalAdmin) {
+        return const <Role>[];
+      }
+      return const <Role>[Role.editor, Role.viewer];
+    case Role.editor:
+    case Role.viewer:
+      return const <Role>[];
+  }
+}
+
 class DogDetailPage extends StatefulWidget {
   const DogDetailPage({
     super.key,
@@ -106,7 +139,6 @@ class _DogDetailPageState extends State<DogDetailPage> {
   late final Box<DogMembership> _membershipBox;
 
   late final String _currentUserId;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final Map<String, AppUser?> _sharedProfiles = {};
   final Set<String> _sharedProfilesLoading = <String>{};
 
@@ -119,6 +151,9 @@ class _DogDetailPageState extends State<DogDetailPage> {
 
   final Set<String> _legacyMigrations = <String>{};
   int _avatarRevision = 0;
+  int _heatCycleRefreshTick = 0;
+
+  final DogHeatCycleRepository _heatCycleRepository = DogHeatCycleRepository();
 
   final Set<String> _ownerEmailEnsured = <String>{};
   bool _wmShowTitle = true;
@@ -184,7 +219,7 @@ class _DogDetailPageState extends State<DogDetailPage> {
     if (localId.isNotEmpty) {
       ids.add(localId);
     }
-    final authId = FirebaseAuth.instance.currentUser?.uid.trim();
+    final authId = _currentFirebaseUser()?.uid.trim();
     if (authId != null && authId.isNotEmpty) {
       ids.add(authId);
     }
@@ -200,11 +235,37 @@ class _DogDetailPageState extends State<DogDetailPage> {
     }
   }
 
+  User? _currentFirebaseUser() {
+    try {
+      return FirebaseAuth.instance.currentUser;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  FirebaseFirestore? _firestoreOrNull() {
+    try {
+      return FirebaseFirestore.instance;
+    } catch (_) {
+      return null;
+    }
+  }
+
   void _showShareError(ShareException error) {
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(_shareErrorMessage(l10n, error.code))),
+    );
+  }
+
+  void _showMembershipRoleError(MembershipRoleException error) {
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(_membershipRoleErrorMessage(l10n, error.code)),
+      ),
     );
   }
 
@@ -261,6 +322,24 @@ class _DogDetailPageState extends State<DogDetailPage> {
         return l10n.transfer_error_cannot_transfer_to_self;
       case TransferError.cancelled:
         return l10n.transfer_error_cancelled;
+    }
+  }
+
+  String _membershipRoleErrorMessage(
+    AppLocalizations l10n,
+    MembershipRoleError code,
+  ) {
+    switch (code) {
+      case MembershipRoleError.notAuthorized:
+        return l10n.membership_role_error_not_authorized;
+      case MembershipRoleError.membershipNotFound:
+        return l10n.membership_role_error_membership_not_found;
+      case MembershipRoleError.cannotEditSelf:
+        return l10n.membership_role_error_cannot_edit_self;
+      case MembershipRoleError.ownerRoleLocked:
+        return l10n.membership_role_error_owner_locked;
+      case MembershipRoleError.cannotPromoteToAdmin:
+        return l10n.membership_role_error_cannot_promote_to_admin;
     }
   }
 
@@ -443,6 +522,352 @@ class _DogDetailPageState extends State<DogDetailPage> {
     );
   }
 
+  String _formatHeatCyclePeriod(DogHeatCycleLog entry) {
+    final l10n = AppLocalizations.of(context)!;
+    final start = DateFormat('dd.MM.yyyy').format(entry.startDate);
+    final end = entry.endDate == null
+        ? l10n.dog_heat_cycle_end_not_set
+        : DateFormat('dd.MM.yyyy').format(entry.endDate!);
+    return l10n.dog_heat_cycle_period_value(start, end);
+  }
+
+  Future<void> _showHeatCycleInfoDialog() async {
+    final l10n = AppLocalizations.of(context)!;
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(l10n.dog_heat_cycle_info_title),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(l10n.dog_heat_cycle_info_line_1),
+                const SizedBox(height: 8),
+                Text(l10n.dog_heat_cycle_info_line_2),
+                const SizedBox(height: 8),
+                Text(l10n.dog_heat_cycle_info_line_3),
+                const SizedBox(height: 8),
+                Text(l10n.dog_heat_cycle_info_line_4),
+                const SizedBox(height: 8),
+                Text(l10n.dog_heat_cycle_info_line_5),
+                const SizedBox(height: 8),
+                Text(l10n.dog_heat_cycle_info_line_6),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(l10n.common_ok),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _openHeatCycleEditor({
+    required Dog dog,
+    DogHeatCycleLog? initial,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    var selectedStartDate = initial?.startDate ?? DateTime.now();
+    DateTime? selectedEndDate = initial?.endDate;
+    final noteController = TextEditingController(text: initial?.note ?? '');
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text(
+                initial == null
+                    ? l10n.dog_heat_cycle_add_title
+                    : l10n.dog_heat_cycle_edit_title,
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.dog_heat_cycle_start_date_label),
+                      subtitle: Text(
+                        DateFormat('dd.MM.yyyy').format(selectedStartDate),
+                      ),
+                      trailing: const Icon(Icons.calendar_today),
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: selectedStartDate,
+                          firstDate: DateTime(1950),
+                          lastDate: DateTime.now().add(
+                            const Duration(days: 3650),
+                          ),
+                        );
+                        if (picked == null) {
+                          return;
+                        }
+                        setDialogState(() {
+                          selectedStartDate = DateTime(
+                            picked.year,
+                            picked.month,
+                            picked.day,
+                          );
+                          if (selectedEndDate != null &&
+                              selectedEndDate!.isBefore(selectedStartDate)) {
+                            selectedEndDate = null;
+                          }
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.dog_heat_cycle_end_date_label),
+                      subtitle: Text(
+                        selectedEndDate == null
+                            ? l10n.dog_heat_cycle_end_not_set
+                            : DateFormat('dd.MM.yyyy').format(selectedEndDate!),
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (selectedEndDate != null)
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () {
+                                setDialogState(() => selectedEndDate = null);
+                              },
+                            ),
+                          const Icon(Icons.calendar_today),
+                        ],
+                      ),
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: selectedEndDate ?? selectedStartDate,
+                          firstDate: selectedStartDate,
+                          lastDate: DateTime.now().add(
+                            const Duration(days: 3650),
+                          ),
+                        );
+                        if (picked == null) {
+                          return;
+                        }
+                        setDialogState(() {
+                          selectedEndDate = DateTime(
+                            picked.year,
+                            picked.month,
+                            picked.day,
+                          );
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: noteController,
+                      minLines: 2,
+                      maxLines: 4,
+                      decoration: InputDecoration(
+                        labelText: l10n.dog_heat_cycle_note_label,
+                        hintText: l10n.dog_heat_cycle_note_hint,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text(l10n.dog_detail_button_cancel),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: Text(l10n.common_save),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (saved != true) {
+      noteController.dispose();
+      return;
+    }
+
+    final now = DateTime.now();
+    final trimmedNote = noteController.text.trim();
+    final entry = DogHeatCycleLog(
+      dogId: dog.id,
+      startDate: selectedStartDate,
+      endDate: selectedEndDate,
+      note: trimmedNote.isEmpty ? null : trimmedNote,
+      createdAt: initial?.createdAt ?? now,
+      updatedAt: now,
+    );
+
+    await _heatCycleRepository.saveForDog(entry);
+    noteController.dispose();
+    if (!mounted) return;
+    setState(() => _heatCycleRefreshTick++);
+  }
+
+  Future<void> _deleteHeatCycleEntry({
+    required Dog dog,
+    required DogHeatCycleLog entry,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(l10n.dog_heat_cycle_delete_title),
+          content: Text(l10n.dog_heat_cycle_delete_body),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l10n.dog_detail_button_cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(l10n.dog_editor_button_delete),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    await _heatCycleRepository.deleteForDog(
+      dogId: dog.id,
+      createdAt: entry.createdAt,
+    );
+    if (!mounted) return;
+    setState(() => _heatCycleRefreshTick++);
+  }
+
+  Widget _buildHeatCycleSection(Dog dog) {
+    final l10n = AppLocalizations.of(context)!;
+    if (!shouldShowHeatCycleSection(dog)) {
+      return const SizedBox.shrink();
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.dog_heat_cycle_section_title,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                IconButton(
+                  tooltip: l10n.dog_heat_cycle_info_title,
+                  onPressed: _showHeatCycleInfoDialog,
+                  icon: const Icon(Icons.info_outline),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: () => _openHeatCycleEditor(dog: dog),
+              icon: const Icon(Icons.add),
+              label: Text(l10n.dog_heat_cycle_add_button),
+            ),
+            const SizedBox(height: 12),
+            FutureBuilder<List<DogHeatCycleLog>>(
+              key: ValueKey('heat_cycles_${dog.id}_$_heatCycleRefreshTick'),
+              future: _heatCycleRepository.listForDog(dog.id),
+              builder: (context, snapshot) {
+                final entries = snapshot.data ?? const <DogHeatCycleLog>[];
+                if (entries.isEmpty) {
+                  return Text(
+                    l10n.dog_heat_cycle_empty,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  );
+                }
+
+                return Column(
+                  children: entries.map((entry) {
+                    final note = entry.note?.trim();
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Card(
+                        margin: EdgeInsets.zero,
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                _formatHeatCyclePeriod(entry),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                              if (note != null && note.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                Text(note),
+                              ],
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: OutlinedButton.icon(
+                                      onPressed: () => _openHeatCycleEditor(
+                                        dog: dog,
+                                        initial: entry,
+                                      ),
+                                      icon: const Icon(Icons.edit),
+                                      label:
+                                          Text(l10n.dog_heat_cycle_edit_button),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: FilledButton.icon(
+                                      onPressed: () => _deleteHeatCycleEntry(
+                                        dog: dog,
+                                        entry: entry,
+                                      ),
+                                      icon: const Icon(Icons.delete),
+                                      label: Text(
+                                        l10n.dog_heat_cycle_delete_button,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(growable: false),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildInfoCard(Dog dog) {
     final l10n = AppLocalizations.of(context)!;
     final rows = <_InfoRow>[];
@@ -554,6 +979,14 @@ class _DogDetailPageState extends State<DogDetailPage> {
                     const SizedBox(height: 4),
                     Text(
                       note,
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(color: colorScheme.onSurfaceVariant),
+                    ),
+                  ],
+                  if (dog.memorialStory?.trim().isNotEmpty ?? false) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      dog.memorialStory!.trim(),
                       style: theme.textTheme.bodySmall
                           ?.copyWith(color: colorScheme.onSurfaceVariant),
                     ),
@@ -840,6 +1273,44 @@ class _DogDetailPageState extends State<DogDetailPage> {
     ).fold<int>(0, (sum, session) => sum + session.birdsShotCount);
   }
 
+  int _mediaCountForDog(Dog dog) {
+    return filterVisibleSessionsForDog(
+      sessions: _sessionsBox.values,
+      dogId: dog.id,
+      dogs: [dog],
+    ).fold<int>(
+      0,
+      (sum, session) =>
+          sum +
+          session.mediaPaths.where((path) => path.trim().isNotEmpty).length,
+    );
+  }
+
+  void _openDogMediaLibrary(Dog dog) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => DogMediaLibraryPage(dog: dog),
+      ),
+    );
+  }
+
+  Widget _buildMediaLibraryEntry(Dog dog) {
+    final mediaCount = _mediaCountForDog(dog);
+    final subtitle = mediaCount > 0
+        ? 'Se alle bilder og videoer for denne hunden · $mediaCount'
+        : 'Se alle bilder og videoer for denne hunden';
+
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.photo_library_outlined),
+        title: const Text('Media'),
+        subtitle: Text(subtitle),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => _openDogMediaLibrary(dog),
+      ),
+    );
+  }
+
   Widget _buildNextMilestoneSection({
     required BuildContext context,
     required int totalStands,
@@ -1037,23 +1508,6 @@ class _DogDetailPageState extends State<DogDetailPage> {
     );
   }
 
-  Widget? _buildMyRoleSection(Dog dog) {
-    final role = _resolveMyRole(dog);
-    if (role == null) return null;
-    final l10n = AppLocalizations.of(context)!;
-    final roleLabel = _shareRoleLabel(l10n, role);
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Text(
-          l10n.dog_detail_my_role_label(roleLabel),
-          style: Theme.of(context).textTheme.bodyLarge,
-        ),
-      ),
-    );
-  }
-
   Widget _buildShareDisabledNotice(AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1069,8 +1523,37 @@ class _DogDetailPageState extends State<DogDetailPage> {
         .where((membership) =>
             membership.dogKey == dog.dogKey &&
             membership.status == Status.active)
-        .toList()
-      ..sort((a, b) => _rolePriority(a.role).compareTo(_rolePriority(b.role)));
+        .toList();
+
+    final ownerUserId = dog.ownerUserId?.trim() ?? '';
+    if (ownerUserId.isNotEmpty) {
+      final hasOwnerMembership = membershipEntries.any((membership) {
+        return membership.role == Role.owner;
+      });
+      if (!hasOwnerMembership) {
+        membershipEntries.add(
+          DogMembership(
+            dogKey: dog.dogKey,
+            userId: ownerUserId,
+            role: Role.owner,
+            status: Status.active,
+            addedAt: DateTime.now(),
+            addedByUserId: ownerUserId,
+          ),
+        );
+      }
+    }
+
+    // Avoid duplicated rows when identical active memberships exist.
+    final seenMembershipKeys = <String>{};
+    membershipEntries.retainWhere((membership) {
+      final dedupeKey =
+          '${membership.userId.trim()}|${membership.role.name}|${membership.status.name}';
+      return seenMembershipKeys.add(dedupeKey);
+    });
+
+    membershipEntries
+        .sort((a, b) => _rolePriority(a.role).compareTo(_rolePriority(b.role)));
 
     final userIds = membershipEntries.map((entry) => entry.userId).toSet();
     _maybeLoadSharedProfiles(userIds);
@@ -1082,7 +1565,7 @@ class _DogDetailPageState extends State<DogDetailPage> {
       ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
     final myRole = _resolveMyRole(dog);
-    final roleLabel = myRole != null ? _shareRoleLabel(l10n, myRole) : null;
+    final roleLabel = myRole != null ? _shareRoleLabel(l10n, myRole) : 'ukjent';
     final canShare = myRole == Role.owner || myRole == Role.admin;
     final activeUid = _activeFirebaseUid ?? _currentUserId.trim();
     final activeMembership = activeUid.isEmpty
@@ -1098,35 +1581,10 @@ class _DogDetailPageState extends State<DogDetailPage> {
       );
     }
 
-    final children = <Widget>[
-      Text(
-        l10n.dog_detail_section_access,
-        style: Theme.of(context).textTheme.titleMedium,
-      ),
-      const SizedBox(height: 12),
-    ];
-
-    if (roleLabel != null) {
-      children.add(Text(
-        l10n.dog_detail_my_role_label(roleLabel),
-        style: Theme.of(context).textTheme.bodyMedium,
-      ));
-      children.add(const SizedBox(height: 12));
-    }
-
-    if (membershipEntries.isEmpty) {
-      final emptyText = _isOwner(dog)
-          ? l10n.dog_detail_share_empty_owner
-          : l10n.dog_detail_share_empty;
-      children.add(
-        Text(
-          emptyText,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-      );
-    } else {
+    final memberChildren = <Widget>[];
+    if (membershipEntries.isNotEmpty) {
       for (var i = 0; i < membershipEntries.length; i++) {
-        children.add(_buildMembershipTile(
+        memberChildren.add(_buildMembershipTile(
           membershipEntries[i],
           dog,
           canShare,
@@ -1134,49 +1592,47 @@ class _DogDetailPageState extends State<DogDetailPage> {
           myRole,
         ));
         if (i != membershipEntries.length - 1) {
-          children.add(const SizedBox(height: 8));
+          memberChildren.add(const SizedBox(height: 4));
         }
       }
     }
 
-    children.add(const SizedBox(height: 16));
-    children.add(Text(
-      l10n.dog_detail_section_invites,
-      style: Theme.of(context).textTheme.titleMedium,
-    ));
-    children.add(const SizedBox(height: 8));
-
+    const emptyText = 'Ingen medlemmer registrert';
     if (pendingInvites.isEmpty) {
-      children.add(Text(
+      final invitesContent = Text(
         l10n.invitations_empty,
         style: Theme.of(context).textTheme.bodyMedium,
-      ));
+      );
+      final shareContent = canShare
+          ? _buildInviteForm(dog, l10n)
+          : _buildShareDisabledNotice(l10n);
+      return DogAccessRolesCard(
+        myRoleText: l10n.dog_detail_my_role_label(roleLabel),
+        hasMembers: membershipEntries.isNotEmpty,
+        memberChildren: memberChildren,
+        emptyText: emptyText,
+        invitesContent: invitesContent,
+        shareContent: shareContent,
+      );
     } else {
-      children.add(_buildPendingInvitesList(
+      final invitesContent = _buildPendingInvitesList(
         context,
         pendingInvites,
         l10n,
         canShare,
-      ));
+      );
+      final shareContent = canShare
+          ? _buildInviteForm(dog, l10n)
+          : _buildShareDisabledNotice(l10n);
+      return DogAccessRolesCard(
+        myRoleText: l10n.dog_detail_my_role_label(roleLabel),
+        hasMembers: membershipEntries.isNotEmpty,
+        memberChildren: memberChildren,
+        emptyText: emptyText,
+        invitesContent: invitesContent,
+        shareContent: shareContent,
+      );
     }
-
-    children.add(const SizedBox(height: 16));
-
-    if (canShare) {
-      children.add(_buildInviteForm(dog, l10n));
-    } else {
-      children.add(_buildShareDisabledNotice(l10n));
-    }
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: children,
-        ),
-      ),
-    );
   }
 
   Widget _buildPendingInvitesList(
@@ -1287,22 +1743,29 @@ class _DogDetailPageState extends State<DogDetailPage> {
     final canManage = _canManageMembership(membership, myRole);
 
     return ListTile(
-      dense: true,
-      contentPadding: EdgeInsets.zero,
+      dense: false,
+      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+      onTap: canManage ? () => _showRoleEditDialog(membership) : null,
       title: Text(
         title,
         overflow: TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.bodyLarge,
       ),
       subtitle: Text(
-        _canonicalRoleLabel(l10n, membership.role),
+        RoleChip.labelForRole(membership.role, l10n),
         overflow: TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).textTheme.bodySmall?.color,
+            ),
       ),
       trailing: canManage
-          ? PopupMenuButton<_MembershipAction>(
-              icon: const Icon(Icons.more_vert),
-              itemBuilder: (_) => _membershipMenuItems(membership, l10n),
-              onSelected: (action) =>
-                  _handleMembershipAction(action, membership),
+          ? Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: OutlinedButton.icon(
+                onPressed: () => _showRoleEditDialog(membership),
+                icon: const Icon(Icons.edit, size: 18),
+                label: Text(l10n.dog_detail_member_action_change_role),
+              ),
             )
           : null,
     );
@@ -1334,69 +1797,72 @@ class _DogDetailPageState extends State<DogDetailPage> {
   bool _canManageMembership(DogMembership membership, Role? myRole) {
     if (myRole != Role.owner && myRole != Role.admin) return false;
     if (_currentMembershipUserIds.contains(membership.userId)) return false;
-    if (membership.role == Role.owner || membership.role == Role.admin) {
+    if (membership.role == Role.owner) {
       return false;
     }
-    return true;
+    return editableRolesForMembership(
+      actorRole: myRole!,
+      targetRole: membership.role,
+    ).isNotEmpty;
   }
 
-  List<PopupMenuEntry<_MembershipAction>> _membershipMenuItems(
-    DogMembership membership,
-    AppLocalizations l10n,
-  ) {
-    final items = <PopupMenuEntry<_MembershipAction>>[];
-    if (membership.role != Role.viewer) {
-      items.add(
-        PopupMenuItem<_MembershipAction>(
-          value: _MembershipAction.setReader,
-          child: Text(l10n.dog_detail_member_action_set_reader),
-        ),
-      );
-    }
-    if (membership.role != Role.editor) {
-      items.add(
-        PopupMenuItem<_MembershipAction>(
-          value: _MembershipAction.setUser,
-          child: Text(l10n.dog_detail_member_action_set_user),
-        ),
-      );
-    }
-    items.add(
-      PopupMenuItem<_MembershipAction>(
-        value: _MembershipAction.remove,
-        child: Text(l10n.dog_detail_member_action_remove_access),
+  Future<void> _showRoleEditDialog(DogMembership membership) async {
+    final l10n = AppLocalizations.of(context)!;
+    final myRole = _resolveMyRole(_resolveDog(_dogsBox) ?? widget.dog);
+    if (myRole == null) return;
+
+    final editableRoles = editableRolesForMembership(
+      actorRole: myRole,
+      targetRole: membership.role,
+    );
+    if (editableRoles.isEmpty) return;
+
+    final updatedRole = await showDialog<Role>(
+      context: context,
+      builder: (_) => MemberRoleEditDialog(
+        initialRole: membership.role,
+        availableRoles: editableRoles,
       ),
     );
-    return items;
-  }
 
-  Future<void> _handleMembershipAction(
-    _MembershipAction action,
-    DogMembership membership,
-  ) async {
-    final key = _membershipKey(membership);
-    switch (action) {
-      case _MembershipAction.setReader:
-        await _membershipBox.put(
-          key,
-          membership.copyWith(role: Role.viewer),
-        );
-        break;
-      case _MembershipAction.setUser:
-        await _membershipBox.put(
-          key,
-          membership.copyWith(role: Role.editor),
-        );
-        break;
-      case _MembershipAction.remove:
-        await _membershipBox.delete(key);
-        break;
+    if (updatedRole == null || updatedRole == membership.role) return;
+
+    if (updatedRole == Role.admin && membership.role != Role.admin) {
+      final confirmed = await showDialog<bool>(
+            context: context,
+            builder: (dialogContext) => AlertDialog(
+              title: Text(l10n.dog_detail_role_confirm_admin_title),
+              content: Text(l10n.dog_detail_role_confirm_admin_message),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: Text(l10n.common_cancel),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  child: Text(l10n.common_save),
+                ),
+              ],
+            ),
+          ) ??
+          false;
+      if (!confirmed) return;
     }
-    if (mounted) setState(() {});
-  }
 
-  String _membershipKey(DogMembership membership) {
-    return '${membership.dogKey}::${membership.userId}';
+    try {
+      await _ownershipService.updateMembershipRole(
+        dogKey: membership.dogKey,
+        targetUserId: membership.userId,
+        role: updatedRole,
+      );
+    } on MembershipRoleException catch (error) {
+      _showMembershipRoleError(error);
+      return;
+    }
+
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   int _rolePriority(Role role) {
@@ -1415,14 +1881,16 @@ class _DogDetailPageState extends State<DogDetailPage> {
     }
   }
 
-  String _canonicalRoleLabel(AppLocalizations l10n, Role role) {
-    return role.isCanonicalAdmin ? l10n.share_role_admin : l10n.share_role_user;
-  }
-
   Role? _resolveMyRole(Dog dog) {
     final activeUid = _activeFirebaseUid;
     if (activeUid != null &&
         (dog.ownerUserId == activeUid || dog.cloudOwnerUid == activeUid)) {
+      return Role.owner;
+    }
+
+    final ownerUserId = dog.ownerUserId?.trim() ?? '';
+    if (ownerUserId.isNotEmpty &&
+        _currentMembershipUserIds.contains(ownerUserId)) {
       return Role.owner;
     }
 
@@ -1435,7 +1903,7 @@ class _DogDetailPageState extends State<DogDetailPage> {
       return resolvedRole;
     }
 
-    final currentUser = FirebaseAuth.instance.currentUser;
+    final currentUser = _currentFirebaseUser();
     final ownerEmail = dog.ownerEmail?.trim();
     final currentEmail = currentUser?.email?.trim();
     if (ownerEmail != null &&
@@ -1453,6 +1921,9 @@ class _DogDetailPageState extends State<DogDetailPage> {
   }
 
   void _maybeLoadSharedProfiles(Set<String> userIds) {
+    final firestore = _firestoreOrNull();
+    if (firestore == null) return;
+
     final idsToLoad = userIds
         .where((id) =>
             id.isNotEmpty &&
@@ -1464,7 +1935,7 @@ class _DogDetailPageState extends State<DogDetailPage> {
 
     for (final id in idsToLoad) {
       _sharedProfilesLoading.add(id);
-      _firestore.collection('users').doc(id).get().then((snapshot) {
+      firestore.collection('users').doc(id).get().then((snapshot) {
         if (snapshot.exists) {
           _sharedProfiles[id] = AppUser.fromSnapshot(snapshot);
         } else {
@@ -1539,7 +2010,7 @@ class _DogDetailPageState extends State<DogDetailPage> {
     final hasOwnerEmail = (dog.ownerEmail?.trim().isNotEmpty ?? false);
     if (hasOwnerEmail) return false;
 
-    final currentUser = FirebaseAuth.instance.currentUser;
+    final currentUser = _currentFirebaseUser();
     final currentEmail = currentUser?.email?.trim();
     if (currentEmail == null || currentEmail.isEmpty) return false;
 
@@ -1569,6 +2040,7 @@ class _DogDetailPageState extends State<DogDetailPage> {
     final updated = dog.copyWith(
       deceasedAt: details.date,
       memorialNote: details.note,
+      memorialStory: details.story,
       updatedAt: DateTime.now(),
     );
 
@@ -1656,6 +2128,7 @@ class _DogDetailPageState extends State<DogDetailPage> {
     final l10n = AppLocalizations.of(context)!;
     DateTime selectedDate = DateTime.now();
     String noteText = widget.dog.memorialNote?.trim() ?? '';
+    String storyText = widget.dog.memorialStory?.trim() ?? '';
 
     final result = await showDialog<_DeceasedDetails>(
       context: context,
@@ -1677,7 +2150,7 @@ class _DogDetailPageState extends State<DogDetailPage> {
                         final picked = await showDatePicker(
                           context: context,
                           initialDate: selectedDate,
-                          firstDate: DateTime(1970),
+                          firstDate: DateTime(1950),
                           lastDate: DateTime.now(),
                         );
                         if (picked != null) {
@@ -1697,6 +2170,16 @@ class _DogDetailPageState extends State<DogDetailPage> {
                     ),
                     maxLines: null,
                   ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    initialValue: storyText,
+                    onChanged: (value) => storyText = value,
+                    decoration: const InputDecoration(
+                      labelText: 'Historie / minne (valgfritt)',
+                    ),
+                    maxLines: null,
+                    minLines: 2,
+                  ),
                 ],
               ),
               actions: [
@@ -1707,10 +2190,12 @@ class _DogDetailPageState extends State<DogDetailPage> {
                 ElevatedButton(
                   onPressed: () {
                     final note = noteText.trim();
+                    final story = storyText.trim();
                     Navigator.of(context).pop(
                       _DeceasedDetails(
                         date: selectedDate,
                         note: note.isEmpty ? null : note,
+                        story: story.isEmpty ? null : story,
                       ),
                     );
                   },
@@ -1952,26 +2437,6 @@ class _DogDetailPageState extends State<DogDetailPage> {
     );
   }
 
-  bool _isOwner(Dog dog) {
-    final activeUid = _activeFirebaseUid;
-    if (activeUid != null &&
-        (dog.ownerUserId == activeUid || dog.cloudOwnerUid == activeUid)) {
-      return true;
-    }
-
-    return _membershipBox.values.any((membership) {
-      final isTargetDog = membership.dogKey == dog.dogKey;
-      final isCurrentUser =
-          _currentMembershipUserIds.contains(membership.userId);
-      final hasPrivileges =
-          membership.role == Role.owner || membership.role == Role.admin;
-      return isTargetDog &&
-          isCurrentUser &&
-          membership.status == Status.active &&
-          hasPrivileges;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
@@ -2031,16 +2496,15 @@ class _DogDetailPageState extends State<DogDetailPage> {
           _wmPrefsInitialized = true;
           _wmPrefsDogId = dog.id;
         }
-        final myRoleSection = _buildMyRoleSection(dog);
         final bodyContent = ListView(
           padding: const EdgeInsets.all(16),
           children: [
             _buildHeroSection(dog, resolvedAvatarPath),
             const SizedBox(height: 16),
-            if (myRoleSection != null) ...[
-              myRoleSection,
-              const SizedBox(height: 16),
-            ],
+            _buildAccessSection(dog, l10n),
+            const SizedBox(height: 16),
+            _buildMediaLibraryEntry(dog),
+            const SizedBox(height: 16),
             GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () => _showPhotoOptions(dog),
@@ -2126,19 +2590,9 @@ class _DogDetailPageState extends State<DogDetailPage> {
             const SizedBox(height: 16),
             _buildInfoCard(dog),
             const SizedBox(height: 16),
+            _buildHeatCycleSection(dog),
+            if (shouldShowHeatCycleSection(dog)) const SizedBox(height: 16),
             _buildPedigreeCard(dog),
-            const SizedBox(height: 16),
-            ValueListenableBuilder(
-              valueListenable: _shareBox.listenable(),
-              builder: (context, _, __) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildAccessSection(dog, l10n),
-                  ],
-                );
-              },
-            ),
             const SizedBox(height: 16),
             _buildOwnershipSection(dog),
             const SizedBox(height: 16),
@@ -2164,6 +2618,7 @@ class _DogDetailPageState extends State<DogDetailPage> {
                       milestones: milestones,
                       dogName: dog.name,
                       dogBirthDate: dog.birthDate,
+                      dogSex: dog.sex,
                     ),
                   ],
                 );
@@ -2212,10 +2667,12 @@ class _DeceasedDetails {
   const _DeceasedDetails({
     required this.date,
     this.note,
+    this.story,
   });
 
   final DateTime date;
   final String? note;
+  final String? story;
 }
 
 class _InfoRow {
@@ -2226,10 +2683,4 @@ class _InfoRow {
 
   final String label;
   final String value;
-}
-
-enum _MembershipAction {
-  setReader,
-  setUser,
-  remove,
 }

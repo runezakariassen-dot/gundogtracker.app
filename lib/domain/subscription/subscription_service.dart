@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -75,6 +76,7 @@ class StorePurchaseUpdate {
     required this.status,
     required this.needsCompletion,
     this.transactionDate,
+    this.expiresAt,
     this.rawDetails,
   });
 
@@ -82,6 +84,7 @@ class StorePurchaseUpdate {
   final StorePurchaseStatus status;
   final bool needsCompletion;
   final DateTime? transactionDate;
+  final DateTime? expiresAt;
   final Object? rawDetails;
 }
 
@@ -235,7 +238,11 @@ class SubscriptionService {
     try {
       await _clearLegacyPermanentProFlag();
       await _expireStoredEntitlementIfNeeded();
+      // Reflect any already-persisted entitlement immediately instead of
+      // waiting for store product loading to finish.
+      _emitState();
       _storeAvailable = await _storeClient.isAvailable();
+      _emitState();
       if (_storeAvailable) {
         await _loadProducts();
       } else {
@@ -255,6 +262,9 @@ class SubscriptionService {
     await init();
     await _clearLegacyPermanentProFlag();
     await _expireStoredEntitlementIfNeeded();
+    // Keep the UI aligned with persisted entitlement even if store refresh
+    // stalls or product loading fails.
+    _emitState();
     if (_storeAvailable) {
       try {
         await _loadProducts();
@@ -396,36 +406,220 @@ class SubscriptionService {
     required StorePurchaseUpdate purchase,
     required String source,
   }) async {
+    final existingEntitlement = _readEntitlement();
     final transactionDate = purchase.transactionDate?.toUtc();
-    if (transactionDate == null) {
-      await _clearStoredEntitlement();
+    final expiresAt = _resolvePurchaseExpiry(
+      purchase: purchase,
+      transactionDate: transactionDate,
+    );
+    if (expiresAt == null) {
       debugPrint(
-        '[SUBSCRIPTION] $source update missing transaction date; '
-        'entitlement not granted',
+        '[SUBSCRIPTION] $source update missing expiry data; '
+        'entitlement unchanged',
       );
-      return false;
+      return existingEntitlement?.isActiveAt(_now) ?? false;
     }
 
-    final expiresAt = transactionDate.add(_monthlyEntitlementDuration);
     if (!expiresAt.isAfter(_now)) {
-      await _clearStoredEntitlement();
       debugPrint(
         '[SUBSCRIPTION] $source update expired at $expiresAt; '
-        'entitlement not granted',
+        'entitlement unchanged',
       );
-      return false;
+      return existingEntitlement?.isActiveAt(_now) ?? false;
+    }
+
+    final effectiveTransactionDate =
+        transactionDate ?? expiresAt.subtract(_monthlyEntitlementDuration);
+    if (_shouldKeepExistingEntitlement(
+      existingEntitlement: existingEntitlement,
+      candidateExpiresAt: expiresAt,
+      candidateTransactionDate: effectiveTransactionDate,
+    )) {
+      debugPrint(
+        '[SUBSCRIPTION] $source update ignored because a newer active '
+        'entitlement is already stored',
+      );
+      return true;
     }
 
     await _clearLegacyPermanentProFlag();
     await _box.put(_entitlementProductIdKey, monthlyProductId);
     await _box.put(
       _entitlementTransactionDateKey,
-      transactionDate.millisecondsSinceEpoch,
+      effectiveTransactionDate.millisecondsSinceEpoch,
     );
     await _box.put(_entitlementExpiresAtKey, expiresAt.millisecondsSinceEpoch);
     await _box.put(_entitlementVerifiedAtKey, _now.millisecondsSinceEpoch);
     await _box.put(_entitlementSourceKey, source);
     return true;
+  }
+
+  DateTime? _resolvePurchaseExpiry({
+    required StorePurchaseUpdate purchase,
+    required DateTime? transactionDate,
+  }) {
+    final explicitExpiry =
+        purchase.expiresAt?.toUtc() ?? _extractExpiryFromRawDetails(purchase);
+    if (explicitExpiry != null) {
+      return explicitExpiry;
+    }
+    if (transactionDate == null) {
+      return null;
+    }
+    return transactionDate.add(_monthlyEntitlementDuration);
+  }
+
+  DateTime? _extractExpiryFromRawDetails(StorePurchaseUpdate purchase) {
+    final rawDetails = purchase.rawDetails;
+    if (rawDetails is! PurchaseDetails) {
+      return null;
+    }
+
+    return _extractExpiryFromStructuredPayload(
+          rawDetails.verificationData.localVerificationData,
+        ) ??
+        _extractExpiryFromStructuredPayload(
+          _decodeJwsPayload(rawDetails.verificationData.serverVerificationData),
+        );
+  }
+
+  DateTime? _extractExpiryFromStructuredPayload(String? payload) {
+    if (payload == null) {
+      return null;
+    }
+
+    final trimmed = payload.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+
+    try {
+      return _findExpiryDateInJson(jsonDecode(trimmed));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String? _decodeJwsPayload(String? rawValue) {
+    if (rawValue == null) {
+      return null;
+    }
+
+    final segments = rawValue.split('.');
+    if (segments.length < 2) {
+      return null;
+    }
+
+    try {
+      final normalized = base64Url.normalize(segments[1]);
+      return utf8.decode(base64Url.decode(normalized), allowMalformed: true);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  DateTime? _findExpiryDateInJson(
+    dynamic value, {
+    String? parentKey,
+  }) {
+    if (value is Map) {
+      for (final entry in value.entries) {
+        final key = entry.key.toString();
+        if (_isExpiryKey(key)) {
+          final parsed = _parseDateValue(entry.value);
+          if (parsed != null) {
+            return parsed;
+          }
+        }
+
+        final nested = _findExpiryDateInJson(entry.value, parentKey: key);
+        if (nested != null) {
+          return nested;
+        }
+      }
+      return null;
+    }
+
+    if (value is List) {
+      for (final item in value) {
+        final nested = _findExpiryDateInJson(item, parentKey: parentKey);
+        if (nested != null) {
+          return nested;
+        }
+      }
+      return null;
+    }
+
+    if (parentKey != null && _isExpiryKey(parentKey)) {
+      return _parseDateValue(value);
+    }
+
+    return null;
+  }
+
+  bool _isExpiryKey(String key) {
+    final normalized = key.toLowerCase();
+    return normalized.contains('expir') || normalized.contains('expire');
+  }
+
+  DateTime? _parseDateValue(dynamic value) {
+    if (value is int) {
+      return _dateFromEpochValue(value);
+    }
+
+    if (value is double) {
+      return _dateFromEpochValue(value.round());
+    }
+
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isEmpty) {
+        return null;
+      }
+
+      final numeric = int.tryParse(trimmed);
+      if (numeric != null) {
+        return _dateFromEpochValue(numeric);
+      }
+
+      final parsed = DateTime.tryParse(trimmed);
+      if (parsed != null) {
+        return parsed.toUtc();
+      }
+
+      final normalized =
+          trimmed.contains('T') ? trimmed : trimmed.replaceFirst(' ', 'T');
+      final normalizedParsed = DateTime.tryParse('${normalized}Z');
+      if (normalizedParsed != null) {
+        return normalizedParsed.toUtc();
+      }
+    }
+
+    return null;
+  }
+
+  DateTime _dateFromEpochValue(int rawValue) {
+    final millis = rawValue.abs() < 1000000000000
+        ? rawValue * Duration.millisecondsPerSecond
+        : rawValue;
+    return DateTime.fromMillisecondsSinceEpoch(millis, isUtc: true);
+  }
+
+  bool _shouldKeepExistingEntitlement({
+    required _SubscriptionEntitlement? existingEntitlement,
+    required DateTime candidateExpiresAt,
+    required DateTime candidateTransactionDate,
+  }) {
+    if (existingEntitlement == null || !existingEntitlement.isActiveAt(_now)) {
+      return false;
+    }
+
+    if (existingEntitlement.expiresAt.isAfter(candidateExpiresAt)) {
+      return true;
+    }
+
+    return existingEntitlement.expiresAt.isAtSameMomentAs(candidateExpiresAt) &&
+        existingEntitlement.transactionDate.isAfter(candidateTransactionDate);
   }
 
   _SubscriptionEntitlement? _readEntitlement() {

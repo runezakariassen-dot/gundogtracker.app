@@ -122,6 +122,9 @@ class Dog implements JsonEncodable {
   @HiveField(27)
   final DateTime? deletedAt;
 
+  @HiveField(28)
+  final String? memorialStory;
+
   static const Object _noValue = Object();
 
   Dog({
@@ -142,6 +145,7 @@ class Dog implements JsonEncodable {
     DogSex? sex,
     this.deceasedAt,
     this.memorialNote,
+    this.memorialStory,
     this.profileHeroTextAnchor = 'bottomLeft',
     this.profileHeroTextScale = 1.0,
     this.nickname,
@@ -182,6 +186,7 @@ class Dog implements JsonEncodable {
     bool? watermarkUseDarkText,
     Object? deceasedAt = _noValue,
     Object? memorialNote = _noValue,
+    Object? memorialStory = _noValue,
     String? profileHeroTextAnchor,
     double? profileHeroTextScale,
     String? cloudId,
@@ -194,6 +199,9 @@ class Dog implements JsonEncodable {
     final String? finalMemorialNote = identical(memorialNote, _noValue)
         ? this.memorialNote
         : memorialNote as String?;
+    final String? finalMemorialStory = identical(memorialStory, _noValue)
+        ? this.memorialStory
+        : memorialStory as String?;
     final DateTime? finalDeletedAt = identical(deletedAt, _noValue)
         ? this.deletedAt
         : deletedAt as DateTime?;
@@ -222,6 +230,7 @@ class Dog implements JsonEncodable {
       watermarkUseDarkText: watermarkUseDarkText ?? this.watermarkUseDarkText,
       deceasedAt: finalDeceasedAt,
       memorialNote: finalMemorialNote,
+      memorialStory: finalMemorialStory,
       profileHeroTextAnchor:
           profileHeroTextAnchor ?? this.profileHeroTextAnchor,
       profileHeroTextScale: profileHeroTextScale ?? this.profileHeroTextScale,
@@ -258,6 +267,7 @@ class Dog implements JsonEncodable {
       'sex': sex.name,
       'deceasedAt': deceasedAt?.toIso8601String(),
       'memorialNote': memorialNote,
+      'memorialStory': memorialStory,
       'profileHeroTextAnchor': profileHeroTextAnchor,
       'profileHeroTextScale': profileHeroTextScale,
       'nickname': nickname,

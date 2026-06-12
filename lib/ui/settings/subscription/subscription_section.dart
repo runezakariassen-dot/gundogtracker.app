@@ -303,7 +303,6 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
     return ValueListenableBuilder<SubscriptionViewData>(
       valueListenable: _service.state,
       builder: (context, viewData, _) {
-        final theme = Theme.of(context);
         final productTitle = viewData.productTitle?.trim().isNotEmpty == true
             ? viewData.productTitle!.trim()
             : l10n.subscription_product_title;
@@ -312,97 +311,304 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
             : l10n.subscription_price_unavailable;
         final isProductUnavailable = _isProductUnavailable(viewData);
 
-        return Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(
-              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
+        if (viewData.isPro) {
+          return _ActiveSubscriptionCard(
+            title: l10n.subscription_active_compact_title,
+            statusText:
+                '${l10n.subscription_status_label}: ${_statusText(viewData)}',
+            benefitText: l10n.subscription_benefit_unlimited_dogs,
+            isLoading: _loading,
+            working: _working,
+            onRestore: (_working || _loading) ? null : _restore,
+            onManage: _openManage,
+          );
+        }
+
+        return _UpgradeSubscriptionCard(
+          title: l10n.subscription_title,
+          description: l10n.subscription_description,
+          productTitle: productTitle,
+          statusText:
+              '${l10n.subscription_status_label}: ${_statusText(viewData)}',
+          priceText: priceText,
+          isLoading: _loading,
+          working: _working,
+          unavailableMessage:
+              isProductUnavailable ? _unavailableProductMessage(l10n) : null,
+          unlimitedDogsText: l10n.subscription_benefit_unlimited_dogs,
+          unlimitedSessionsText: l10n.subscription_benefit_unlimited_sessions,
+          purchaseButtonLabel: _purchaseButtonLabel(l10n, viewData),
+          restoreButtonLabel: l10n.subscription_restore_button,
+          manageButtonLabel: l10n.subscription_manage_button,
+          onPurchase: _purchase,
+          onRestore: (_working || _loading) ? null : _restore,
+          onManage: _openManage,
+        );
+      },
+    );
+  }
+}
+
+class _UpgradeSubscriptionCard extends StatelessWidget {
+  const _UpgradeSubscriptionCard({
+    required this.title,
+    required this.description,
+    required this.productTitle,
+    required this.statusText,
+    required this.priceText,
+    required this.isLoading,
+    required this.working,
+    required this.unavailableMessage,
+    required this.unlimitedDogsText,
+    required this.unlimitedSessionsText,
+    required this.purchaseButtonLabel,
+    required this.restoreButtonLabel,
+    required this.manageButtonLabel,
+    required this.onPurchase,
+    required this.onRestore,
+    required this.onManage,
+  });
+
+  final String title;
+  final String description;
+  final String productTitle;
+  final String statusText;
+  final String priceText;
+  final bool isLoading;
+  final bool working;
+  final String? unavailableMessage;
+  final String unlimitedDogsText;
+  final String unlimitedSessionsText;
+  final String purchaseButtonLabel;
+  final String restoreButtonLabel;
+  final String manageButtonLabel;
+  final VoidCallback onPurchase;
+  final VoidCallback? onRestore;
+  final VoidCallback onManage;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.2,
+              ),
             ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+            const SizedBox(height: 4),
+            Text(
+              description,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 18),
+            _SubscriptionProductSummary(
+              productTitle: productTitle,
+              statusText: statusText,
+              priceText: priceText,
+              isLoading: isLoading,
+              unavailableMessage: unavailableMessage,
+            ),
+            const SizedBox(height: 18),
+            _BenefitRow(text: unlimitedDogsText),
+            const SizedBox(height: 7),
+            _BenefitRow(text: unlimitedSessionsText),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: onPurchase,
+                child: working
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(purchaseButtonLabel),
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: onRestore,
+                child: Text(restoreButtonLabel),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.center,
+              child: TextButton(
+                onPressed: onManage,
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  minimumSize: const Size(0, 34),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  manageButtonLabel,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ActiveSubscriptionCard extends StatelessWidget {
+  const _ActiveSubscriptionCard({
+    required this.title,
+    required this.statusText,
+    required this.benefitText,
+    required this.isLoading,
+    required this.working,
+    required this.onRestore,
+    required this.onManage,
+  });
+
+  final String title;
+  final String statusText;
+  final String benefitText;
+  final bool isLoading;
+  final bool working;
+  final VoidCallback? onRestore;
+  final VoidCallback onManage;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    return Card(
+      elevation: 0,
+      color: theme.colorScheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  l10n.subscription_title,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.2,
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.workspace_premium_rounded,
+                    color: theme.colorScheme.primary,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.subscription_description,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 18),
-                _SubscriptionProductSummary(
-                  productTitle: productTitle,
-                  statusText:
-                      '${l10n.subscription_status_label}: ${_statusText(viewData)}',
-                  priceText: priceText,
-                  isLoading: _loading,
-                  unavailableMessage: isProductUnavailable
-                      ? _unavailableProductMessage(l10n)
-                      : null,
-                ),
-                const SizedBox(height: 18),
-                _BenefitRow(text: l10n.subscription_benefit_unlimited_dogs),
-                const SizedBox(height: 7),
-                _BenefitRow(text: l10n.subscription_benefit_unlimited_sessions),
-                const SizedBox(height: 18),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: _purchase,
-                    child: _working
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(_purchaseButtonLabel(l10n, viewData)),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: (_working || _loading) ? null : _restore,
-                    child: Text(l10n.subscription_restore_button),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.center,
-                  child: TextButton(
-                    onPressed: _openManage,
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.1,
+                        ),
                       ),
-                      minimumSize: const Size(0, 34),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: Text(
-                      l10n.subscription_manage_button,
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
+                      const SizedBox(height: 4),
+                      Text(
+                        benefitText,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
+                      const SizedBox(height: 6),
+                      Text(
+                        statusText,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isLoading || working)
+                  const Padding(
+                    padding: EdgeInsets.only(left: 12, top: 4),
+                    child: SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 4,
+              runSpacing: 4,
+              children: [
+                TextButton(
+                  onPressed: onRestore,
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(0, 36),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    l10n.subscription_restore_button,
+                  ),
+                ),
+                TextButton(
+                  onPressed: onManage,
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(0, 36),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    l10n.subscription_manage_button,
                   ),
                 ),
               ],
             ),
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 }

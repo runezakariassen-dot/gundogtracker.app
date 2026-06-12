@@ -101,6 +101,9 @@
   "stats_period_weekly": "Ukentlig",
   "stats_period_monthly": "Månedlig",
   "stats_no_sessions_registered": "Ingen økter registrert enda",
+  "stats_no_sessions_empty_body": "Registrer din første økt for å se trender og statistikk over tid.",
+  "stats_no_sessions_empty_cta": "Start en økt",
+  "statistics_no_dogs_body": "Legg til en hund for å se statistikk her.",
   "stats_filter_all_dogs": "Alle hunder",
   "stats_filter_dynamic_period": "Dynamisk periode",
   "stats_trendline_title": "Trendlinje",
@@ -165,6 +168,12 @@
   "dog_editor_deleting": "Sletter…",
   "dog_editor_delete_dog_title": "Slett hund",
   "dog_editor_delete_dog_body": "Vil du slette hunden? Dette kan ikke angres.",
+  "dog_editor_remove_shared_dog": "Fjern fra mine hunder",
+  "dog_editor_removing_shared_dog": "Fjerner…",
+  "dog_editor_remove_shared_dog_title": "Fjern fra mine hunder",
+  "dog_editor_remove_shared_dog_body": "Vil du fjerne denne delte hunden fra din liste?",
+  "dog_editor_remove_shared_dog_explanation": "Hunden fjernes bare for deg. Eier og andre delte brukere beholder tilgang.",
+  "dog_editor_remove_shared_dog_confirm": "Fjern",
   "dog_editor_discard_changes_title": "Forkast endringer?",
   "dog_editor_discard_changes_body": "Endringene er ikke lagret ennå.",
   "dog_editor_discard_changes_confirm": "Forkast",
@@ -205,6 +214,8 @@
   "dog_editor_section_lifecycle_title": "Livsløp",
   "dog_editor_death_date_label": "Dødsdato",
   "dog_editor_death_date_picker_hint": "Velg dato",
+  "dog_memorial_story_label": "Historie / minne",
+  "dog_memorial_story_hint": "Skriv lengre tekst om hunden, jaktminner, premier eller personlighet",
   "dog_detail_snackbar_invite_accepted": "Invitasjon akseptert",
   "dog_detail_snackbar_invite_declined": "Invitasjon avvist",
   "dog_detail_snackbar_invite_sent": "Invitasjon sendt",
@@ -248,13 +259,35 @@
       "role": {}
     }
   },
+  "invitation_summary_with_sender_and_dog": "{sender} inviterte deg til {dogName}.",
+  "@invitation_summary_with_sender_and_dog": {
+    "description": "Invitasjonstekst som viser avsender og hund.",
+    "placeholders": {
+      "sender": {},
+      "dogName": {}
+    }
+  },
+  "invitation_summary_with_dog": "Du er invitert til {dogName}.",
+  "@invitation_summary_with_dog": {
+    "description": "Invitasjonstekst som viser hund når avsender mangler.",
+    "placeholders": {
+      "dogName": {}
+    }
+  },
+  "invitation_summary_generic": "Du har fått en hundeinvitasjon.",
   "invite_accept": "Aksepter",
   "invite_decline": "Avslå",
   "dog_share_section_title": "Delt med",
   "dog_detail_access_section_title": "Tilgang til denne hunden",
+  "dog_detail_member_action_change_role": "Endre rolle",
   "dog_detail_member_action_set_reader": "Sett som leser",
   "dog_detail_member_action_set_user": "Sett som bruker",
   "dog_detail_member_action_remove_access": "Fjern tilgang",
+  "dog_detail_role_dialog_title": "Rediger rolle",
+  "dog_detail_role_dialog_label": "Rolle",
+  "dog_detail_role_confirm_admin_title": "Gi administratorrolle?",
+  "dog_detail_role_confirm_admin_message":
+      "Administrator kan administrere tilgang for denne hunden.",
   "share_role_owner": "Eier",
   "share_role_admin": "Administrator",
   "share_role_user": "Bruker",
@@ -284,6 +317,15 @@
   "share_error_already_invited": "Denne e-postadressen er allerede invitert.",
   "share_error_invalid_role": "Ugyldig rolle.",
   "share_error_invalid_email": "Ugyldig e-postadresse.",
+  "membership_role_error_not_authorized":
+      "Du har ikke rettighet til å endre denne rollen.",
+  "membership_role_error_membership_not_found": "Fant ikke medlemmet.",
+  "membership_role_error_cannot_edit_self":
+      "Du kan ikke endre din egen rolle.",
+  "membership_role_error_owner_locked":
+      "Eierrolle kan bare endres via eierskapsoverføring.",
+  "membership_role_error_cannot_promote_to_admin":
+      "Administrator kan ikke endre eller tildele administratorrolle.",
   "share_error_dog_not_found_title": "Hund ikke funnet",
   "share_error_dog_not_found_detail": "Fant ingen hund for denne koden.",
   "transfer_error_not_owner": "Kun eier kan avslå forespørselen.",
@@ -378,6 +420,34 @@
   },
   "dog_detail_next_milestones_title": "Neste milepæler",
   "dog_detail_next_milestone_title": "Neste milepæl",
+  "dog_heat_cycle_section_title": "Løpetid",
+  "dog_heat_cycle_add_button": "Legg til løpetid",
+  "dog_heat_cycle_add_title": "Ny løpetid",
+  "dog_heat_cycle_edit_title": "Rediger løpetid",
+  "dog_heat_cycle_start_date_label": "Startdato",
+  "dog_heat_cycle_end_date_label": "Sluttdato (valgfritt)",
+  "dog_heat_cycle_end_not_set": "Ikke satt",
+  "dog_heat_cycle_note_label": "Notat (valgfritt)",
+  "dog_heat_cycle_note_hint": "Skriv notat",
+  "dog_heat_cycle_empty": "Ingen løpetid registrert ennå.",
+  "dog_heat_cycle_period_value": "{start} - {end}",
+  "@dog_heat_cycle_period_value": {
+    "placeholders": {
+      "start": {},
+      "end": {}
+    }
+  },
+  "dog_heat_cycle_edit_button": "Rediger",
+  "dog_heat_cycle_delete_button": "Slett",
+  "dog_heat_cycle_delete_title": "Slett løpetid",
+  "dog_heat_cycle_delete_body": "Vil du slette denne løpetiden?",
+  "dog_heat_cycle_info_title": "Info om løpetid",
+  "dog_heat_cycle_info_line_1": "Løpetid hos tisper kommer ofte ca. 1-2 ganger i året, men varierer mellom individer.",
+  "dog_heat_cycle_info_line_2": "Varighet er ofte rundt 2-3 uker, men kan variere.",
+  "dog_heat_cycle_info_line_3": "Under løpetid kan tispa være mer ukonsentrert, endre adferd eller prestere annerledes på trening/jakt.",
+  "dog_heat_cycle_info_line_4": "Vær ekstra oppmerksom rundt andre hunder.",
+  "dog_heat_cycle_info_line_5": "Tilpass trening etter hundens form og adferd.",
+  "dog_heat_cycle_info_line_6": "Kontakt veterinær ved unormal blødning, smerter, sykdomstegn eller bekymring.",
   "milestone_first_session_title": "Første økt gjennomført",
   "milestone_first_session_subtitle": "Første økt med {dogName}",
   "@milestone_first_session_subtitle": {
@@ -473,12 +543,29 @@
   "home_first_session_title": "Klar for første økt?",
   "home_first_session_body": "Du har hunden på plass. Neste steg er å logge en økt, så bygger du historikk og statistikk fra start.",
   "home_empty_offline_note": "Du kan bruke appen helt offline. All data lagres lokalt på telefonen din.",
+  "home_dashboard_goal_title": "Personlig mål",
+  "home_dashboard_goal_prompt": "Sett et personlig mål i Innstillinger for å følge standprogresjonen din.",
+  "home_dashboard_latest_session_title": "Siste økt",
+  "home_dashboard_latest_session_empty": "Ingen økter registrert ennå.",
+  "home_dashboard_latest_session_unknown_dog": "Ukjent hund",
+  "home_dashboard_quick_action_title": "Rask handling",
+  "home_dashboard_quick_action_body": "Klar for neste økt? Start loggingen med ett trykk.",
   "@home_empty_offline_note": {
     "description": "Tekst som forklarer at appen fungerer uten nett."
   },
   "home_visible_empty_title": "Ingen hunder tilgjengelig",
   "home_visible_empty_body": "Du har ingen hunder knyttet til denne kontoen. Sjekk invitasjoner eller be noen dele en hund med deg.",
   "home_visible_empty_button": "Åpne invitasjoner",
+  "home_pendingInvitationsTitle": "{count, plural, =1{Du har en hundeinvitasjon} other{Du har {count} hundeinvitasjoner}}",
+  "@home_pendingInvitationsTitle": {
+    "description": "Bannertekst på hovedsiden når brukeren har ventende hundeinvitasjoner.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "home_pendingInvitationsButton": "Se invitasjon",
   "home_noDogsRegistered": "Ingen hunder registrert",
   "home_primaryActionSubtitle": "Notater først. Tellere med + i felt.",
   "home_top10_points_title": "Topp 10 stander",
@@ -655,6 +742,7 @@
   "active_session_hunt_events_title": "Jakthendelser +1",
   "active_session_action_stand_plus1": "Stand +1",
   "active_session_action_secondary_plus1": "Sekundering +1",
+  "active_session_action_tomstand_plus1": "Tomstand +1",
   "active_session_action_flush_plus1": "Støkk +1",
   "active_session_action_bird_plus1": "Fugl +1",
   "active_session_action_undo": "Angre",
@@ -686,6 +774,13 @@
   "session_detail_meta_secondary_points": "Sekundering: {count}",
   "@session_detail_meta_secondary_points": {
     "description": "Label for the secondary points chip in session detail.",
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "session_detail_meta_tomstand": "Tomstand: {count}",
+  "@session_detail_meta_tomstand": {
+    "description": "Label for the tomstand chip in session detail.",
     "placeholders": {
       "count": {}
     }
@@ -856,7 +951,7 @@
       }
     }
   },
-  "session_detail_stats_total_secondary_points":
+    "session_detail_stats_total_secondary_points":
       "Sekundering totalt: {count}",
   "@session_detail_stats_total_secondary_points": {
     "placeholders": {
@@ -952,6 +1047,10 @@
   "session_detail_session_menu_exporting": "Eksporterer…",
   "session_detail_session_menu_edit": "Rediger økt",
   "session_detail_session_menu_delete": "Slett økt",
+  "session_detail_confirm_delete_title": "Slett økt?",
+  "session_detail_confirm_delete_body": "Denne handlingen kan ikke angres.",
+  "session_detail_media_delete_title": "Slett vedlegg?",
+  "session_detail_media_delete_body": "Vedlegget fjernes permanent fra økten.",
   "session_detail_detail_title": "Detaljer",
   "session_detail_detail_label_date": "Dato",
   "session_detail_detail_label_location": "Sted",
@@ -1047,6 +1146,7 @@
   "session_species_picker_empty": "Ingen arter tilgjengelig",
   "session_media_section_title": "Media",
   "session_media_add_photo_video": "Legg til bilde/video",
+  "session_media_importing": "Importerer media ...",
   "session_media_gallery_label": "Bilde fra galleri",
   "session_media_camera_label": "Ta bilde",
   "session_media_video_label": "Video fra galleri",
@@ -1251,6 +1351,69 @@
   "gpx_export_label": "Eksporter GPX",
   "gpx_exporting_ellipsis": "Eksporterer…",
   "settings_title": "Innstillinger",
+  "settings_section_profile": "Profil",
+  "settings_profile_name_label": "Navn",
+  "settings_profile_phone_label": "Telefonnummer",
+  "settings_profile_email_label": "E-postadresse",
+  "settings_profile_email_invalid": "Skriv en gyldig e-postadresse",
+  "settings_profile_personal_goal_stands_label": "Personlig mål for stander",
+  "settings_profile_personal_goal_section_title": "Fremdrift",
+  "settings_profile_personal_goal_prompt": "{count} stander registrert totalt. Sett et personlig mål for å følge fremdriften.",
+  "@settings_profile_personal_goal_prompt": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "settings_profile_personal_goal_progress": "{current} / {goal} stander",
+  "@settings_profile_personal_goal_progress": {
+    "placeholders": {
+      "current": {},
+      "goal": {}
+    }
+  },
+  "settings_profile_personal_goal_percent": "{percent}% fullført",
+  "@settings_profile_personal_goal_percent": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
+  "settings_profile_personal_goal_celebration_generic": "Gratulerer! Du har nådd ditt mål 🎉",
+  "settings_profile_personal_goal_celebration_named": "Gratulerer {name}! Du har nådd ditt mål 🎉",
+  "@settings_profile_personal_goal_celebration_named": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "settings_profile_birthday_greeting_and": "og",
+  "settings_profile_birthday_greeting_generic": "Gratulerer med dagen 🎉",
+  "settings_profile_birthday_greeting_named": "Gratulerer med dagen, {name}! 🎉",
+  "@settings_profile_birthday_greeting_named": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "settings_profile_birthday_greeting_dogs_generic": "Gratulerer med dagen! Hilsen {dogs} 🎉",
+  "@settings_profile_birthday_greeting_dogs_generic": {
+    "placeholders": {
+      "dogs": {}
+    }
+  },
+  "settings_profile_birthday_greeting_dogs_named": "Gratulerer med dagen, {name}! Hilsen {dogs} 🎉",
+  "@settings_profile_birthday_greeting_dogs_named": {
+    "placeholders": {
+      "name": {},
+      "dogs": {}
+    }
+  },
+  "settings_notification_birthday_title": "Gratulerer med dagen!",
+  "settings_notification_birthday_body": "Vi ønsker deg en fantastisk dag 🎉",
+  "settings_notification_goal_title": "Du har nådd målet ditt!",
+  "settings_notification_goal_body": "Sterkt jobbet - fortsett det gode arbeidet 🎯",
+  "settings_profile_birth_date_label": "Fødselsdato / bursdag",
+  "settings_profile_birth_date_empty": "Ikke satt",
+  "settings_profile_birth_date_clear": "Fjern dato",
+  "settings_profile_saved": "Profil lagret",
+  "settings_profile_saving": "Lagrer profil…",
   "settings_section_general": "Generelt",
   "settings_section_milestones": "Milepæler",
   "invitations_title": "Invitasjoner",
@@ -1624,7 +1787,8 @@
   },
   "subscription_title": "Abonnement",
   "subscription_status_label": "Status",
-  "subscription_status_active": "Aktivt",
+  "subscription_status_active": "Pro aktiv",
+  "subscription_active_compact_title": "GundogTracker Pro aktiv",
   "subscription_status_inactive": "Ikke aktivt",
   "subscription_status_unknown": "Ukjent",
   "subscription_product_title": "Fuglehund Pro",
@@ -1863,5 +2027,45 @@
     }
   },
   "advanced_statistics_generate_readable_text_report": "Generer en lesbar tekst-rapport med alle statistikker.",
-  "advanced_statistics_generate_text_report_description": "Generer en tekst-sammendrag av alle statistikker."
+  "advanced_statistics_generate_text_report_description": "Generer en tekst-sammendrag av alle statistikker.",
+  "session_field_session_button": "Start feltøkt",
+  "@session_field_session_button": {
+    "description": "Button label for starting a field session (auto-start)."
+  },
+  "session_field_session_help": "For logging mens du er ute med hunden",
+  "@session_field_session_help": {
+    "description": "Help text explaining field session is for logging while out with the dog."
+  },
+  "session_manual_registration_button": "Registrer økt manuelt",
+  "@session_manual_registration_button": {
+    "description": "Button label for manual session registration."
+  },
+  "session_options_info_tooltip": "Hva betyr valgene?",
+  "@session_options_info_tooltip": {
+    "description": "Tooltip for the info button that explains session start options."
+  },
+  "session_options_info_title": "Hva betyr valgene?",
+  "@session_options_info_title": {
+    "description": "Title in the info dialog that explains session start options."
+  },
+  "session_options_info_field_body": "Brukes når du er ute med hunden og vil starte logging med en gang.",
+  "@session_options_info_field_body": {
+    "description": "Explanation text for starting a field session immediately."
+  },
+  "session_options_info_manual_body": "Brukes når du vil legge inn en tidligere trening, jakt eller prøve.",
+  "@session_options_info_manual_body": {
+    "description": "Explanation text for manual session registration."
+  },
+  "settings_section_account": "Konto",
+  "@settings_section_account": {
+    "description": "Section title for account information."
+  },
+  "settings_signed_in_as": "Innlogget som",
+  "@settings_signed_in_as": {
+    "description": "Label for showing which account is currently signed in."
+  },
+  "settings_not_signed_in": "Ikke innlogget",
+  "@settings_not_signed_in": {
+    "description": "Message shown when no user is currently signed in."
+  }
 }

@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:jakthund_app/domain/milestones/milestone_catalog.dart';
 import 'package:jakthund_app/domain/milestones/milestone_id.dart';
 import 'package:jakthund_app/domain/services/dog_milestone_display_service.dart';
+import 'package:jakthund_app/models/dog_sex.dart';
 import 'package:jakthund_app/ui/milestones/milestone_list_section.dart';
 
 import '../test_app.dart';
@@ -41,6 +42,14 @@ bool _anyTextMatches(WidgetTester tester, RegExp pattern) {
 
 bool _anyTextContains(WidgetTester tester, String needle) {
   return _allTextStrings(tester).any((t) => t.contains(needle));
+}
+
+String _findAchievementSentence(WidgetTester tester, {required String dogName}) {
+  final rendered = _allTextStrings(tester);
+  return rendered.firstWhere(
+    (text) => text.toLowerCase().contains('$dogName oppnådde'.toLowerCase()),
+    orElse: () => '',
+  );
 }
 
 void main() {
@@ -116,6 +125,7 @@ void main() {
       child: MilestoneListSection(
         milestones: displays,
         dogBirthDate: DateTime(2023, 6, 1),
+        dogSex: DogSex.female,
       ),
     );
 
@@ -152,5 +162,145 @@ void main() {
     // Guardrails mot gamle/alternative formuleringer (disse må IKKE dukke opp)
     expect(find.text('Alder: 7 mnd'), findsNothing);
     expect(find.text('Oppnådd 7 mnd'), findsNothing);
+  });
+
+  testWidgets('first stand explanation separates date and age (NB)',
+      (tester) async {
+    final displays = [
+      DogMilestoneDisplay(
+        id: MilestoneId.stands1,
+        def: milestoneDefById(MilestoneId.stands1)!,
+        achievedAt: DateTime(2026, 4, 28),
+      ),
+    ];
+
+    await pumpApp(
+      tester,
+      child: MilestoneListSection(
+        milestones: displays,
+        dogName: 'Fjell',
+        dogBirthDate: DateTime(2024, 5, 7),
+        dogSex: DogSex.female,
+      ),
+    );
+
+    final explanation = _findAchievementSentence(tester, dogName: 'Fjell');
+
+    expect(
+      explanation,
+      'Fjell oppnådde \'Første stand\' 28.4.2026 da hun var 1 år 11 mnd og 21 dager gammel.',
+    );
+  });
+
+  testWidgets('first session explanation separates date and age (NB)',
+      (tester) async {
+    final displays = [
+      DogMilestoneDisplay(
+        id: MilestoneId.sessions1,
+        def: milestoneDefById(MilestoneId.sessions1)!,
+        achievedAt: DateTime(2026, 4, 28),
+      ),
+    ];
+
+    await pumpApp(
+      tester,
+      child: MilestoneListSection(
+        milestones: displays,
+        dogName: 'Fjell',
+        dogBirthDate: DateTime(2024, 5, 7),
+        dogSex: DogSex.male,
+      ),
+    );
+
+    final explanation = _findAchievementSentence(tester, dogName: 'Fjell');
+
+    expect(
+      explanation,
+      'Fjell oppnådde \'Første økt gjennomført\' 28.4.2026 da han var 1 år 11 mnd og 21 dager gammel.',
+    );
+  });
+
+  testWidgets('no rendered milestone explanation has collapsed date+age (NB)',
+      (tester) async {
+    final displays = [
+      DogMilestoneDisplay(
+        id: MilestoneId.stands1,
+        def: milestoneDefById(MilestoneId.stands1)!,
+        achievedAt: DateTime(2026, 4, 28),
+      ),
+      DogMilestoneDisplay(
+        id: MilestoneId.sessions1,
+        def: milestoneDefById(MilestoneId.sessions1)!,
+        achievedAt: DateTime(2026, 4, 28),
+      ),
+    ];
+
+    await pumpApp(
+      tester,
+      child: MilestoneListSection(
+        milestones: displays,
+        dogName: 'Fjell',
+        dogBirthDate: DateTime(2024, 5, 7),
+        dogSex: DogSex.female,
+      ),
+    );
+
+    final collapsedPattern =
+        RegExp(r'\b\d{1,2}\.\d{1,2}\.\d{4}\d+\s*(år|mnd|dag)');
+    for (final text in _allTextStrings(tester)) {
+      expect(
+        collapsedPattern.hasMatch(text),
+        isFalse,
+        reason: 'Collapsed date+age found in text: $text',
+      );
+    }
+  });
+
+  testWidgets('renders sentence without age when birth date is missing',
+      (tester) async {
+    final displays = [
+      DogMilestoneDisplay(
+        id: MilestoneId.stands1,
+        def: milestoneDefById(MilestoneId.stands1)!,
+        achievedAt: DateTime(2026, 4, 1),
+      ),
+    ];
+
+    await pumpApp(
+      tester,
+      child: MilestoneListSection(
+        milestones: displays,
+        dogName: 'Luna',
+      ),
+    );
+
+    final explanation = _findAchievementSentence(tester, dogName: 'Luna');
+    expect(explanation, 'Luna oppnådde \'Første stand\' 1.4.2026.');
+  });
+
+  testWidgets('renders neutral sentence when age exists but sex is unknown',
+      (tester) async {
+    final displays = [
+      DogMilestoneDisplay(
+        id: MilestoneId.stands1,
+        def: milestoneDefById(MilestoneId.stands1)!,
+        achievedAt: DateTime(2026, 4, 1),
+      ),
+    ];
+
+    await pumpApp(
+      tester,
+      child: MilestoneListSection(
+        milestones: displays,
+        dogName: 'Luna',
+        dogBirthDate: DateTime(2025, 9, 29),
+      ),
+    );
+
+    final explanation = _findAchievementSentence(tester, dogName: 'Luna');
+    expect(
+      explanation,
+      'Luna oppnådde \'Første stand\' 1.4.2026 da den var 6 mnd og 3 dager gammel.',
+    );
   });
 }
