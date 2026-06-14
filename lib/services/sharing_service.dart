@@ -28,6 +28,7 @@ typedef CloudShareMembershipWriter = Future<bool> Function({
   required ShareInvitation invite,
   required DogMembership membership,
 });
+typedef CloudShareInviteWriter = Future<void> Function(ShareInvitation invite);
 typedef RestoreAccessibleDogs = Future<int> Function();
 typedef PullAllVisibleData = Future<void> Function();
 
@@ -42,6 +43,7 @@ class SharingService {
     AuthUserEmailProvider? currentAuthUserEmailProvider,
     AuthUserDisplayNameProvider? currentAuthUserDisplayNameProvider,
     FirestoreShareInvitationSyncService? cloudInviteSyncService,
+    CloudShareInviteWriter? cloudShareInviteWriter,
     CloudShareMembershipWriter? cloudShareMembershipWriter,
     RestoreAccessibleDogs? restoreAccessibleDogs,
     PullAllVisibleData? pullAllVisibleData,
@@ -61,6 +63,7 @@ class SharingService {
                 _defaultCurrentAuthUserDisplayNameProvider,
         _cloudInviteSyncService = cloudInviteSyncService ??
             FirestoreShareInvitationSyncService.instance,
+        _cloudShareInviteWriter = cloudShareInviteWriter,
         _cloudShareMembershipWriter = cloudShareMembershipWriter ??
             FirestoreDogSyncService
                 .instance.upsertShareInviteMembershipBestEffort,
@@ -78,6 +81,7 @@ class SharingService {
   final AuthUserEmailProvider _currentAuthUserEmailProvider;
   final AuthUserDisplayNameProvider _currentAuthUserDisplayNameProvider;
   final FirestoreShareInvitationSyncService _cloudInviteSyncService;
+  final CloudShareInviteWriter? _cloudShareInviteWriter;
   final CloudShareMembershipWriter _cloudShareMembershipWriter;
   final RestoreAccessibleDogs _restoreAccessibleDogs;
   final PullAllVisibleData _pullAllVisibleData;
@@ -448,7 +452,9 @@ class SharingService {
 
   Future<void> _upsertInviteEverywhere(ShareInvitation invite) async {
     await _inviteRepository.upsertInvite(invite);
-    await _cloudInviteSyncService.upsertInviteBestEffort(invite);
+    final cloudShareInviteWriter = _cloudShareInviteWriter ??
+        _cloudInviteSyncService.upsertInviteBestEffort;
+    await cloudShareInviteWriter(invite);
   }
 
   Future<void> _rehydrateAcceptedInvite({

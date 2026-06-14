@@ -229,6 +229,75 @@ void main() {
     expect(invite.dogName, 'Kompis');
   });
 
+  test('create invite normalizes recipient email for receiver cloud query',
+      () async {
+    await initDomainLayer();
+    final identity = UserIdentityService();
+    await identity.setCurrentUserId('owner');
+
+    final dog = await DomainDi.dogService(identityService: identity).createDog(
+      regNrInput: 'NO129/45',
+      name: 'Frikk',
+    );
+
+    ShareInvitation? cloudInvite;
+    final sharing = SharingService(
+      identityService: identity,
+      inviteRepository: DomainDi.inviteRepository(),
+      membershipRepository: DomainDi.membershipRepository(),
+      dogRepository: DomainDi.dogRepository(),
+      cloudShareInviteWriter: (invite) async {
+        cloudInvite = invite;
+      },
+    );
+
+    final invite = await sharing.createShareInvite(
+      dogKey: dog.dogKey,
+      recipientEmail: '  Member@Example.COM  ',
+    );
+    final storedInvite = shareInvitesBox().get(invite.inviteId);
+
+    expect(invite.recipientEmail, 'member@example.com');
+    expect(storedInvite?.recipientEmail, 'member@example.com');
+    expect(cloudInvite?.recipientEmail, 'member@example.com');
+    expect(cloudInvite?.inviteId, invite.inviteId);
+    expect(cloudInvite?.status, Status.pending);
+  });
+
+  test('create invite calls cloud invite writer with persisted invite',
+      () async {
+    await initDomainLayer();
+    final identity = UserIdentityService();
+    await identity.setCurrentUserId('owner');
+
+    final dog = await DomainDi.dogService(identityService: identity).createDog(
+      regNrInput: 'NO130/45',
+      name: 'Storm',
+    );
+
+    final cloudWrites = <ShareInvitation>[];
+    final sharing = SharingService(
+      identityService: identity,
+      inviteRepository: DomainDi.inviteRepository(),
+      membershipRepository: DomainDi.membershipRepository(),
+      dogRepository: DomainDi.dogRepository(),
+      cloudShareInviteWriter: (invite) async {
+        cloudWrites.add(invite);
+      },
+    );
+
+    final invite = await sharing.createShareInvite(
+      dogKey: dog.dogKey,
+      recipientEmail: 'friend@example.com',
+    );
+
+    expect(cloudWrites, hasLength(1));
+    expect(cloudWrites.single.inviteId, invite.inviteId);
+    expect(cloudWrites.single.dogKey, dog.dogKey);
+    expect(cloudWrites.single.recipientEmail, 'friend@example.com');
+    expect(shareInvitesBox().containsKey(invite.inviteId), isTrue);
+  });
+
   test('non-owner cannot create invite', () async {
     await initDomainLayer();
     final identity = UserIdentityService();
@@ -276,6 +345,42 @@ void main() {
     expect(membership.role, Role.editor);
     expect(membership.status, Status.active);
     expect(membership.userId, 'member');
+  });
+
+  test('accept creates active local membership that makes local dog visible',
+      () async {
+    await initDomainLayer();
+    final identity = UserIdentityService();
+    await identity.setCurrentUserId('owner');
+
+    final dog = await DomainDi.dogService(identityService: identity).createDog(
+      regNrInput: 'NO131/45',
+      name: 'Kvikk',
+    );
+
+    final sharing = DomainDi.sharingService(identityService: identity);
+    final invite = await sharing.createShareInvite(
+      dogKey: dog.dogKey,
+      recipientEmail: 'member@example.com',
+    );
+
+    await identity.setCurrentUserId('member');
+    final membership = await sharing.acceptShareInvite(token: invite.token);
+    final storedMembership =
+        await DomainDi.membershipRepository().getMembership(
+      dog.dogKey,
+      'member',
+    );
+    final visibleDogs = filterVisibleDogs(
+      dogs: dogsBox().values,
+      memberships: dogMembershipsBox().values,
+      currentUserId: 'member',
+    );
+
+    expect(membership.status, Status.active);
+    expect(storedMembership?.status, Status.active);
+    expect(storedMembership?.userId, 'member');
+    expect(visibleDogs.map((dog) => dog.dogKey), contains(dog.dogKey));
   });
 
   test('multiple users can accept invites for the same dog', () async {
