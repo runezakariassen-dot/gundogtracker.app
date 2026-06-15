@@ -35,21 +35,25 @@ import 'package:jakthund_app/ui/home/widgets/active_session_restore_banner.dart'
 import 'package:jakthund_app/ui/home/widgets/top10_points_card.dart';
 import '../../utils/dog_image_path_resolver.dart';
 
+typedef PendingInvitePuller = Future<int> Function();
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
     this.currentUserIdOverride,
     this.currentUserEmailOverride,
+    this.pendingInvitePuller,
   });
 
   final String? currentUserIdOverride;
   final String? currentUserEmailOverride;
+  final PendingInvitePuller? pendingInvitePuller;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   late final Box<Dog> _dogsBox;
   late final Box<HuntSession> _sessionsBox;
   late final Box<DogMembership> _membershipBox;
@@ -64,6 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _dogsBox = HiveLifecycleService.getBox<Dog>(dogsBoxName);
     _sessionsBox = HiveLifecycleService.getBox<HuntSession>(sessionsBoxName);
     _membershipBox =
@@ -72,11 +77,19 @@ class _HomeScreenState extends State<HomeScreen> {
         HiveLifecycleService.getBox<ShareInvitation>(shareInvitesBoxName);
     _settingsBox = HiveLifecycleService.getBox<dynamic>(appSettingsBoxName);
     _draftRepository = LocalActiveSessionDraftRepository();
-    if (Firebase.apps.isNotEmpty) {
-      unawaited(
-        FirestoreShareInvitationSyncService.instance
-            .pullPendingInvitesForCurrentUserIntoLocalBox(),
-      );
+    _triggerPendingInvitePull(reason: 'home_init');
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _triggerPendingInvitePull(reason: 'app_resumed');
     }
   }
 
@@ -306,6 +319,33 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
       MaterialPageRoute(builder: (_) => const InvitationsPage()),
     );
+  }
+
+  void _triggerPendingInvitePull({required String reason}) {
+    if (widget.pendingInvitePuller == null && Firebase.apps.isEmpty) {
+      debugPrint(
+        '[CLOUD][INVITE] skip home pull reason=$reason firebaseInitialized=false',
+      );
+      return;
+    }
+
+    unawaited(_pullPendingInvites(reason: reason));
+  }
+
+  Future<void> _pullPendingInvites({required String reason}) async {
+    final puller = widget.pendingInvitePuller ??
+        FirestoreShareInvitationSyncService
+            .instance.pullPendingInvitesForCurrentUserIntoLocalBox;
+    try {
+      final upserted = await puller();
+      debugPrint(
+        '[CLOUD][INVITE] home pull complete reason=$reason upserted=$upserted',
+      );
+    } catch (error, stackTrace) {
+      debugPrint(
+          '[CLOUD][INVITE] home pull failed reason=$reason error=$error');
+      debugPrint(stackTrace.toString());
+    }
   }
 
   int _pendingInviteCount(
