@@ -24,7 +24,8 @@ class DogHeatCycleLog {
     return DogHeatCycleLog(
       dogId: dogId,
       startDate: startDate ?? this.startDate,
-      endDate: identical(endDate, _noValue) ? this.endDate : endDate as DateTime?,
+      endDate:
+          identical(endDate, _noValue) ? this.endDate : endDate as DateTime?,
       note: identical(note, _noValue) ? this.note : note as String?,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -48,7 +49,10 @@ class DogHeatCycleLog {
     final createdAt = _readDate(json['createdAt']);
     final updatedAt = _readDate(json['updatedAt']);
 
-    if (dogId == null || startDate == null || createdAt == null || updatedAt == null) {
+    if (dogId == null ||
+        startDate == null ||
+        createdAt == null ||
+        updatedAt == null) {
       return null;
     }
 

@@ -45,7 +45,8 @@ class SettingsRepository {
   }
 
   Future<void> setLastCelebratedPersonalStandGoal(int? goal) async {
-    await _writePositiveInt(_profileKey(profileLastCelebratedStandGoalKey), goal);
+    await _writePositiveInt(
+        _profileKey(profileLastCelebratedStandGoalKey), goal);
   }
 
   DateTime? getLastBirthdayGreetingShownDate() {

@@ -15,7 +15,8 @@ class StatisticsExportService {
     List<Dog> dogs,
     List<HuntSession> allSessions,
   ) async {
-    final comparisonStats = AdvancedStatisticsService.calculateDogComparison(dogs, allSessions);
+    final comparisonStats =
+        AdvancedStatisticsService.calculateDogComparison(dogs, allSessions);
 
     final csvData = <List<String>>[];
 
@@ -132,7 +133,8 @@ class StatisticsExportService {
     buffer.writeln('=' * 50);
     buffer.writeln();
     buffer.writeln('Hund: ${stats.dogName}');
-    buffer.writeln('Rapport generert: ${DateTime.now().toIso8601String().split('T')[0]}');
+    buffer.writeln(
+        'Rapport generert: ${DateTime.now().toIso8601String().split('T')[0]}');
     buffer.writeln();
 
     buffer.writeln('📊 SAMMENDRAG');
@@ -147,10 +149,14 @@ class StatisticsExportService {
 
     buffer.writeln('📈 GJENNOMSNITTLIG YTEELSE');
     buffer.writeln('-' * 30);
-    buffer.writeln('Poeng per time: ${stats.averagePointsPerHour.toStringAsFixed(1)}');
-    buffer.writeln('Fuglkontakter per økt: ${stats.averageBirdContactsPerSession.toStringAsFixed(1)}');
-    buffer.writeln('Flushes per økt: ${stats.averageFlushesPerSession.toStringAsFixed(1)}');
-    buffer.writeln('Suksessrate: ${(stats.successRate * 100).toStringAsFixed(1)}%');
+    buffer.writeln(
+        'Poeng per time: ${stats.averagePointsPerHour.toStringAsFixed(1)}');
+    buffer.writeln(
+        'Fuglkontakter per økt: ${stats.averageBirdContactsPerSession.toStringAsFixed(1)}');
+    buffer.writeln(
+        'Flushes per økt: ${stats.averageFlushesPerSession.toStringAsFixed(1)}');
+    buffer.writeln(
+        'Suksessrate: ${(stats.successRate * 100).toStringAsFixed(1)}%');
     buffer.writeln();
 
     if (seasonalStats.isNotEmpty) {
@@ -161,7 +167,8 @@ class StatisticsExportService {
         buffer.writeln('  Økter: ${season.sessions}');
         buffer.writeln('  Aktiv tid: ${_formatDuration(season.activeTime)}');
         buffer.writeln('  Poeng: ${season.points}');
-        buffer.writeln('  Gj.snitt poeng/time: ${season.averagePointsPerHour.toStringAsFixed(1)}');
+        buffer.writeln(
+            '  Gj.snitt poeng/time: ${season.averagePointsPerHour.toStringAsFixed(1)}');
         buffer.writeln();
       }
     }

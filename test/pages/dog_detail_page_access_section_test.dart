@@ -88,7 +88,8 @@ void main() {
     final membershipBox = HiveLifecycleService.getBox<DogMembership>(
       dogMembershipsBoxName,
     );
-    final settingsBox = HiveLifecycleService.getBox<dynamic>(appSettingsBoxName);
+    final settingsBox =
+        HiveLifecycleService.getBox<dynamic>(appSettingsBoxName);
 
     await tester.runAsync(() async {
       await dogs.put(dog.id, dog);

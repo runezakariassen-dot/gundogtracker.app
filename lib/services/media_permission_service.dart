@@ -12,7 +12,8 @@ class MediaPermissionService {
   MediaPermissionService({
     DogMembershipRepository? membershipRepository,
     UserIdentityService? identityService,
-  })  : _membershipRepository = membershipRepository ?? LocalDogMembershipRepository(),
+  })  : _membershipRepository =
+            membershipRepository ?? LocalDogMembershipRepository(),
         _identityService = identityService ?? UserIdentityService();
 
   final DogMembershipRepository _membershipRepository;
@@ -28,7 +29,8 @@ class MediaPermissionService {
 
     DogMembership? membership;
     for (final userId in _currentUserIds()) {
-      final candidate = await _membershipRepository.getMembership(dogKey, userId);
+      final candidate =
+          await _membershipRepository.getMembership(dogKey, userId);
       if (candidate != null) {
         membership = candidate;
         break;

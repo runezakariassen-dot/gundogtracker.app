@@ -4,33 +4,33 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // Jaktbaserte farger - Fjell og naturfarger
-  static const primary = Color(0xFF1F3A2D);      // Dyp skoggrønn (fjellskog)
-  static const secondary = Color(0xFF5A4A42);    // Jord-grå-brun (ste)
-  static const accent = Color(0xFFD97706);       // Oransje (fugler, sol)
+  static const primary = Color(0xFF1F3A2D); // Dyp skoggrønn (fjellskog)
+  static const secondary = Color(0xFF5A4A42); // Jord-grå-brun (ste)
+  static const accent = Color(0xFFD97706); // Oransje (fugler, sol)
   static const lightBackground = Color(0xFFF8F7F4); // Nøytral hys bakgrunn
-  static const darkBackground = Color(0xFF0F1419);  // Natt i fjellene
-  
+  static const darkBackground = Color(0xFF0F1419); // Natt i fjellene
+
   // Ekstra aksentfarger for dybde
-  static const success = Color(0xFF10B981);      // Grønn (jagtsukess)
-  static const warning = Color(0xFFF59E0B);      // Gul (varsel)
-  static const error = Color(0xFFEF4444);        // Rød
-  static const skyBlue = Color(0xFF60A5FA);      // Himmelblå
-  
+  static const success = Color(0xFF10B981); // Grønn (jagtsukess)
+  static const warning = Color(0xFFF59E0B); // Gul (varsel)
+  static const error = Color(0xFFEF4444); // Rød
+  static const skyBlue = Color(0xFF60A5FA); // Himmelblå
+
   // Proffe brand-farger for bedre dybde
-  static const brandPrimary = Color(0xFF1B2E20);    // Dypere grønn for headers
-  static const brandSecondary = Color(0xFF2A3D2F);  // Medium grønn
-  static const brandAccent = Color(0xFFE67E22);     // Varm oransje
-  static const brandSuccess = Color(0xFF27AE60);    // Profesjonell grønn
-  static const brandWarning = Color(0xFFF39C12);    // Profesjonell gul
-  static const brandError = Color(0xFFE74C3C);      // Profesjonell rød
-  
+  static const brandPrimary = Color(0xFF1B2E20); // Dypere grønn for headers
+  static const brandSecondary = Color(0xFF2A3D2F); // Medium grønn
+  static const brandAccent = Color(0xFFE67E22); // Varm oransje
+  static const brandSuccess = Color(0xFF27AE60); // Profesjonell grønn
+  static const brandWarning = Color(0xFFF39C12); // Profesjonell gul
+  static const brandError = Color(0xFFE74C3C); // Profesjonell rød
+
   // Gradient farger
-  static const gradientStart = Color(0xFF1F3A2D);   // Start av gradient
-  static const gradientEnd = Color(0xFF2A3D2F);     // Slutt av gradient
-  
+  static const gradientStart = Color(0xFF1F3A2D); // Start av gradient
+  static const gradientEnd = Color(0xFF2A3D2F); // Slutt av gradient
+
   // Mørk modus forbedringer
-  static const darkSurface = Color(0xFF1A1A1A);     // Bedre kontrast
-  static const darkCard = Color(0xFF2A2A2A);        // Høyere kontrast kort
+  static const darkSurface = Color(0xFF1A1A1A); // Bedre kontrast
+  static const darkCard = Color(0xFF2A2A2A); // Høyere kontrast kort
   static const darkTextPrimary = Color(0xFFE0E0E0); // Bedre lesbarhet
   static const darkTextSecondary = Color(0xFFB0B0B0); // Sekundær tekst
 }
@@ -60,7 +60,7 @@ class AppGradients {
       end: Alignment.bottomRight,
     );
   }
-  
+
   static LinearGradient accentGradient() {
     return const LinearGradient(
       colors: [AppColors.accent, AppColors.brandAccent],
@@ -68,7 +68,7 @@ class AppGradients {
       end: Alignment.bottomRight,
     );
   }
-  
+
   static LinearGradient successGradient() {
     return const LinearGradient(
       colors: [AppColors.success, AppColors.brandSuccess],
@@ -89,7 +89,7 @@ class AppCardStyles {
       ),
     );
   }
-  
+
   static CardThemeData flatCard() {
     return CardThemeData(
       elevation: 0,

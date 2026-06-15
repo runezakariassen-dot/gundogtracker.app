@@ -39,9 +39,11 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
     this.currentUserIdOverride,
+    this.currentUserEmailOverride,
   });
 
   final String? currentUserIdOverride;
+  final String? currentUserEmailOverride;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -328,6 +330,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   String? _currentUserEmail() {
+    final override = widget.currentUserEmailOverride?.trim();
+    if (override != null && override.isNotEmpty) {
+      return override.toLowerCase();
+    }
+
     try {
       final email = FirebaseAuth.instance.currentUser?.email?.trim();
       if (email != null && email.isNotEmpty) {

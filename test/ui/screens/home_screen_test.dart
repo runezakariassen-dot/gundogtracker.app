@@ -88,13 +88,17 @@ void main() {
   Future<void> pumpHome(
     WidgetTester tester, {
     String? currentUserIdOverride,
+    String? currentUserEmailOverride,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('nb'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: HomeScreen(currentUserIdOverride: currentUserIdOverride),
+        home: HomeScreen(
+          currentUserIdOverride: currentUserIdOverride,
+          currentUserEmailOverride: currentUserEmailOverride,
+        ),
       ),
     );
     await tester.pump();
@@ -170,6 +174,78 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Invitasjoner'), findsOneWidget);
+
+    await disposeHome(tester);
+  });
+
+  testWidgets('home shows pending invitation that matches recipient email',
+      (tester) async {
+    final shareInvitesBox =
+        HiveLifecycleService.getBox<ShareInvitation>(shareInvitesBoxName);
+
+    await tester.runAsync(() async {
+      await shareInvitesBox.put(
+        'invite-email',
+        ShareInvitation(
+          inviteId: 'invite-email',
+          dogKey: 'DOG-EMAIL',
+          role: Role.editor,
+          token: 'TOKENEMAIL',
+          createdAt: DateTime(2026, 5, 1),
+          expiresAt: DateTime(2026, 5, 8),
+          status: Status.pending,
+          recipientEmail: 'member@example.com',
+          recipientUserId: null,
+          createdByUserId: 'owner-a',
+          dogName: 'Kompis',
+        ),
+      );
+    });
+
+    await pumpHome(
+      tester,
+      currentUserIdOverride: 'different-user',
+      currentUserEmailOverride: 'member@example.com',
+    );
+
+    expect(find.text('Du har en hundeinvitasjon'), findsOneWidget);
+    expect(find.text('Se invitasjon'), findsOneWidget);
+
+    await disposeHome(tester);
+  });
+
+  testWidgets('home shows pending invitation that matches recipient uid',
+      (tester) async {
+    final shareInvitesBox =
+        HiveLifecycleService.getBox<ShareInvitation>(shareInvitesBoxName);
+
+    await tester.runAsync(() async {
+      await shareInvitesBox.put(
+        'invite-uid',
+        ShareInvitation(
+          inviteId: 'invite-uid',
+          dogKey: 'DOG-UID',
+          role: Role.editor,
+          token: 'TOKENUID',
+          createdAt: DateTime(2026, 5, 1),
+          expiresAt: DateTime(2026, 5, 8),
+          status: Status.pending,
+          recipientEmail: 'other@example.com',
+          recipientUserId: 'user-b',
+          createdByUserId: 'owner-a',
+          dogName: 'Kompis',
+        ),
+      );
+    });
+
+    await pumpHome(
+      tester,
+      currentUserIdOverride: 'user-b',
+      currentUserEmailOverride: 'member@example.com',
+    );
+
+    expect(find.text('Du har en hundeinvitasjon'), findsOneWidget);
+    expect(find.text('Se invitasjon'), findsOneWidget);
 
     await disposeHome(tester);
   });

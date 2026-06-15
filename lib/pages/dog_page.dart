@@ -97,9 +97,9 @@ class _DogPageState extends State<DogPage> {
                     ? <DogMembership>[]
                     : membershipBox.values
                         .where((membership) =>
-                      currentUserIds.contains(
-                        membership.userId.trim(),
-                      ) &&
+                            currentUserIds.contains(
+                              membership.userId.trim(),
+                            ) &&
                             membership.status == Status.active)
                         .toList();
                 final visibleDogs = filterVisibleDogs(
@@ -114,8 +114,8 @@ class _DogPageState extends State<DogPage> {
                     ? 0
                     : visibleDogs
                         .where((dog) =>
-                      currentUserIds
-                        .contains(dog.ownerUserId?.trim() ?? '') &&
+                            currentUserIds
+                                .contains(dog.ownerUserId?.trim() ?? '') &&
                             !allowedDogKeys.contains(dog.dogKey))
                         .length;
                 if (kDebugMode) {

@@ -108,16 +108,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       keyboardType: TextInputType.emailAddress,
                       autofillHints: const [AutofillHints.email],
                       textInputAction: TextInputAction.done,
-                      onFieldSubmitted: (_) =>
-                          _busy ? null : _sendReset(),
+                      onFieldSubmitted: (_) => _busy ? null : _sendReset(),
                       decoration: InputDecoration(
                         labelText: l10n.forgot_password_email_label,
                         border: const OutlineInputBorder(),
                       ),
                       validator: (v) {
                         final value = (v ?? '').trim();
-                        if (value.isEmpty) return l10n.forgot_password_error_missing;
-                        if (!value.contains('@')) return l10n.forgot_password_error_invalid;
+                        if (value.isEmpty) {
+                          return l10n.forgot_password_error_missing;
+                        }
+                        if (!value.contains('@')) {
+                          return l10n.forgot_password_error_invalid;
+                        }
                         return null;
                       },
                       enabled: !_busy,
@@ -131,7 +134,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             ? const SizedBox(
                                 height: 18,
                                 width: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               )
                             : Text(l10n.forgot_password_button),
                       ),

@@ -183,8 +183,8 @@ class NotificationService implements AppNotificationService {
       }
 
       final now = DateTime.now();
-      var trigger = DateTime(now.year, birthDate.month, birthDate.day, hour,
-          minute);
+      var trigger =
+          DateTime(now.year, birthDate.month, birthDate.day, hour, minute);
       if (!trigger.isAfter(now)) {
         trigger = DateTime(
           now.year + 1,

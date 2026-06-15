@@ -64,7 +64,8 @@ import 'app_localizations_sv.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale)
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -72,7 +73,8 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -84,7 +86,8 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
     delegate,
     GlobalMaterialLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,
@@ -1909,7 +1912,8 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{name} was {years} {months} {days} old'**
-  String dog_detail_farewell_age_sentence(Object name, Object years, Object months, Object days);
+  String dog_detail_farewell_age_sentence(
+      Object name, Object years, Object months, Object days);
 
   /// No description provided for @dog_detail_next_milestones_title.
   ///
@@ -3571,7 +3575,8 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Time: {durationMinutes} min, Birds: {birds}, Points: {stand}, Secondary: {secondaryPoints}, Tomstand: {tomstandCount}, Flushes: {flushes}'**
-  String session_detail_saved_session_summary(int durationMinutes, int birds, int stand, int secondaryPoints, int tomstandCount, int flushes);
+  String session_detail_saved_session_summary(int durationMinutes, int birds,
+      int stand, int secondaryPoints, int tomstandCount, int flushes);
 
   /// No description provided for @session_detail_button_exporting.
   ///
@@ -3943,7 +3948,8 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{minutes}m {seconds}s'**
-  String session_detail_helper_duration_minutes_seconds(int minutes, int seconds);
+  String session_detail_helper_duration_minutes_seconds(
+      int minutes, int seconds);
 
   /// Formatted duration when only seconds exist.
   ///
@@ -4201,7 +4207,8 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{month} {year}: Points {stand}, Flushes {flush}'**
-  String stats_stand_flush_tooltip(String month, int year, String stand, String flush);
+  String stats_stand_flush_tooltip(
+      String month, int year, String stand, String flush);
 
   /// No description provided for @stats_info_points_flushes_title.
   ///
@@ -5071,7 +5078,8 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Happy birthday, {name}! Greetings from {dogs} 🎉'**
-  String settings_profile_birthday_greeting_dogs_named(Object name, Object dogs);
+  String settings_profile_birthday_greeting_dogs_named(
+      Object name, Object dogs);
 
   /// No description provided for @settings_notification_birthday_title.
   ///
@@ -6181,7 +6189,8 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{dog} achieved “{milestone}” on {date}{age}'**
-  String milestone_achieved_sentence(Object dog, Object milestone, Object date, Object age);
+  String milestone_achieved_sentence(
+      Object dog, Object milestone, Object date, Object age);
 
   /// No description provided for @milestone_bird_threshold_label.
   ///
@@ -6610,7 +6619,8 @@ abstract class AppLocalizations {
   String get settings_not_signed_in;
 }
 
-class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -6619,27 +6629,29 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
   }
 
   @override
-  bool isSupported(Locale locale) => <String>['da', 'en', 'nb', 'sv'].contains(locale.languageCode);
+  bool isSupported(Locale locale) =>
+      <String>['da', 'en', 'nb', 'sv'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
-
-
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'da': return AppLocalizationsDa();
-    case 'en': return AppLocalizationsEn();
-    case 'nb': return AppLocalizationsNb();
-    case 'sv': return AppLocalizationsSv();
+    case 'da':
+      return AppLocalizationsDa();
+    case 'en':
+      return AppLocalizationsEn();
+    case 'nb':
+      return AppLocalizationsNb();
+    case 'sv':
+      return AppLocalizationsSv();
   }
 
   throw FlutterError(
-    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-    'an issue with the localizations generation tool. Please file an issue '
-    'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.'
-  );
+      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+      'an issue with the localizations generation tool. Please file an issue '
+      'on GitHub with a reproducible sample app and the gen-l10n configuration '
+      'that was used.');
 }

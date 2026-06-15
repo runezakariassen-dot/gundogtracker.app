@@ -7,7 +7,8 @@ class _FakeLocalNotificationsClient implements LocalNotificationsClient {
   int requestPermissionCalls = 0;
   final List<int> canceledIds = <int>[];
   final List<({int id, DateTime scheduledDate, String title, String body})>
-      schedules = <({int id, DateTime scheduledDate, String title, String body})>[];
+      schedules =
+      <({int id, DateTime scheduledDate, String title, String body})>[];
   final List<({int id, String title, String body})> shown =
       <({int id, String title, String body})>[];
 
@@ -54,7 +55,8 @@ class _FakeLocalNotificationsClient implements LocalNotificationsClient {
 }
 
 void main() {
-  test('scheduleBirthdayReminder schedules next birthday at default time', () async {
+  test('scheduleBirthdayReminder schedules next birthday at default time',
+      () async {
     final client = _FakeLocalNotificationsClient();
     final service = NotificationService(client: client);
 
@@ -66,14 +68,17 @@ void main() {
 
     expect(client.initializeCalls, 1);
     expect(client.requestPermissionCalls, 1);
-    expect(client.canceledIds, contains(NotificationService.birthdayNotificationId));
+    expect(client.canceledIds,
+        contains(NotificationService.birthdayNotificationId));
     expect(client.schedules, hasLength(1));
-    expect(client.schedules.single.id, NotificationService.birthdayNotificationId);
+    expect(
+        client.schedules.single.id, NotificationService.birthdayNotificationId);
     expect(client.schedules.single.scheduledDate.hour, 9);
     expect(client.schedules.single.scheduledDate.minute, 0);
   });
 
-  test('scheduleBirthdayReminder with null birthdate cancels existing schedule only',
+  test(
+      'scheduleBirthdayReminder with null birthdate cancels existing schedule only',
       () async {
     final client = _FakeLocalNotificationsClient();
     final service = NotificationService(client: client);

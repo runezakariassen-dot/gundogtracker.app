@@ -541,7 +541,6 @@ String? _birdMilestoneAgeText(
   );
 }
 
-
 String? _standMilestoneAgeText(
   Dog dog,
   DogMilestoneState state,
