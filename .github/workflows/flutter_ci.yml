@@ -37,19 +37,6 @@ jobs:
       - name: Format check
         run: dart format --output=none --set-exit-if-changed .
 
-      - name: Flutter code quality
-        if: github.event_name == 'pull_request'
-        uses: ZebraDevs/flutter-code-quality@v1.0.10
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          run-tests: false
-          run-analysis: false
-          run-coverage: false
-          run-prev-coverage: false
-          run-behind-by: false
-          create-comment: true
-          working-directory: .
-
       - name: Analyze
         run: fvm flutter analyze
 
