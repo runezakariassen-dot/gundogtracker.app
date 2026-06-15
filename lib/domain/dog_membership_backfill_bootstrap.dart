@@ -23,7 +23,8 @@ Future<void> ensureCurrentUserMemberships({
     return;
   }
 
-  logger('[BACKFILL] Membership backfill start user=$userId dogs=${dogs.length}');
+  logger(
+      '[BACKFILL] Membership backfill start user=$userId dogs=${dogs.length}');
   var created = 0;
   var skippedWithoutKey = 0;
 

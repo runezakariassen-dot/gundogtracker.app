@@ -22,7 +22,8 @@ void main() {
       expect(editableRoles, contains(Role.editor));
     });
 
-    test('editableRolesForMembership prevents admin from setting admin role', () {
+    test('editableRolesForMembership prevents admin from setting admin role',
+        () {
       final editableRoles = editableRolesForMembership(
         actorRole: Role.admin,
         targetRole: Role.admin,
@@ -60,7 +61,8 @@ void main() {
   });
 
   group('DogDetailPage - Membership UI Tests', () {
-    test('resolveHighestActiveRoleForUserIds returns highest priority role', () {
+    test('resolveHighestActiveRoleForUserIds returns highest priority role',
+        () {
       final memberships = <DogMembership>[
         DogMembership(
           dogKey: 'dog-1',
@@ -118,7 +120,8 @@ void main() {
       expect(role, Role.viewer);
     });
 
-    test('resolveHighestActiveRoleForUserIds returns null when no active memberships',
+    test(
+        'resolveHighestActiveRoleForUserIds returns null when no active memberships',
         () {
       final memberships = <DogMembership>[
         DogMembership(

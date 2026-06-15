@@ -113,7 +113,8 @@ Widget _buildApp({
   );
 }
 
-class _FakeActiveSessionDraftRepository implements ActiveSessionDraftRepository {
+class _FakeActiveSessionDraftRepository
+    implements ActiveSessionDraftRepository {
   final _controller = StreamController<ActiveSessionDraft?>.broadcast();
   ActiveSessionDraft? _current;
 

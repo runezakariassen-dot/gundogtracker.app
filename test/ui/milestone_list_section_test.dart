@@ -44,7 +44,8 @@ bool _anyTextContains(WidgetTester tester, String needle) {
   return _allTextStrings(tester).any((t) => t.contains(needle));
 }
 
-String _findAchievementSentence(WidgetTester tester, {required String dogName}) {
+String _findAchievementSentence(WidgetTester tester,
+    {required String dogName}) {
   final rendered = _allTextStrings(tester);
   return rendered.firstWhere(
     (text) => text.toLowerCase().contains('$dogName oppnådde'.toLowerCase()),

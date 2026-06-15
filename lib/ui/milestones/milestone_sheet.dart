@@ -41,8 +41,7 @@ Future<void> showMilestoneSheet({
             Text(
               dateText,
               style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
-                    color:
-                        Theme.of(ctx).colorScheme.onSurface.withOpacity(0.6),
+                    color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.6),
                   ),
             ),
             const SizedBox(height: 20),

@@ -438,9 +438,7 @@ class _StatisticsPageState extends State<StatisticsPage>
                         Icon(
                           Icons.pets,
                           size: 48,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurfaceVariant,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         const SizedBox(height: 12),
                         Text(

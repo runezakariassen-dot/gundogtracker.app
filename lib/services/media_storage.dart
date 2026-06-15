@@ -57,7 +57,8 @@ class MediaStorage {
     return relativePath;
   }
 
-  static Future<List<String>> normalizeMediaPaths(List<String> storedPaths) async {
+  static Future<List<String>> normalizeMediaPaths(
+      List<String> storedPaths) async {
     final docsDir = await _ensureDocumentsDirectory();
     final normalized = <String>[];
     for (final stored in storedPaths) {
@@ -71,8 +72,7 @@ class MediaStorage {
         continue;
       }
       if (p.isAbsolute(sanitized)) {
-        final relative =
-            _relativeFromDocuments(sanitized, docsDir.path);
+        final relative = _relativeFromDocuments(sanitized, docsDir.path);
         if (relative != null) {
           normalized.add(relative);
           continue;
@@ -202,7 +202,8 @@ class MediaStorage {
     return relative.replaceAll('\\', '/');
   }
 
-  static String _absoluteFromRelativePath(String relativePath, String docsPath) {
+  static String _absoluteFromRelativePath(
+      String relativePath, String docsPath) {
     final segments =
         relativePath.split('/').where((segment) => segment.isNotEmpty).toList();
     if (segments.isEmpty) return docsPath;

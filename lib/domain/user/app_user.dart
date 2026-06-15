@@ -24,7 +24,8 @@ class AppUser {
   final String locale;
   final bool rolesAdmin;
 
-  factory AppUser.fromSnapshot(DocumentSnapshot<Map<String, dynamic>> snapshot) {
+  factory AppUser.fromSnapshot(
+      DocumentSnapshot<Map<String, dynamic>> snapshot) {
     final data = snapshot.data() ?? const <String, dynamic>{};
 
     return AppUser(

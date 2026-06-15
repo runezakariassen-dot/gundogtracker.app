@@ -38,7 +38,8 @@ void main() {
     expect(find.text('Leser').last, findsOneWidget);
   });
 
-  testWidgets('role dialog keeps current role selected initially', (tester) async {
+  testWidgets('role dialog keeps current role selected initially',
+      (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         locale: Locale('nb'),

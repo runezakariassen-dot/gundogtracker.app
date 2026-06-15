@@ -658,8 +658,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
     final lastShownDate =
         _settingsRepository.getLastBirthdayGreetingShownDate();
-    final alreadyShownToday =
-        lastShownDate != null &&
+    final alreadyShownToday = lastShownDate != null &&
         lastShownDate.year == today.year &&
         lastShownDate.month == today.month &&
         lastShownDate.day == today.day;
@@ -694,9 +693,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   Text(
                     title,
                     textAlign: TextAlign.center,
-                    style: Theme.of(dialogContext).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                    style:
+                        Theme.of(dialogContext).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -729,14 +729,13 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _buildAccountSection(TextStyle sectionStyle) {
     final l10n = AppLocalizations.of(context)!;
     final currentUser = _currentUserOrNull();
-    
+
     String displayValue;
     if (currentUser == null) {
       displayValue = l10n.settings_not_signed_in;
     } else {
-      displayValue = currentUser.email ??
-          currentUser.displayName ??
-          currentUser.uid;
+      displayValue =
+          currentUser.email ?? currentUser.displayName ?? currentUser.uid;
     }
 
     return Column(
@@ -1811,9 +1810,8 @@ class _BirthdayHeroDogTile extends StatelessWidget {
                 ? Image.file(imageFile, fit: BoxFit.cover)
                 : DecoratedBox(
                     decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surfaceContainerHighest,
+                      color:
+                          Theme.of(context).colorScheme.surfaceContainerHighest,
                     ),
                     child: const Center(
                       child: Icon(Icons.pets, size: 72),

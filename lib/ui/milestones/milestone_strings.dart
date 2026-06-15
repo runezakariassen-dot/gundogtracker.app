@@ -105,4 +105,5 @@ bool _isSessionsId(String id) => id.startsWith('sessions_');
 
 bool _isStandId(String id) => id.startsWith('stands_');
 
-bool _isBirdId(String id) => id.startsWith('birds_') || id.startsWith('birds_felled_');
+bool _isBirdId(String id) =>
+    id.startsWith('birds_') || id.startsWith('birds_felled_');

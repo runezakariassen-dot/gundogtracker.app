@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 
 class AudioService {
   static final AudioService _instance = AudioService._internal();
-  
+
   factory AudioService() {
     return _instance;
   }

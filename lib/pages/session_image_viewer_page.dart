@@ -247,8 +247,8 @@ class _SessionImageViewerPageState extends State<SessionImageViewerPage> {
 
             return SafeArea(
               child: SingleChildScrollView(
-                padding:
-                    EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
+                padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                   child: Column(
@@ -271,8 +271,8 @@ class _SessionImageViewerPageState extends State<SessionImageViewerPage> {
                             onTap: () => applyPreset(_WatermarkPreset.discreet),
                           ),
                           _PresetChip(
-                            label:
-                                l10n.session_image_viewer_watermark_preset_clear,
+                            label: l10n
+                                .session_image_viewer_watermark_preset_clear,
                             icon: Icons.visibility,
                             onTap: () => applyPreset(_WatermarkPreset.clear),
                           ),
@@ -286,7 +286,8 @@ class _SessionImageViewerPageState extends State<SessionImageViewerPage> {
                       ),
                       const SizedBox(height: 16),
                       SwitchListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 0),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 0),
                         dense: true,
                         title: Text(
                             l10n.session_image_viewer_watermark_toggle_title),
@@ -298,7 +299,8 @@ class _SessionImageViewerPageState extends State<SessionImageViewerPage> {
                         },
                       ),
                       SwitchListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 0),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 0),
                         dense: true,
                         title: Text(l10n
                             .session_image_viewer_watermark_toggle_official_name),
@@ -310,10 +312,11 @@ class _SessionImageViewerPageState extends State<SessionImageViewerPage> {
                         },
                       ),
                       SwitchListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 0),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 0),
                         dense: true,
-                        title: Text(
-                            l10n.session_image_viewer_watermark_toggle_nickname),
+                        title: Text(l10n
+                            .session_image_viewer_watermark_toggle_nickname),
                         value: _showNickname,
                         onChanged: (value) {
                           setSheetState(() => _showNickname = value);

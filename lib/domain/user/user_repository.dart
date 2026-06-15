@@ -23,7 +23,8 @@ class AppUserRepository {
   Future<AppUser> getCurrentUserProfile() async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) {
-      throw const AppUserRepositoryException('No authenticated user is available');
+      throw const AppUserRepositoryException(
+          'No authenticated user is available');
     }
 
     final ref = _firestore.collection('users').doc(uid);
@@ -70,5 +71,6 @@ class AppUserRepositoryException implements Exception {
 
 class AppUserNotFoundException extends AppUserRepositoryException {
   const AppUserNotFoundException()
-      : super('Firestore users/{uid} document was not found for the current user');
+      : super(
+            'Firestore users/{uid} document was not found for the current user');
 }

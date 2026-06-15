@@ -192,8 +192,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                     children: [
                                       TextFormField(
                                         controller: _emailCtrl,
-                                        keyboardType: TextInputType.emailAddress,
-                                        autofillHints: const [AutofillHints.email],
+                                        keyboardType:
+                                            TextInputType.emailAddress,
+                                        autofillHints: const [
+                                          AutofillHints.email
+                                        ],
                                         textInputAction: TextInputAction.next,
                                         decoration: const InputDecoration(
                                           labelText: 'E-post',
@@ -201,8 +204,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                         ),
                                         validator: (v) {
                                           final value = (v ?? '').trim();
-                                          if (value.isEmpty) return 'Skriv inn e-post.';
-                                          if (!value.contains('@')) return 'Ugyldig e-post.';
+                                          if (value.isEmpty) {
+                                            return 'Skriv inn e-post.';
+                                          }
+                                          if (!value.contains('@')) {
+                                            return 'Ugyldig e-post.';
+                                          }
                                           return null;
                                         },
                                         enabled: !_busy,
@@ -211,7 +218,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                       TextFormField(
                                         controller: _passwordCtrl,
                                         obscureText: _obscure,
-                                        autofillHints: const [AutofillHints.password],
+                                        autofillHints: const [
+                                          AutofillHints.password
+                                        ],
                                         textInputAction: TextInputAction.done,
                                         onFieldSubmitted: (_) =>
                                             _busy ? null : _signIn(),
@@ -222,7 +231,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                             onPressed: _busy
                                                 ? null
                                                 : () => setState(
-                                                      () => _obscure = !_obscure,
+                                                      () =>
+                                                          _obscure = !_obscure,
                                                     ),
                                             icon: Icon(
                                               _obscure
@@ -233,7 +243,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                         ),
                                         validator: (v) {
                                           final value = (v ?? '');
-                                          if (value.isEmpty) return 'Skriv inn passord.';
+                                          if (value.isEmpty) {
+                                            return 'Skriv inn passord.';
+                                          }
                                           if (value.length < 6) {
                                             return 'Passordet må være minst 6 tegn.';
                                           }

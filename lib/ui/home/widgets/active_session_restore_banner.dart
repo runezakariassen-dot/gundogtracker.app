@@ -26,7 +26,8 @@ class ActiveSessionRestoreBanner extends StatefulWidget {
       _ActiveSessionRestoreBannerState();
 }
 
-class _ActiveSessionRestoreBannerState extends State<ActiveSessionRestoreBanner> {
+class _ActiveSessionRestoreBannerState
+    extends State<ActiveSessionRestoreBanner> {
   ActiveSessionDraft? _draft;
   StreamSubscription<ActiveSessionDraft?>? _subscription;
 

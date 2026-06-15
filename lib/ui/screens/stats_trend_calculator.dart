@@ -33,9 +33,8 @@ class StatsTrendCalculator {
     Iterable<HuntSession> sessions, {
     DateTime Function()? now,
   }) {
-    final visibleSessions = sessions
-        .where((session) => !session.isDeleted)
-        .toList(growable: false);
+    final visibleSessions =
+        sessions.where((session) => !session.isDeleted).toList(growable: false);
     if (visibleSessions.isEmpty) return null;
 
     final sortedSessions = List<HuntSession>.from(visibleSessions)
