@@ -89,6 +89,7 @@ void main() {
     WidgetTester tester, {
     String? currentUserIdOverride,
     String? currentUserEmailOverride,
+    PendingInvitePuller? pendingInvitePuller,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -98,6 +99,7 @@ void main() {
         home: HomeScreen(
           currentUserIdOverride: currentUserIdOverride,
           currentUserEmailOverride: currentUserEmailOverride,
+          pendingInvitePuller: pendingInvitePuller,
         ),
       ),
     );
@@ -178,6 +180,46 @@ void main() {
     await disposeHome(tester);
   });
 
+  testWidgets('home triggers pending invite pull on startup', (tester) async {
+    var pullCalls = 0;
+
+    await pumpHome(
+      tester,
+      currentUserIdOverride: 'user-b',
+      currentUserEmailOverride: 'member@example.com',
+      pendingInvitePuller: () async {
+        pullCalls += 1;
+        return 0;
+      },
+    );
+
+    expect(pullCalls, 1);
+
+    await disposeHome(tester);
+  });
+
+  testWidgets('home triggers pending invite pull when app resumes',
+      (tester) async {
+    var pullCalls = 0;
+
+    await pumpHome(
+      tester,
+      currentUserIdOverride: 'user-b',
+      currentUserEmailOverride: 'member@example.com',
+      pendingInvitePuller: () async {
+        pullCalls += 1;
+        return 0;
+      },
+    );
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+
+    expect(pullCalls, 2);
+
+    await disposeHome(tester);
+  });
+
   testWidgets('home shows pending invitation that matches recipient email',
       (tester) async {
     final shareInvitesBox =
@@ -207,6 +249,80 @@ void main() {
       currentUserIdOverride: 'different-user',
       currentUserEmailOverride: 'member@example.com',
     );
+
+    expect(find.text('Du har en hundeinvitasjon'), findsOneWidget);
+    expect(find.text('Se invitasjon'), findsOneWidget);
+
+    await disposeHome(tester);
+  });
+
+  testWidgets(
+      'home pending invite email matching is trimmed and case insensitive',
+      (tester) async {
+    final shareInvitesBox =
+        HiveLifecycleService.getBox<ShareInvitation>(shareInvitesBoxName);
+
+    await tester.runAsync(() async {
+      await shareInvitesBox.put(
+        'invite-email-case',
+        ShareInvitation(
+          inviteId: 'invite-email-case',
+          dogKey: 'DOG-EMAIL',
+          role: Role.editor,
+          token: 'TOKENEMAIL',
+          createdAt: DateTime(2026, 5, 1),
+          expiresAt: DateTime(2026, 5, 8),
+          status: Status.pending,
+          recipientEmail: '  MEMBER@Example.COM  ',
+          recipientUserId: null,
+          createdByUserId: 'owner-a',
+          dogName: 'Kompis',
+        ),
+      );
+    });
+
+    await pumpHome(
+      tester,
+      currentUserIdOverride: 'different-user',
+      currentUserEmailOverride: ' member@example.com ',
+    );
+
+    expect(find.text('Du har en hundeinvitasjon'), findsOneWidget);
+    expect(find.text('Se invitasjon'), findsOneWidget);
+
+    await disposeHome(tester);
+  });
+
+  testWidgets('home shows banner after cloud pull writes local pending invite',
+      (tester) async {
+    final shareInvitesBox =
+        HiveLifecycleService.getBox<ShareInvitation>(shareInvitesBoxName);
+
+    await pumpHome(
+      tester,
+      currentUserIdOverride: 'user-b',
+      currentUserEmailOverride: 'member@example.com',
+      pendingInvitePuller: () async {
+        await shareInvitesBox.put(
+          'invite-cloud',
+          ShareInvitation(
+            inviteId: 'invite-cloud',
+            dogKey: 'DOG-CLOUD',
+            role: Role.editor,
+            token: 'TOKENCLOUD',
+            createdAt: DateTime(2026, 5, 1),
+            expiresAt: DateTime(2026, 5, 8),
+            status: Status.pending,
+            recipientEmail: 'member@example.com',
+            recipientUserId: null,
+            createdByUserId: 'owner-a',
+            dogName: 'Kompis',
+          ),
+        );
+        return 1;
+      },
+    );
+    await tester.pump();
 
     expect(find.text('Du har en hundeinvitasjon'), findsOneWidget);
     expect(find.text('Se invitasjon'), findsOneWidget);

@@ -22,7 +22,9 @@ class FirestoreShareInvitationSyncService {
       final user = _auth.currentUser;
       final uid = user?.uid.trim() ?? '';
       if (uid.isEmpty) {
-        debugPrint('[CLOUD][INVITE] skip upsert: missing auth uid');
+        debugPrint(
+          '[CLOUD][INVITE] skip upsert: missing auth uid inviteId=${invite.inviteId} dogKey=${invite.dogKey} recipientEmail=${invite.recipientEmail.trim().toLowerCase()}',
+        );
         return;
       }
 
@@ -30,16 +32,21 @@ class FirestoreShareInvitationSyncService {
             _mapInviteToFirestore(invite, createdByAuthUid: uid),
             SetOptions(merge: true),
           );
-      debugPrint('[CLOUD][INVITE] upsert success: ${invite.inviteId}');
+      debugPrint(
+        '[CLOUD][INVITE] upsert success inviteId=${invite.inviteId} dogKey=${invite.dogKey} recipientEmail=${invite.recipientEmail.trim().toLowerCase()}',
+      );
     } catch (error, stackTrace) {
-      debugPrint('[CLOUD][INVITE] upsert failed: $error');
+      debugPrint(
+        '[CLOUD][INVITE] upsert failed inviteId=${invite.inviteId} dogKey=${invite.dogKey} recipientEmail=${invite.recipientEmail.trim().toLowerCase()} error=$error',
+      );
       debugPrint(stackTrace.toString());
     }
   }
 
   Future<int> pullPendingInvitesForCurrentUserIntoLocalBox() async {
+    String? email;
     try {
-      final email = _auth.currentUser?.email?.trim().toLowerCase();
+      email = _auth.currentUser?.email?.trim().toLowerCase();
       if (email == null || email.isEmpty) {
         debugPrint('[CLOUD][INVITE] skip pull: missing auth email');
         return 0;
@@ -64,7 +71,7 @@ class FirestoreShareInvitationSyncService {
       );
       return upserted;
     } catch (error, stackTrace) {
-      debugPrint('[CLOUD][INVITE] pull failed: $error');
+      debugPrint('[CLOUD][INVITE] pull failed email=$email error=$error');
       debugPrint(stackTrace.toString());
       return 0;
     }
