@@ -383,6 +383,70 @@ void main() {
     expect(visibleDogs.map((dog) => dog.dogKey), contains(dog.dogKey));
   });
 
+  test('accept reactivates revoked existing membership locally and in cloud',
+      () async {
+    await initDomainLayer();
+    final identity = UserIdentityService();
+    await identity.setCurrentUserId('owner');
+
+    final dog = await DomainDi.dogService(identityService: identity).createDog(
+      regNrInput: 'NO132/45',
+      name: 'Rapp',
+    );
+
+    final ownerSharing = DomainDi.sharingService(identityService: identity);
+    final createdInvite = await ownerSharing.createShareInvite(
+      dogKey: dog.dogKey,
+      recipientEmail: 'member@example.com',
+    );
+    final invite = createdInvite.copyWith(role: Role.viewer);
+    await shareInvitesBox().put(invite.inviteId, invite);
+
+    await identity.setCurrentUserId('local-member');
+    final revoked = DogMembership(
+      dogKey: dog.dogKey,
+      userId: 'firebase-member',
+      role: Role.editor,
+      status: Status.revoked,
+      addedAt: DateTime.now(),
+      addedByUserId: 'owner',
+    );
+    await dogMembershipsBox().put('${dog.dogKey}::firebase-member', revoked);
+
+    DogMembership? cloudMembership;
+    final sharing = SharingService(
+      identityService: identity,
+      inviteRepository: DomainDi.inviteRepository(),
+      membershipRepository: DomainDi.membershipRepository(),
+      dogRepository: DomainDi.dogRepository(),
+      currentAuthUserIdProvider: () => 'firebase-member',
+      cloudShareMembershipWriter: ({
+        required invite,
+        required membership,
+      }) async {
+        cloudMembership = membership;
+        return true;
+      },
+      restoreAccessibleDogs: () async => 1,
+      pullAllVisibleData: () async {},
+    );
+
+    final membership = await sharing.acceptShareInvite(token: invite.token);
+    final storedMembership =
+        await DomainDi.membershipRepository().getMembership(
+      dog.dogKey,
+      'firebase-member',
+    );
+
+    expect(membership.status, Status.active);
+    expect(membership.role, Role.viewer);
+    expect(storedMembership?.status, Status.active);
+    expect(storedMembership?.role, Role.viewer);
+    expect(cloudMembership?.status, Status.active);
+    expect(cloudMembership?.role, Role.viewer);
+    expect(shareInvitesBox().get(invite.inviteId)?.status, Status.accepted);
+  });
+
   test('multiple users can accept invites for the same dog', () async {
     await initDomainLayer();
     final identity = UserIdentityService();

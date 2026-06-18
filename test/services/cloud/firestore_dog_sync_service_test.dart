@@ -2,7 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:jakthund_app/models/dog.dart';
+import 'package:jakthund_app/models/dog_membership.dart';
 import 'package:jakthund_app/models/dog_sex.dart';
+import 'package:jakthund_app/models/share_invitation.dart';
 import 'package:jakthund_app/services/cloud/firestore_dog_sync_service.dart';
 
 void main() {
@@ -159,5 +161,44 @@ void main() {
       ),
       isFalse,
     );
+  });
+
+  test('accept membership payload reactivates revoked member as active', () {
+    final invite = ShareInvitation(
+      inviteId: 'invite-1',
+      dogKey: 'DOG-1',
+      role: Role.viewer,
+      token: 'TOKEN123',
+      createdAt: DateTime.utc(2026, 6),
+      expiresAt: DateTime.utc(2026, 6, 8),
+      status: Status.accepted,
+      recipientEmail: 'member@example.com',
+      recipientUserId: 'member-uid',
+      createdByUserId: 'owner-uid',
+      cloudDogId: 'cloud-dog-1',
+    );
+    final revokedMembership = DogMembership(
+      dogKey: 'DOG-1',
+      userId: 'member-uid',
+      role: Role.viewer,
+      status: Status.revoked,
+      addedAt: DateTime.utc(2026, 6),
+      addedByUserId: 'owner-uid',
+    );
+
+    final payload = FirestoreDogSyncService.buildShareInviteMembershipPayload(
+      invite: invite,
+      membership: revokedMembership,
+      uid: 'member-uid',
+      includeCreatedAt: true,
+    );
+
+    expect(payload['uid'], 'member-uid');
+    expect(payload['role'], 'viewer');
+    expect(payload['status'], 'active');
+    expect(payload['dogKey'], 'DOG-1');
+    expect(payload['acceptedInviteId'], 'invite-1');
+    expect(payload['createdAt'], isA<FieldValue>());
+    expect(payload['updatedAt'], isA<FieldValue>());
   });
 }

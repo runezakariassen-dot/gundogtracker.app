@@ -174,19 +174,27 @@ class SharingService {
       currentUserId,
     );
     if (existingMembership != null) {
-      if (invite.status != Status.accepted) {
-        final accepted = invite.copyWith(
-          status: Status.accepted,
-          recipientUserId: currentUserId,
-        );
+      final acceptedMembership = existingMembership.copyWith(
+        role: _acceptedRole(existingMembership, invite),
+        status: Status.active,
+      );
+      await _membershipRepository.upsertMembership(acceptedMembership);
+      _logAcceptMembershipResult(acceptedMembership);
+
+      final accepted = invite.copyWith(
+        status: Status.accepted,
+        recipientUserId: currentUserId,
+      );
+      if (invite.status != Status.accepted ||
+          invite.recipientUserId?.trim() != currentUserId) {
         await _upsertInviteEverywhere(accepted);
       }
       await _rehydrateAcceptedInvite(
-        invite: invite,
-        membership: existingMembership,
+        invite: accepted,
+        membership: acceptedMembership,
         authUid: authUid,
       );
-      return existingMembership;
+      return acceptedMembership;
     }
     if (invite.status != Status.pending) {
       throw ShareException(ShareError.inviteInactive);
@@ -198,7 +206,7 @@ class SharingService {
     final membership = DogMembership(
       dogKey: invite.dogKey,
       userId: currentUserId,
-      role: Role.editor,
+      role: invite.role,
       status: Status.active,
       addedAt: _now(),
       addedByUserId: addedBy,
@@ -433,6 +441,13 @@ class SharingService {
   DateTime _now() => DateTime.now();
 
   String _normalizeEmail(String email) => email.trim().toLowerCase();
+
+  Role _acceptedRole(DogMembership existingMembership, ShareInvitation invite) {
+    if (existingMembership.role.isCanonicalAdmin) {
+      return existingMembership.role;
+    }
+    return invite.role;
+  }
 
   String? _resolveCloudDogId(Dog? dog) {
     if (dog == null) return null;
