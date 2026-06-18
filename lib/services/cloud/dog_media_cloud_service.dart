@@ -164,6 +164,19 @@ class DogMediaCloudService {
     return _storage.ref(storagePath).writeToFile(File(localPath));
   }
 
+  Future<Map<String, dynamic>?> readMediaMetadata({
+    required String dogId,
+    required String mediaId,
+  }) async {
+    final snapshot = await _firestore
+        .collection('dogs')
+        .doc(dogId)
+        .collection('media')
+        .doc(mediaId)
+        .get();
+    return snapshot.data();
+  }
+
   Future<void> writeMediaMetadata({
     required String dogId,
     required String mediaId,
