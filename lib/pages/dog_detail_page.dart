@@ -31,6 +31,8 @@ import '../models/hunt_session.dart';
 import '../models/ownership_transfer.dart';
 import '../models/share_invitation.dart';
 import '../services/dog_profile_image_resolver.dart';
+import '../services/dog_profile_media_download_guard.dart';
+import '../services/dog_profile_media_download_service.dart';
 import '../services/dog_profile_media_update_service.dart';
 import '../services/dog_photo_storage.dart';
 import 'session_media_image_helper.dart';
@@ -158,6 +160,10 @@ class _DogDetailPageState extends State<DogDetailPage> {
   final DogHeatCycleRepository _heatCycleRepository = DogHeatCycleRepository();
   final DogProfileImageResolver _profileImageResolver =
       DogProfileImageResolver();
+  final DogProfileMediaDownloadGuard _profileMediaDownloadGuard =
+      DogProfileMediaDownloadGuard();
+  final DogProfileMediaDownloadService _profileMediaDownloadService =
+      DogProfileMediaDownloadService();
 
   final Set<String> _ownerEmailEnsured = <String>{};
   bool _wmShowTitle = true;
@@ -529,6 +535,25 @@ class _DogDetailPageState extends State<DogDetailPage> {
       debugPrint('[DOG][PROFILE_MEDIA] cloud upload failed: $error');
       debugPrint('$stack');
     }
+  }
+
+  void _scheduleProfileMediaDownloadIfNeeded(Dog dog) {
+    if (!_profileMediaDownloadGuard.markAttemptIfEligible(dog)) {
+      return;
+    }
+    Future.microtask(() async {
+      if (!mounted) return;
+      try {
+        final asset =
+            await _profileMediaDownloadService.downloadProfileImageForDog(dog);
+        if (asset != null && mounted) {
+          setState(() => _avatarRevision++);
+        }
+      } catch (error, stack) {
+        debugPrint('[DOG][PROFILE_MEDIA] cloud download failed: $error');
+        debugPrint('$stack');
+      }
+    });
   }
 
   Dog? _resolveDog(Box<Dog> box) {
@@ -2511,6 +2536,7 @@ class _DogDetailPageState extends State<DogDetailPage> {
         }
         final storedPath = dog.imagePath;
         final resolvedAvatarPath = _profileImageResolver.resolve(dog);
+        _scheduleProfileMediaDownloadIfNeeded(dog);
 
         if (storedPath != null &&
             storedPath.startsWith('/') &&
