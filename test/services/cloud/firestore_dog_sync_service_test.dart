@@ -201,4 +201,20 @@ void main() {
     expect(payload['createdAt'], isA<FieldValue>());
     expect(payload['updatedAt'], isA<FieldValue>());
   });
+
+  test('mapFirestoreDogToDog ignores local-only imagePath from cloud', () {
+    final dog = FirestoreDogSyncService.instance.mapFirestoreDogToDog(
+      <String, dynamic>{
+        'id': 'cloud-dog-1',
+        'dogKey': 'DOG-1',
+        'name': 'Birk',
+        'regNrDisplay': 'NO123/45',
+        'updatedAt': Timestamp.fromDate(DateTime.utc(2026, 6)),
+        'imagePath': 'dogs/photos/dog_owner_device.jpg',
+      },
+      'cloud-dog-1',
+    );
+
+    expect(dog.imagePath, isNull);
+  });
 }

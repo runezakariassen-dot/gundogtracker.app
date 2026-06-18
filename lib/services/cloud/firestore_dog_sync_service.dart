@@ -512,7 +512,7 @@ class FirestoreDogSyncService {
       name: name,
       dogKey: dogKey,
       regNrDisplay: regNrDisplay,
-      imagePath: _readString(data['imagePath']),
+      imagePath: _readCloudDogImagePath(data),
       birthDate: _readDateTime(data['birthDate']),
       pedigreeUrl: _readString(data['pedigreeUrl']),
       breed: _readString(data['breed']),
@@ -886,7 +886,18 @@ class FirestoreDogSyncService {
     return cloudDog.copyWith(
       id: localDog.id,
       dogKey: localDog.dogKey.isNotEmpty ? localDog.dogKey : cloudDog.dogKey,
+      imagePath: localDog.imagePath,
     );
+  }
+
+  String? _readCloudDogImagePath(Map<String, dynamic> data) {
+    final imagePath = _readString(data['imagePath']);
+    if (imagePath != null) {
+      _printLog(
+        '[CLOUD][DOG][MEDIA] ignored non-portable dog imagePath from cloud',
+      );
+    }
+    return null;
   }
 
   /// Guarantees a local [DogMembership] exists for an accessible dog.
