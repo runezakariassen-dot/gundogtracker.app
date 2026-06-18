@@ -30,6 +30,7 @@ import '../models/dog_sex.dart';
 import '../models/hunt_session.dart';
 import '../models/ownership_transfer.dart';
 import '../models/share_invitation.dart';
+import '../services/dog_profile_media_update_service.dart';
 import '../services/dog_photo_storage.dart';
 import 'session_media_image_helper.dart';
 import '../services/hive_lifecycle_service.dart';
@@ -480,6 +481,10 @@ class _DogDetailPageState extends State<DogDetailPage> {
 
       if (!mounted) return;
       setState(() => _avatarRevision++);
+      await _tryUploadProfilePhotoToCloud(
+        dog: dog.copyWith(imagePath: savedPath),
+        savedPath: savedPath,
+      );
     } catch (error, stack) {
       debugPrint('🐕 [PHOTO] Error picking photo: $error');
       debugPrint('$stack');
@@ -487,6 +492,39 @@ class _DogDetailPageState extends State<DogDetailPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.dog_detail_snackbar_image_save_failed)),
       );
+    }
+  }
+
+  Future<void> _tryUploadProfilePhotoToCloud({
+    required Dog dog,
+    required String savedPath,
+  }) async {
+    final dogCloudId = dog.cloudId?.trim();
+    if (dogCloudId == null || dogCloudId.isEmpty || dog.dogKey.trim().isEmpty) {
+      return;
+    }
+    final currentUserUid = _activeFirebaseUid;
+    if (currentUserUid == null || currentUserUid.isEmpty) {
+      return;
+    }
+    final absolutePath = DogImagePathResolver.toAbsolute(savedPath);
+    if (absolutePath == null || absolutePath.trim().isEmpty) {
+      return;
+    }
+
+    try {
+      final file = File(absolutePath);
+      final sizeBytes = await file.exists() ? await file.length() : null;
+      await DogProfileMediaUpdateService().uploadAndSetProfileMediaId(
+        dog: dog,
+        localImagePath: absolutePath,
+        currentUserUid: currentUserUid,
+        contentType: 'image/jpeg',
+        sizeBytes: sizeBytes,
+      );
+    } catch (error, stack) {
+      debugPrint('[DOG][PROFILE_MEDIA] cloud upload failed: $error');
+      debugPrint('$stack');
     }
   }
 
