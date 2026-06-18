@@ -9,6 +9,7 @@ import '../data/hive_boxes.dart';
 import '../data/hive_path_service.dart';
 import '../domain/models/active_session_draft.dart';
 import '../models/dog.dart';
+import '../models/dog_media_asset.dart';
 import '../models/dog_milestone_state.dart';
 import '../models/dog_membership.dart';
 import '../models/gps_track.dart';
@@ -106,6 +107,11 @@ class HiveLifecycleService {
       name: dogMilestoneStateBoxName,
       open: (attempts) =>
           _openBoxOnce<DogMilestoneState>(dogMilestoneStateBoxName, attempts),
+    ),
+    _BoxDescriptor<DogMediaAsset>(
+      name: dogMediaAssetsBoxName,
+      open: (attempts) =>
+          _openBoxOnce<DogMediaAsset>(dogMediaAssetsBoxName, attempts),
     ),
     _BoxDescriptor<ActiveSessionDraft>(
       name: activeSessionDraftBoxName,
