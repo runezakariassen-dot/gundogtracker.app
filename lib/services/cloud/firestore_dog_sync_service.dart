@@ -42,6 +42,7 @@ class FirestoreDogSyncService {
     required String cloudDogId,
     required String cloudOwnerUid,
   }) {
+    final profileMediaId = dog.profileMediaId?.trim();
     return <String, dynamic>{
       'id': cloudDogId,
       'dogKey': dog.dogKey,
@@ -70,6 +71,8 @@ class FirestoreDogSyncService {
       'watermarkShowOfficialName': dog.watermarkShowOfficialName,
       'watermarkShowNickname': dog.watermarkShowNickname,
       'watermarkUseDarkText': dog.watermarkUseDarkText,
+      if (profileMediaId != null && profileMediaId.isNotEmpty)
+        'profileMediaId': profileMediaId,
       'updatedAt': Timestamp.fromDate(dog.updatedAt.toUtc()),
       'deletedAt': FieldValue.delete(),
       'cloudOwnerUid': cloudOwnerUid,
@@ -535,6 +538,7 @@ class FirestoreDogSyncService {
       watermarkUseDarkText: watermarkUseDarkText,
       cloudId: dogId,
       cloudOwnerUid: _readString(data['cloudOwnerUid']),
+      profileMediaId: _readString(data['profileMediaId']),
       deletedAt: _readDateTime(data['deletedAt']),
     );
   }

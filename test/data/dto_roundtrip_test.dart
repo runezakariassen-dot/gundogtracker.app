@@ -17,6 +17,7 @@ void main() {
       dogKey: 'NO123-45',
       regNrDisplay: 'NO123/45',
       imagePath: '/tmp/dog.png',
+      profileMediaId: 'profile-media-1',
       birthDate: DateTime(2020, 5, 1),
       pedigreeUrl: 'https://example.com',
       breed: 'Elghund',
@@ -33,6 +34,7 @@ void main() {
     expect(restored.dogKey, dog.dogKey);
     expect(restored.regNrDisplay, dog.regNrDisplay);
     expect(restored.imagePath, dog.imagePath);
+    expect(restored.profileMediaId, dog.profileMediaId);
     expect(restored.birthDate, dog.birthDate);
     expect(restored.pedigreeUrl, dog.pedigreeUrl);
     expect(restored.breed, dog.breed);

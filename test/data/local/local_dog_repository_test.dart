@@ -125,6 +125,7 @@ void main() {
       dogKey: 'DOG-MALE',
       regNrDisplay: 'NO100/01',
       imagePath: '/tmp/birk.jpg',
+      profileMediaId: 'profile-media-1',
       pedigreeUrl: 'https://example.com/pedigree/birk',
       sex: DogSex.male,
       updatedAt: DateTime.utc(2024, 1, 1, 12),
@@ -146,6 +147,7 @@ void main() {
     expect(restored.name, 'Birk');
     expect(restored.pedigreeUrl, 'https://example.com/pedigree/birk');
     expect(restored.imagePath, '/tmp/birk.jpg');
+    expect(restored.profileMediaId, 'profile-media-1');
   });
 
   test('female sex persists after restart and keeps profile metadata',
