@@ -30,6 +30,7 @@ import '../models/dog_sex.dart';
 import '../models/hunt_session.dart';
 import '../models/ownership_transfer.dart';
 import '../models/share_invitation.dart';
+import '../services/dog_profile_image_resolver.dart';
 import '../services/dog_profile_media_update_service.dart';
 import '../services/dog_photo_storage.dart';
 import 'session_media_image_helper.dart';
@@ -155,6 +156,8 @@ class _DogDetailPageState extends State<DogDetailPage> {
   int _heatCycleRefreshTick = 0;
 
   final DogHeatCycleRepository _heatCycleRepository = DogHeatCycleRepository();
+  final DogProfileImageResolver _profileImageResolver =
+      DogProfileImageResolver();
 
   final Set<String> _ownerEmailEnsured = <String>{};
   bool _wmShowTitle = true;
@@ -2507,7 +2510,7 @@ class _DogDetailPageState extends State<DogDetailPage> {
           }
         }
         final storedPath = dog.imagePath;
-        final resolvedAvatarPath = DogImagePathResolver.toAbsolute(storedPath);
+        final resolvedAvatarPath = _profileImageResolver.resolve(dog);
 
         if (storedPath != null &&
             storedPath.startsWith('/') &&
