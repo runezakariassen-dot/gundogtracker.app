@@ -391,22 +391,18 @@ class FirestoreDogSyncService {
 
       final memberRef = dogRef.collection('members').doc(uid);
       final snapshot = await memberRef.get();
-      final data = <String, dynamic>{
-        'uid': uid,
-        'role': membership.role.name,
-        'status': membership.status.name,
-        'dogKey': invite.dogKey,
-        'acceptedInviteId': invite.inviteId,
-        'updatedAt': FieldValue.serverTimestamp(),
-      };
-      if (!snapshot.exists) {
-        data['createdAt'] = FieldValue.serverTimestamp();
-      }
+      final data = buildShareInviteMembershipPayload(
+        invite: invite,
+        membership: membership,
+        uid: uid,
+        includeCreatedAt: !snapshot.exists,
+      );
 
       await memberRef.set(data, SetOptions(merge: true));
       _printLog(
         '[INVITE][ACCEPT] cloud membership write success '
-        'dogId=${dogRef.id} uid=$uid role=${membership.role.name}',
+        'dogId=${dogRef.id} uid=$uid role=${membership.role.name} '
+        'status=${Status.active.name}',
       );
       return true;
     } catch (error, stackTrace) {
@@ -414,6 +410,26 @@ class FirestoreDogSyncService {
       debugPrint(stackTrace.toString());
       return false;
     }
+  }
+
+  static Map<String, dynamic> buildShareInviteMembershipPayload({
+    required ShareInvitation invite,
+    required DogMembership membership,
+    required String uid,
+    bool includeCreatedAt = false,
+  }) {
+    final data = <String, dynamic>{
+      'uid': uid,
+      'role': membership.role.name,
+      'status': Status.active.name,
+      'dogKey': invite.dogKey,
+      'acceptedInviteId': invite.inviteId,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+    if (includeCreatedAt) {
+      data['createdAt'] = FieldValue.serverTimestamp();
+    }
+    return data;
   }
 
   Future<DocumentReference<Map<String, dynamic>>?> _resolveInviteDogRef(
@@ -496,7 +512,7 @@ class FirestoreDogSyncService {
       name: name,
       dogKey: dogKey,
       regNrDisplay: regNrDisplay,
-      imagePath: _readString(data['imagePath']),
+      imagePath: _readCloudDogImagePath(data),
       birthDate: _readDateTime(data['birthDate']),
       pedigreeUrl: _readString(data['pedigreeUrl']),
       breed: _readString(data['breed']),
@@ -870,7 +886,18 @@ class FirestoreDogSyncService {
     return cloudDog.copyWith(
       id: localDog.id,
       dogKey: localDog.dogKey.isNotEmpty ? localDog.dogKey : cloudDog.dogKey,
+      imagePath: localDog.imagePath,
     );
+  }
+
+  String? _readCloudDogImagePath(Map<String, dynamic> data) {
+    final imagePath = _readString(data['imagePath']);
+    if (imagePath != null) {
+      _printLog(
+        '[CLOUD][DOG][MEDIA] ignored non-portable dog imagePath from cloud',
+      );
+    }
+    return null;
   }
 
   /// Guarantees a local [DogMembership] exists for an accessible dog.
