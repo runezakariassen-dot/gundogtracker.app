@@ -17,29 +17,52 @@ class FirestoreShareInvitationSyncService {
 
   static const String _collection = 'shareInvites';
 
-  Future<void> upsertInviteBestEffort(ShareInvitation invite) async {
+  /// Writes the invite to Firestore and throws on any failure.
+  ///
+  /// Throws [StateError] if the current Firebase user is not authenticated.
+  /// Re-throws any Firestore exception so callers can react to failures.
+  Future<void> upsertInviteRequired(ShareInvitation invite) async {
+    final uid = _auth.currentUser?.uid.trim() ?? '';
+    if (uid.isEmpty) {
+      debugPrint(
+        '[CLOUD][INVITE] upsertRequired failed: missing auth uid '
+        'inviteId=${invite.inviteId} dogKey=${invite.dogKey} '
+        'recipientEmail=${invite.recipientEmail.trim().toLowerCase()}',
+      );
+      throw StateError(
+        'Cannot write invite to Firestore: no authenticated user. '
+        'inviteId=${invite.inviteId}',
+      );
+    }
     try {
-      final user = _auth.currentUser;
-      final uid = user?.uid.trim() ?? '';
-      if (uid.isEmpty) {
-        debugPrint(
-          '[CLOUD][INVITE] skip upsert: missing auth uid inviteId=${invite.inviteId} dogKey=${invite.dogKey} recipientEmail=${invite.recipientEmail.trim().toLowerCase()}',
-        );
-        return;
-      }
-
       await _firestore.collection(_collection).doc(invite.inviteId).set(
             _mapInviteToFirestore(invite, createdByAuthUid: uid),
             SetOptions(merge: true),
           );
       debugPrint(
-        '[CLOUD][INVITE] upsert success inviteId=${invite.inviteId} dogKey=${invite.dogKey} recipientEmail=${invite.recipientEmail.trim().toLowerCase()}',
+        '[CLOUD][INVITE] upsertRequired success inviteId=${invite.inviteId} '
+        'dogKey=${invite.dogKey} '
+        'recipientEmail=${invite.recipientEmail.trim().toLowerCase()}',
       );
     } catch (error, stackTrace) {
       debugPrint(
-        '[CLOUD][INVITE] upsert failed inviteId=${invite.inviteId} dogKey=${invite.dogKey} recipientEmail=${invite.recipientEmail.trim().toLowerCase()} error=$error',
+        '[CLOUD][INVITE] upsertRequired failed inviteId=${invite.inviteId} '
+        'dogKey=${invite.dogKey} '
+        'recipientEmail=${invite.recipientEmail.trim().toLowerCase()} '
+        'error=$error',
       );
       debugPrint(stackTrace.toString());
+      rethrow;
+    }
+  }
+
+  /// Best-effort variant: delegates to [upsertInviteRequired] but swallows all
+  /// errors so background sync paths never crash.
+  Future<void> upsertInviteBestEffort(ShareInvitation invite) async {
+    try {
+      await upsertInviteRequired(invite);
+    } catch (_) {
+      // Error already logged by upsertInviteRequired.
     }
   }
 

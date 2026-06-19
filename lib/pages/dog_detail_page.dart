@@ -1782,6 +1782,12 @@ class _DogDetailPageState extends State<DogDetailPage> {
                     });
                   } on ShareException catch (error) {
                     _showShareError(error);
+                  } catch (_) {
+                    if (!mounted) return;
+                    final l10n = AppLocalizations.of(context)!;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.share_error_dialog_title)),
+                    );
                   } finally {
                     if (mounted) setState(() => _isSendingInvite = false);
                   }
