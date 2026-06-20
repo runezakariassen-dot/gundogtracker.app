@@ -23,6 +23,7 @@ import '../domain/milestones/milestone_helpers.dart';
 import '../domain/repositories/dog_milestone_state_repository.dart';
 import '../domain/sessions/session_visibility.dart';
 import '../domain/services/dog_milestone_display_service.dart';
+import '../data/local/sync_outbox_service.dart';
 import '../models/dog.dart';
 import '../models/dog_heat_cycle_log.dart';
 import '../models/dog_membership.dart';
@@ -164,6 +165,7 @@ class _DogDetailPageState extends State<DogDetailPage> {
       DogProfileMediaDownloadGuard();
   final DogProfileMediaDownloadService _profileMediaDownloadService =
       DogProfileMediaDownloadService();
+  final SyncOutboxService _syncOutboxService = SyncOutboxService();
 
   final Set<String> _ownerEmailEnsured = <String>{};
   bool _wmShowTitle = true;
@@ -540,13 +542,15 @@ class _DogDetailPageState extends State<DogDetailPage> {
     try {
       final file = File(absolutePath);
       final sizeBytes = await file.exists() ? await file.length() : null;
-      await DogProfileMediaUpdateService().uploadAndSetProfileMediaId(
+      final updatedDog =
+          await DogProfileMediaUpdateService().uploadAndSetProfileMediaId(
         dog: dog.copyWith(cloudId: dogCloudId),
         localImagePath: absolutePath,
         currentUserUid: currentUserUid,
         contentType: 'image/jpeg',
         sizeBytes: sizeBytes,
       );
+      await _syncOutboxService.enqueueUpsertDog(updatedDog);
     } catch (error, stack) {
       debugPrint('[DOG][PROFILE_MEDIA] cloud upload failed: $error');
       debugPrint('$stack');

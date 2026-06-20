@@ -1322,13 +1322,15 @@ class _DogEditorPageState extends State<DogEditorPage> {
     try {
       final file = File(absolutePath);
       final sizeBytes = await file.exists() ? await file.length() : null;
-      await DogProfileMediaUpdateService().uploadAndSetProfileMediaId(
+      final updatedDog =
+          await DogProfileMediaUpdateService().uploadAndSetProfileMediaId(
         dog: dog.copyWith(cloudId: dogCloudId),
         localImagePath: absolutePath,
         currentUserUid: currentUserUid,
         contentType: 'image/jpeg',
         sizeBytes: sizeBytes,
       );
+      await _syncOutboxService.enqueueUpsertDog(updatedDog);
       _profilePhotoChanged = false;
     } catch (error, stackTrace) {
       debugPrint('[DOG][PROFILE_MEDIA] editor cloud upload failed: $error');
