@@ -508,16 +508,32 @@ class _DogDetailPageState extends State<DogDetailPage> {
     required Dog dog,
     required String savedPath,
   }) async {
-    final dogCloudId = dog.cloudId?.trim();
-    if (dogCloudId == null || dogCloudId.isEmpty || dog.dogKey.trim().isEmpty) {
+    final resolvedCloudId = dog.cloudId?.trim();
+    final dogCloudId = (resolvedCloudId == null || resolvedCloudId.isEmpty)
+        ? dog.id.trim()
+        : resolvedCloudId;
+    if (dogCloudId.isEmpty) {
+      debugPrint(
+        '[DOG][PROFILE_MEDIA] Skipping cloud upload: missing cloudId and dog.id fallback',
+      );
+      return;
+    }
+    if (dog.dogKey.trim().isEmpty) {
+      debugPrint('[DOG][PROFILE_MEDIA] Skipping cloud upload: missing dogKey');
       return;
     }
     final currentUserUid = _activeFirebaseUid;
     if (currentUserUid == null || currentUserUid.isEmpty) {
+      debugPrint(
+        '[DOG][PROFILE_MEDIA] Skipping cloud upload: missing Firebase uid',
+      );
       return;
     }
     final absolutePath = DogImagePathResolver.toAbsolute(savedPath);
     if (absolutePath == null || absolutePath.trim().isEmpty) {
+      debugPrint(
+        '[DOG][PROFILE_MEDIA] Skipping cloud upload: could not resolve absolute image path',
+      );
       return;
     }
 
@@ -525,7 +541,7 @@ class _DogDetailPageState extends State<DogDetailPage> {
       final file = File(absolutePath);
       final sizeBytes = await file.exists() ? await file.length() : null;
       await DogProfileMediaUpdateService().uploadAndSetProfileMediaId(
-        dog: dog,
+        dog: dog.copyWith(cloudId: dogCloudId),
         localImagePath: absolutePath,
         currentUserUid: currentUserUid,
         contentType: 'image/jpeg',
@@ -534,6 +550,11 @@ class _DogDetailPageState extends State<DogDetailPage> {
     } catch (error, stack) {
       debugPrint('[DOG][PROFILE_MEDIA] cloud upload failed: $error');
       debugPrint('$stack');
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.dog_detail_snackbar_image_save_failed)),
+      );
     }
   }
 
