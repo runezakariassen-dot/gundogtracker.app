@@ -25,6 +25,13 @@ service cloud.firestore {
         ).data.status == 'active';
     }
 
+    function canManageDogMedia(dogId) {
+      return isDogMember(dogId)
+        && get(
+          /databases/$(database)/documents/dogs/$(dogId)/members/$(request.auth.uid)
+        ).data.role in ['owner', 'editor', 'admin'];
+    }
+
     function isOwnerMemberCreate(dogId, memberId) {
       return isSignedIn()
         && memberId == request.auth.uid
@@ -140,6 +147,11 @@ service cloud.firestore {
 
       match /sessions/{sessionId} {
         allow read, create, update: if isDogMember(dogId);
+      }
+
+      match /media/{mediaId} {
+        allow read: if isDogMember(dogId);
+        allow create, update, delete: if canManageDogMedia(dogId);
       }
     }
 

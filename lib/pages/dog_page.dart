@@ -18,8 +18,8 @@ import 'package:jakthund_app/pages/settings_page.dart';
 import 'package:jakthund_app/pages/invitations_page.dart';
 import 'package:jakthund_app/domain/subscription/subscription_service.dart';
 import 'package:jakthund_app/services/hive_lifecycle_service.dart';
+import 'package:jakthund_app/services/dog_profile_image_resolver.dart';
 import 'package:jakthund_app/services/user_identity_service.dart';
-import 'package:jakthund_app/utils/dog_image_path_resolver.dart';
 import 'package:jakthund_app/models/dog_membership.dart';
 import 'package:jakthund_app/ui/subscription/pro_upgrade_sheet.dart';
 
@@ -170,7 +170,7 @@ class _DogPageState extends State<DogPage> {
         Card(
           child: ListTile(
             // ✅ Bigger avatar (56px)
-            leading: _DogAvatar(imagePath: dog.imagePath),
+            leading: _DogAvatar(dog: dog),
             title: Text(
               dog.name.isNotEmpty ? dog.name : l10n.dog_unnamed,
               maxLines: 1,
@@ -499,13 +499,13 @@ class _DogPageState extends State<DogPage> {
 
 /// Bigger avatar widget to keep ListTile clean.
 class _DogAvatar extends StatelessWidget {
-  const _DogAvatar({required this.imagePath});
+  const _DogAvatar({required this.dog});
 
-  final String? imagePath;
+  final Dog dog;
 
   @override
   Widget build(BuildContext context) {
-    final absPath = DogImagePathResolver.toAbsolute(imagePath);
+    final absPath = DogProfileImageResolver().resolve(dog);
     final hasAvatar =
         absPath != null && absPath.isNotEmpty && File(absPath).existsSync();
 

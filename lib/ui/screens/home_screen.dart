@@ -33,7 +33,7 @@ import 'package:jakthund_app/services/hive_lifecycle_service.dart';
 import 'package:jakthund_app/services/user_identity_service.dart';
 import 'package:jakthund_app/ui/home/widgets/active_session_restore_banner.dart';
 import 'package:jakthund_app/ui/home/widgets/top10_points_card.dart';
-import '../../utils/dog_image_path_resolver.dart';
+import 'package:jakthund_app/services/dog_profile_image_resolver.dart';
 
 typedef PendingInvitePuller = Future<int> Function();
 
@@ -811,9 +811,7 @@ class _DogCarouselCard extends StatelessWidget {
   }
 
   Widget _buildImage(BuildContext context) {
-    final resolved = dog.imagePath != null
-        ? DogImagePathResolver.toAbsolute(dog.imagePath)
-        : null;
+    final resolved = DogProfileImageResolver().resolve(dog);
     if (resolved != null && File(resolved).existsSync()) {
       return Image.file(
         File(resolved),
