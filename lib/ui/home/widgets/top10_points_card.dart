@@ -1,14 +1,16 @@
 // ignore_for_file: deprecated_member_use
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'package:jakthund_app/l10n/app_localizations.dart';
+import 'package:jakthund_app/services/dog_profile_image_resolver.dart';
 
 import '../../../domain/milestones/milestone_helpers.dart';
 import '../../../domain/repositories/dog_milestone_state_repository.dart';
 import '../../../models/dog.dart';
 import '../../../models/dog_milestone_state.dart';
-import '../../../services/dog_photo_storage.dart';
 import '../../../widgets/animated_dog_widget.dart';
 import '../top10/top10_strings.dart';
 
@@ -19,9 +21,18 @@ const double _birdIconSize = 32;
 const double _standBadgeWidth = 110;
 const double _milestoneBadgeDefaultWidth = 110;
 
-ImageProvider? _dogAvatarProvider(String? path) {
-  final file = DogPhotoStorage.imageFileFromPath(path);
-  return file == null ? null : FileImage(file);
+ImageProvider? _dogAvatarProvider(Dog dog) {
+  final resolvedPath = DogProfileImageResolver().resolve(dog);
+  if (resolvedPath == null || resolvedPath.isEmpty) {
+    return null;
+  }
+
+  final file = File(resolvedPath);
+  if (!file.existsSync()) {
+    return null;
+  }
+
+  return FileImage(file);
 }
 
 class Top10PointsCard extends StatelessWidget {
@@ -66,7 +77,7 @@ class Top10PointsCard extends StatelessWidget {
                   children: [
                     Builder(
                       builder: (context) {
-                        final avatarImage = _dogAvatarProvider(dog.imagePath);
+                        final avatarImage = _dogAvatarProvider(dog);
                         return Stack(
                           clipBehavior: Clip.none,
                           children: [
@@ -394,7 +405,7 @@ class Top10BirdsCard extends StatelessWidget {
                   children: [
                     Builder(
                       builder: (context) {
-                        final avatarImage = _dogAvatarProvider(dog.imagePath);
+                        final avatarImage = _dogAvatarProvider(dog);
                         return Stack(
                           clipBehavior: Clip.none,
                           children: [
