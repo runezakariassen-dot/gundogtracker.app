@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_types_as_parameter_names, depend_on_referenced_packages, deprecated_member_use, prefer_const_constructors, use_build_context_synchronously
+// ignore_for_file: avoid_types_as_parameter_names, depend_on_referenced_packages, deprecated_member_use, prefer_const_constructors, use_build_context_synchronously, unused_element
 // lib/pages/dog_detail_page.dart
 import 'dart:async';
 import 'dart:io';
@@ -2603,28 +2603,15 @@ class _DogDetailPageState extends State<DogDetailPage> {
             const SizedBox(height: 16),
             _buildMediaLibraryEntry(dog),
             const SizedBox(height: 16),
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => _showPhotoOptions(dog),
-              child: SizedBox(
-                width: 140,
-                height: 140,
-                child: Center(
-                  child: _buildAvatar(
-                    dogId: dog.id,
-                    absolutePath: resolvedAvatarPath,
-                    revision: _avatarRevision,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
             SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.photo_camera),
-                label: Text(l10n.dog_detail_button_edit_photo),
-                onPressed: () => _showPhotoOptions(dog),
+              width: 140,
+              height: 140,
+              child: Center(
+                child: _buildAvatar(
+                  dogId: dog.id,
+                  absolutePath: resolvedAvatarPath,
+                  revision: _avatarRevision,
+                ),
               ),
             ),
             const SizedBox(height: 12),

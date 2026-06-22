@@ -17,6 +17,8 @@ import 'package:jakthund_app/pages/dog_editor_page.dart';
 import 'package:jakthund_app/pages/settings_page.dart';
 import 'package:jakthund_app/pages/invitations_page.dart';
 import 'package:jakthund_app/domain/subscription/subscription_service.dart';
+import 'package:jakthund_app/services/dog_profile_media_download_guard.dart';
+import 'package:jakthund_app/services/dog_profile_media_download_service.dart';
 import 'package:jakthund_app/services/hive_lifecycle_service.dart';
 import 'package:jakthund_app/services/dog_profile_image_resolver.dart';
 import 'package:jakthund_app/services/user_identity_service.dart';
@@ -34,6 +36,10 @@ class _DogPageState extends State<DogPage> {
   late final Box<Dog> _dogsBox;
   late final Box<DogMembership> _membershipBox;
   final UserIdentityService _identityService = UserIdentityService();
+  final DogProfileMediaDownloadGuard _profileMediaDownloadGuard =
+      DogProfileMediaDownloadGuard();
+  final DogProfileMediaDownloadService _profileMediaDownloadService =
+      DogProfileMediaDownloadService();
 
   _WisdomService? _wisdomService;
   int? _wisdomIndex;
@@ -108,6 +114,7 @@ class _DogPageState extends State<DogPage> {
                   currentUserId: currentUid,
                   currentUserIds: currentUserIds,
                 );
+                _scheduleProfileMediaDownloadsForVisibleDogs(visibleDogs);
                 final allowedDogKeys =
                     memberships.map((membership) => membership.dogKey).toSet();
                 final fallbackOwnerCount = currentUserIds.isEmpty
@@ -494,6 +501,29 @@ class _DogPageState extends State<DogPage> {
       context,
       MaterialPageRoute(builder: (_) => const DogEditorPage()),
     );
+  }
+
+  void _scheduleProfileMediaDownloadsForVisibleDogs(List<Dog> dogs) {
+    for (final dog in dogs) {
+      if (!_profileMediaDownloadGuard.markAttemptIfEligible(dog)) {
+        continue;
+      }
+
+      Future.microtask(() async {
+        try {
+          final downloadedAsset = await _profileMediaDownloadService
+              .downloadProfileImageForDog(dog);
+          if (downloadedAsset != null && mounted) {
+            setState(() {});
+          }
+        } catch (error, stackTrace) {
+          debugPrint(
+            '[DOG][PROFILE_MEDIA] Dog page background profile download failed dogId=${dog.id} error=$error',
+          );
+          debugPrint(stackTrace.toString());
+        }
+      });
+    }
   }
 }
 
