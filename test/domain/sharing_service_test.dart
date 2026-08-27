@@ -46,7 +46,13 @@ void main() {
       name: 'Birk',
     );
 
-    final sharing = DomainDi.sharingService(identityService: identity);
+    final sharing = SharingService(
+      identityService: identity,
+      inviteRepository: DomainDi.inviteRepository(),
+      membershipRepository: DomainDi.membershipRepository(),
+      dogRepository: DomainDi.dogRepository(),
+      cloudShareInviteWriter: (_) async {},
+    );
     final invite = await sharing.createShareInvite(
       dogKey: dog.dogKey,
       recipientEmail: 'owner@example.com',
@@ -70,7 +76,13 @@ void main() {
     );
     await dogsBox().add(dog);
 
-    final invite = await DomainDi.sharingService(identityService: identity)
+    final invite = await SharingService(
+      identityService: identity,
+      inviteRepository: DomainDi.inviteRepository(),
+      membershipRepository: DomainDi.membershipRepository(),
+      dogRepository: DomainDi.dogRepository(),
+      cloudShareInviteWriter: (_) async {},
+    )
         .createShareInvite(
       dogKey: dog.dogKey,
       recipientEmail: 'friend@example.com',
@@ -100,7 +112,13 @@ void main() {
       ),
     );
 
-    final invite = await DomainDi.sharingService(identityService: identity)
+    final invite = await SharingService(
+      identityService: identity,
+      inviteRepository: DomainDi.inviteRepository(),
+      membershipRepository: DomainDi.membershipRepository(),
+      dogRepository: DomainDi.dogRepository(),
+      cloudShareInviteWriter: (_) async {},
+    )
         .createShareInvite(
       dogKey: dog.dogKey,
       recipientEmail: 'admin-share@example.com',
@@ -130,7 +148,13 @@ void main() {
     );
 
     await expectLater(
-      DomainDi.sharingService(identityService: identity).createShareInvite(
+      SharingService(
+      identityService: identity,
+      inviteRepository: DomainDi.inviteRepository(),
+      membershipRepository: DomainDi.membershipRepository(),
+      dogRepository: DomainDi.dogRepository(),
+      cloudShareInviteWriter: (_) async {},
+    ).createShareInvite(
         dogKey: dog.dogKey,
         recipientEmail: 'viewer-share@example.com',
       ),
@@ -162,7 +186,13 @@ void main() {
     );
 
     await expectLater(
-      DomainDi.sharingService(identityService: identity).createShareInvite(
+      SharingService(
+      identityService: identity,
+      inviteRepository: DomainDi.inviteRepository(),
+      membershipRepository: DomainDi.membershipRepository(),
+      dogRepository: DomainDi.dogRepository(),
+      cloudShareInviteWriter: (_) async {},
+    ).createShareInvite(
         dogKey: dog.dogKey,
         recipientEmail: 'revoked-share@example.com',
       ),
@@ -192,7 +222,13 @@ void main() {
     );
     expect(visibleDogs.map((dog) => dog.id), <String>['dog-visible-owner']);
 
-    final invite = await DomainDi.sharingService(identityService: identity)
+    final invite = await SharingService(
+      identityService: identity,
+      inviteRepository: DomainDi.inviteRepository(),
+      membershipRepository: DomainDi.membershipRepository(),
+      dogRepository: DomainDi.dogRepository(),
+      cloudShareInviteWriter: (_) async {},
+    )
         .createShareInvite(
       dogKey: dog.dogKey,
       recipientEmail: 'visible-owner@example.com',
@@ -217,6 +253,7 @@ void main() {
       dogRepository: DomainDi.dogRepository(),
       currentAuthUserDisplayNameProvider: () => 'Rune Zakariassen',
       currentAuthUserEmailProvider: () => 'rune.zakariassen@gmail.com',
+      cloudShareInviteWriter: (_) async {},
     );
 
     final invite = await sharing.createShareInvite(
@@ -298,6 +335,78 @@ void main() {
     expect(shareInvitesBox().containsKey(invite.inviteId), isTrue);
   });
 
+  test(
+      'createShareInvite throws and leaves no local invite when cloud write fails',
+      () async {
+    await initDomainLayer();
+    final identity = UserIdentityService();
+    await identity.setCurrentUserId('owner');
+
+    final dog = await DomainDi.dogService(identityService: identity).createDog(
+      regNrInput: 'NO140/45',
+      name: 'Eira',
+    );
+
+    final sharing = SharingService(
+      identityService: identity,
+      inviteRepository: DomainDi.inviteRepository(),
+      membershipRepository: DomainDi.membershipRepository(),
+      dogRepository: DomainDi.dogRepository(),
+      cloudShareInviteWriter: (invite) async {
+        throw Exception('Firestore unavailable');
+      },
+    );
+
+    await expectLater(
+      sharing.createShareInvite(
+        dogKey: dog.dogKey,
+        recipientEmail: 'eira@example.com',
+      ),
+      throwsA(isA<Exception>()),
+    );
+
+    // No pending invite should be stored locally after a failed cloud write.
+    final localInvites =
+        await DomainDi.inviteRepository().getInvitesForDog(dog.dogKey);
+    expect(
+      localInvites.where((i) => i.recipientEmail == 'eira@example.com'),
+      isEmpty,
+    );
+  });
+
+  test('createShareInvite stores local invite when cloud write succeeds',
+      () async {
+    await initDomainLayer();
+    final identity = UserIdentityService();
+    await identity.setCurrentUserId('owner');
+
+    final dog = await DomainDi.dogService(identityService: identity).createDog(
+      regNrInput: 'NO141/45',
+      name: 'Vind',
+    );
+
+    final sharing = SharingService(
+      identityService: identity,
+      inviteRepository: DomainDi.inviteRepository(),
+      membershipRepository: DomainDi.membershipRepository(),
+      dogRepository: DomainDi.dogRepository(),
+      cloudShareInviteWriter: (invite) async {
+        // Succeeds silently – simulates successful Firestore write.
+      },
+    );
+
+    final invite = await sharing.createShareInvite(
+      dogKey: dog.dogKey,
+      recipientEmail: 'vind@example.com',
+    );
+
+    final localInvites =
+        await DomainDi.inviteRepository().getInvitesForDog(dog.dogKey);
+    expect(localInvites.map((i) => i.inviteId), contains(invite.inviteId));
+    expect(invite.status, Status.pending);
+    expect(invite.recipientEmail, 'vind@example.com');
+  });
+
   test('non-owner cannot create invite', () async {
     await initDomainLayer();
     final identity = UserIdentityService();
@@ -309,7 +418,13 @@ void main() {
     );
 
     await identity.setCurrentUserId('member');
-    final sharing = DomainDi.sharingService(identityService: identity);
+    final sharing = SharingService(
+      identityService: identity,
+      inviteRepository: DomainDi.inviteRepository(),
+      membershipRepository: DomainDi.membershipRepository(),
+      dogRepository: DomainDi.dogRepository(),
+      cloudShareInviteWriter: (_) async {},
+    );
 
     await expectLater(
       sharing.createShareInvite(
@@ -333,7 +448,13 @@ void main() {
       name: 'Luna',
     );
 
-    final sharing = DomainDi.sharingService(identityService: identity);
+    final sharing = SharingService(
+      identityService: identity,
+      inviteRepository: DomainDi.inviteRepository(),
+      membershipRepository: DomainDi.membershipRepository(),
+      dogRepository: DomainDi.dogRepository(),
+      cloudShareInviteWriter: (_) async {},
+    );
     final invite = await sharing.createShareInvite(
       dogKey: dog.dogKey,
       recipientEmail: 'luna@example.com',
@@ -358,7 +479,13 @@ void main() {
       name: 'Kvikk',
     );
 
-    final sharing = DomainDi.sharingService(identityService: identity);
+    final sharing = SharingService(
+      identityService: identity,
+      inviteRepository: DomainDi.inviteRepository(),
+      membershipRepository: DomainDi.membershipRepository(),
+      dogRepository: DomainDi.dogRepository(),
+      cloudShareInviteWriter: (_) async {},
+    );
     final invite = await sharing.createShareInvite(
       dogKey: dog.dogKey,
       recipientEmail: 'member@example.com',
@@ -394,7 +521,13 @@ void main() {
       name: 'Rapp',
     );
 
-    final ownerSharing = DomainDi.sharingService(identityService: identity);
+    final ownerSharing = SharingService(
+      identityService: identity,
+      inviteRepository: DomainDi.inviteRepository(),
+      membershipRepository: DomainDi.membershipRepository(),
+      dogRepository: DomainDi.dogRepository(),
+      cloudShareInviteWriter: (_) async {},
+    );
     final createdInvite = await ownerSharing.createShareInvite(
       dogKey: dog.dogKey,
       recipientEmail: 'member@example.com',
@@ -457,7 +590,13 @@ void main() {
       name: 'Kompis',
     );
 
-    final ownerSharing = DomainDi.sharingService(identityService: identity);
+    final ownerSharing = SharingService(
+      identityService: identity,
+      inviteRepository: DomainDi.inviteRepository(),
+      membershipRepository: DomainDi.membershipRepository(),
+      dogRepository: DomainDi.dogRepository(),
+      cloudShareInviteWriter: (_) async {},
+    );
     final inviteB = await ownerSharing.createShareInvite(
       dogKey: dog.dogKey,
       recipientEmail: 'b@example.com',
@@ -505,7 +644,13 @@ void main() {
       name: 'Froya',
     );
 
-    final ownerSharing = DomainDi.sharingService(identityService: identity);
+    final ownerSharing = SharingService(
+      identityService: identity,
+      inviteRepository: DomainDi.inviteRepository(),
+      membershipRepository: DomainDi.membershipRepository(),
+      dogRepository: DomainDi.dogRepository(),
+      cloudShareInviteWriter: (_) async {},
+    );
     final invite = await ownerSharing.createShareInvite(
       dogKey: dog.dogKey,
       recipientEmail: 'member@example.com',
@@ -558,7 +703,13 @@ void main() {
       name: 'Tara',
     );
 
-    final sharing = DomainDi.sharingService(identityService: identity);
+    final sharing = SharingService(
+      identityService: identity,
+      inviteRepository: DomainDi.inviteRepository(),
+      membershipRepository: DomainDi.membershipRepository(),
+      dogRepository: DomainDi.dogRepository(),
+      cloudShareInviteWriter: (_) async {},
+    );
     final invite = await sharing.createShareInvite(
       dogKey: dog.dogKey,
       recipientEmail: 'tara@example.com',
@@ -604,7 +755,13 @@ void main() {
     final identity = UserIdentityService();
     await identity.setCurrentUserId('member');
     await expectLater(
-      DomainDi.sharingService(identityService: identity)
+      SharingService(
+      identityService: identity,
+      inviteRepository: DomainDi.inviteRepository(),
+      membershipRepository: DomainDi.membershipRepository(),
+      dogRepository: DomainDi.dogRepository(),
+      cloudShareInviteWriter: (_) async {},
+    )
           .acceptShareInvite(token: invite.token),
       throwsA(
         isA<ShareException>()
@@ -627,7 +784,13 @@ void main() {
       name: 'Siv',
     );
 
-    final sharing = DomainDi.sharingService(identityService: identity);
+    final sharing = SharingService(
+      identityService: identity,
+      inviteRepository: DomainDi.inviteRepository(),
+      membershipRepository: DomainDi.membershipRepository(),
+      dogRepository: DomainDi.dogRepository(),
+      cloudShareInviteWriter: (_) async {},
+    );
     final invite = await sharing.createShareInvite(
       dogKey: dog.dogKey,
       recipientEmail: 'siv@example.com',
@@ -654,7 +817,13 @@ void main() {
       name: 'Zorro',
     );
 
-    final sharing = DomainDi.sharingService(identityService: identity);
+    final sharing = SharingService(
+      identityService: identity,
+      inviteRepository: DomainDi.inviteRepository(),
+      membershipRepository: DomainDi.membershipRepository(),
+      dogRepository: DomainDi.dogRepository(),
+      cloudShareInviteWriter: (_) async {},
+    );
     final invite = await sharing.createShareInvite(
       dogKey: dog.dogKey,
       recipientEmail: 'zorro@example.com',
@@ -709,6 +878,7 @@ void main() {
       membershipRepository: DomainDi.membershipRepository(),
       dogRepository: DomainDi.dogRepository(),
       currentAuthUserIdProvider: () => authOwnerUid,
+      cloudShareInviteWriter: (_) async {},
     );
 
     final invite = await sharing.createShareInvite(
@@ -742,6 +912,7 @@ void main() {
       dogRepository: DomainDi.dogRepository(),
       currentAuthUserIdProvider: () => null,
       currentAuthUserEmailProvider: () => 'owner@example.com',
+      cloudShareInviteWriter: (_) async {},
     );
 
     final invite = await sharing.createShareInvite(

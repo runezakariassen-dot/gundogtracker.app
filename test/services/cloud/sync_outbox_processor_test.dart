@@ -5,6 +5,8 @@ import 'package:hive/hive.dart';
 import 'package:jakthund_app/data/local/sync_outbox_service.dart';
 import 'package:jakthund_app/services/cloud/network_awareness_service.dart';
 import 'package:jakthund_app/models/dog.dart';
+import 'package:jakthund_app/models/dog_sex.dart';
+import 'package:jakthund_app/models/health_record.dart';
 import 'package:jakthund_app/models/hunt_session.dart';
 import 'package:jakthund_app/models/session_type.dart';
 import 'package:jakthund_app/models/sync_task.dart';
@@ -286,4 +288,186 @@ void main() {
     await processorOnline.runOnce();
     expect(box.values.single.status, SyncStatus.sent);
   });
+
+  test('health record task resolves latest local record and cloud dog id',
+      () async {
+    if (!Hive.isAdapterRegistered(50)) {
+      Hive.registerAdapter(HealthRecordAdapter());
+    }
+    if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(DogAdapter());
+    if (!Hive.isAdapterRegistered(222)) {
+      Hive.registerAdapter(DogSexAdapter());
+    }
+    final healthBox = await Hive.openBox<HealthRecord>('health_records');
+    final dogBox = await Hive.openBox<Dog>('dogs');
+    final outboxService = SyncOutboxService(
+      box: box,
+      enableAutoSync: false,
+    );
+    final record = HealthRecord(
+      id: 'health-1',
+      dogId: 'dog-1',
+      type: HealthRecordType.medication,
+      title: 'Latest title',
+      recordedAt: DateTime.utc(2026, 1, 1),
+      createdAt: DateTime.utc(2026, 1, 1),
+      updatedAt: DateTime.utc(2026, 1, 2),
+    );
+    await healthBox.put(record.id, record);
+    await dogBox.put(
+      'dog-1',
+      Dog(
+        id: 'dog-1',
+        name: 'Birk',
+        dogKey: 'DOG-1',
+        regNrDisplay: 'NO12345/24',
+        cloudId: 'cloud-dog-1',
+      ),
+    );
+    await outboxService.enqueueUpsertHealthRecord(record);
+    final pushed = <String>[];
+    final processor = SyncOutboxProcessor(
+      outboxService: outboxService,
+      networkAwarenessService: FakeNetworkAwarenessService(online: true),
+      healthRecordBox: healthBox,
+      dogBox: dogBox,
+      healthRecordUpsertHandler: ({
+        required HealthRecord record,
+        required String cloudDogId,
+      }) async {
+        pushed.add('$cloudDogId:${record.title}');
+      },
+    );
+
+    await processor.runOnce();
+
+    expect(pushed, <String>['cloud-dog-1:Latest title']);
+    expect(box.values.single.status, SyncStatus.sent);
+  });
+
+  test('missing cloud id waits without retry increment and later completes',
+      () async {
+    if (!Hive.isAdapterRegistered(50)) {
+      Hive.registerAdapter(HealthRecordAdapter());
+    }
+    if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(DogAdapter());
+    if (!Hive.isAdapterRegistered(222)) {
+      Hive.registerAdapter(DogSexAdapter());
+    }
+    final healthBox = await Hive.openBox<HealthRecord>('health_retry');
+    final dogBox = await Hive.openBox<Dog>('dogs_retry');
+    final record = HealthRecord(
+      id: 'health-retry',
+      dogId: 'dog-retry',
+      type: HealthRecordType.other,
+      title: 'Retry',
+      recordedAt: DateTime(2026, 7, 20),
+      createdAt: DateTime.utc(2026, 7, 20),
+      updatedAt: DateTime.utc(2026, 7, 20),
+    );
+    final dog = Dog(
+      id: 'dog-retry',
+      name: 'Birk',
+      dogKey: 'DOG-RETRY',
+      regNrDisplay: 'NO12345/24',
+    );
+    await healthBox.put(record.id, record);
+    await dogBox.put(dog.id, dog);
+    final outbox = SyncOutboxService(box: box, enableAutoSync: false);
+    await outbox.enqueueUpsertHealthRecord(record);
+    final originalTaskId = box.values.single.taskId;
+    var pushes = 0;
+    final processor = SyncOutboxProcessor(
+      outboxService: outbox,
+      networkAwarenessService: FakeNetworkAwarenessService(online: true),
+      healthRecordBox: healthBox,
+      dogBox: dogBox,
+      healthRecordUpsertHandler: ({
+        required HealthRecord record,
+        required String cloudDogId,
+      }) async {
+        pushes++;
+      },
+    );
+
+    await processor.runOnce();
+    expect(box.values.single.status, SyncStatus.pending);
+    expect(box.values.single.retryCount, 0);
+    expect(box.values.single.taskId, originalTaskId);
+    expect(box.length, 1);
+    expect(pushes, 0);
+
+    await dogBox.put(dog.id, dog.copyWith(cloudId: 'cloud-dog-retry'));
+    await processor.runOnce();
+    expect(box.values.single.status, SyncStatus.sent);
+    expect(box.values.single.retryCount, 0);
+    expect(box.values.single.taskId, originalTaskId);
+    expect(box.length, 1);
+    expect(pushes, 1);
+  });
+
+  test('one failing health record does not stop the next task', () async {
+    if (!Hive.isAdapterRegistered(50)) {
+      Hive.registerAdapter(HealthRecordAdapter());
+    }
+    if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(DogAdapter());
+    if (!Hive.isAdapterRegistered(222)) {
+      Hive.registerAdapter(DogSexAdapter());
+    }
+    final healthBox = await Hive.openBox<HealthRecord>('health_batch');
+    final dogBox = await Hive.openBox<Dog>('dogs_batch');
+    await dogBox.put(
+      'dog-1',
+      Dog(
+        id: 'dog-1',
+        name: 'Birk',
+        dogKey: 'DOG-1',
+        regNrDisplay: 'NO12345/24',
+        cloudId: 'cloud-dog-1',
+      ),
+    );
+    final first = _healthRecord('health-fail');
+    final second = _healthRecord('health-success');
+    await healthBox.put(first.id, first);
+    await healthBox.put(second.id, second);
+    final outbox = SyncOutboxService(box: box, enableAutoSync: false);
+    await outbox.enqueueUpsertHealthRecord(first);
+    await outbox.enqueueUpsertHealthRecord(second);
+    final pushed = <String>[];
+    final processor = SyncOutboxProcessor(
+      outboxService: outbox,
+      networkAwarenessService: FakeNetworkAwarenessService(online: true),
+      healthRecordBox: healthBox,
+      dogBox: dogBox,
+      healthRecordUpsertHandler: ({
+        required HealthRecord record,
+        required String cloudDogId,
+      }) async {
+        if (record.id == first.id) throw StateError('network failure');
+        pushed.add(record.id);
+      },
+    );
+
+    await processor.runOnce(limit: 10);
+
+    expect(pushed, <String>[second.id]);
+    expect(
+      box.values.firstWhere((task) => task.entityId == first.id).status,
+      SyncStatus.failed,
+    );
+    expect(
+      box.values.firstWhere((task) => task.entityId == second.id).status,
+      SyncStatus.sent,
+    );
+  });
 }
+
+HealthRecord _healthRecord(String id) => HealthRecord(
+      id: id,
+      dogId: 'dog-1',
+      type: HealthRecordType.other,
+      title: id,
+      recordedAt: DateTime(2026, 7, 20),
+      createdAt: DateTime.utc(2026, 7, 20),
+      updatedAt: DateTime.utc(2026, 7, 20),
+    );

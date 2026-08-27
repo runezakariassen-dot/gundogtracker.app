@@ -135,7 +135,15 @@ class SharingService {
       senderEmail: _currentAuthUserEmail()?.trim().toLowerCase(),
       dogName: _resolveDogName(dog),
     );
-    await _upsertInviteEverywhere(invite);
+
+    // Write to cloud first (strict). If this fails the invite is never
+    // persisted locally, so the UI will never show a false "sent" state.
+    final cloudWriter =
+        _cloudShareInviteWriter ?? _cloudInviteSyncService.upsertInviteRequired;
+    await cloudWriter(invite);
+
+    // Cloud write succeeded – persist locally.
+    await _inviteRepository.upsertInvite(invite);
     return invite;
   }
 

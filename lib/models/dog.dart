@@ -125,6 +125,9 @@ class Dog implements JsonEncodable {
   @HiveField(28)
   final String? memorialStory;
 
+  @HiveField(29)
+  final String? profileMediaId;
+
   static const Object _noValue = Object();
 
   Dog({
@@ -157,6 +160,7 @@ class Dog implements JsonEncodable {
     this.cloudId,
     this.cloudOwnerUid,
     this.deletedAt,
+    this.profileMediaId,
   })  : id = id ?? const Uuid().v4(),
         updatedAt = updatedAt ?? DateTime.now(),
         achievedMilestones = achievedMilestones ?? const [],
@@ -191,6 +195,7 @@ class Dog implements JsonEncodable {
     double? profileHeroTextScale,
     String? cloudId,
     String? cloudOwnerUid,
+    Object? profileMediaId = _noValue,
     Object? deletedAt = _noValue,
   }) {
     final DateTime? finalDeceasedAt = identical(deceasedAt, _noValue)
@@ -205,6 +210,9 @@ class Dog implements JsonEncodable {
     final DateTime? finalDeletedAt = identical(deletedAt, _noValue)
         ? this.deletedAt
         : deletedAt as DateTime?;
+    final String? finalProfileMediaId = identical(profileMediaId, _noValue)
+        ? this.profileMediaId
+        : profileMediaId as String?;
     return Dog(
       name: name ?? this.name,
       dogKey: dogKey ?? this.dogKey,
@@ -238,6 +246,7 @@ class Dog implements JsonEncodable {
       cloudId: cloudId ?? this.cloudId,
       cloudOwnerUid: cloudOwnerUid ?? this.cloudOwnerUid,
       deletedAt: finalDeletedAt,
+      profileMediaId: finalProfileMediaId,
     );
   }
 
@@ -273,6 +282,7 @@ class Dog implements JsonEncodable {
       'nickname': nickname,
       'cloudId': cloudId,
       'cloudOwnerUid': cloudOwnerUid,
+      'profileMediaId': profileMediaId,
       'deletedAt': deletedAt?.toIso8601String(),
     };
   }

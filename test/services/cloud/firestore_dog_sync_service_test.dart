@@ -35,6 +35,7 @@ void main() {
       watermarkShowNickname: true,
       watermarkUseDarkText: true,
       imagePath: 'dogs/photos/dog-1.jpg',
+      profileMediaId: 'profile-media-1',
     );
 
     final payload = FirestoreDogSyncService.buildUpsertPayload(
@@ -64,11 +65,31 @@ void main() {
     expect(payload['watermarkShowOfficialName'], isTrue);
     expect(payload['watermarkShowNickname'], isTrue);
     expect(payload['watermarkUseDarkText'], isTrue);
+    expect(payload['profileMediaId'], 'profile-media-1');
     expect(payload['birthDate'], isA<Timestamp>());
     expect(payload['deceasedAt'], isA<Timestamp>());
     expect(payload['updatedAt'], isA<Timestamp>());
     expect(payload['deletedAt'], isA<FieldValue>());
     expect(payload.containsKey('imagePath'), isFalse);
+  });
+
+  test('buildUpsertPayload omits blank profileMediaId', () {
+    final dog = Dog(
+      id: 'dog-1',
+      name: 'Birk',
+      dogKey: 'DOG-1',
+      regNrDisplay: 'NO123/45',
+      updatedAt: DateTime.utc(2024, 3, 1, 12),
+      profileMediaId: '   ',
+    );
+
+    final payload = FirestoreDogSyncService.buildUpsertPayload(
+      dog: dog,
+      cloudDogId: 'cloud-dog-1',
+      cloudOwnerUid: 'owner-1',
+    );
+
+    expect(payload.containsKey('profileMediaId'), isFalse);
   });
 
   test('isActiveMembershipStatus allows active and legacy owner memberships',
@@ -211,10 +232,27 @@ void main() {
         'regNrDisplay': 'NO123/45',
         'updatedAt': Timestamp.fromDate(DateTime.utc(2026, 6)),
         'imagePath': 'dogs/photos/dog_owner_device.jpg',
+        'profileMediaId': 'profile-media-1',
       },
       'cloud-dog-1',
     );
 
     expect(dog.imagePath, isNull);
+    expect(dog.profileMediaId, 'profile-media-1');
+  });
+
+  test('mapFirestoreDogToDog handles missing profileMediaId', () {
+    final dog = FirestoreDogSyncService.instance.mapFirestoreDogToDog(
+      <String, dynamic>{
+        'id': 'cloud-dog-1',
+        'dogKey': 'DOG-1',
+        'name': 'Birk',
+        'regNrDisplay': 'NO123/45',
+        'updatedAt': Timestamp.fromDate(DateTime.utc(2026, 6)),
+      },
+      'cloud-dog-1',
+    );
+
+    expect(dog.profileMediaId, isNull);
   });
 }

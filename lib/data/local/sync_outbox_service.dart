@@ -8,6 +8,7 @@ import '../../data/dto/dog_dto.dart';
 import '../../data/hive_boxes.dart';
 import '../../models/dog.dart';
 import '../../models/hunt_session.dart';
+import '../../models/health_record.dart';
 import '../../models/sync_task.dart';
 import '../../services/cloud/auto_sync_coordinator.dart';
 
@@ -23,6 +24,17 @@ class SyncOutboxTaskCounts {
   final int inProgress;
   final int failed;
   final int sent;
+}
+
+class SyncOutboxEnqueueException implements Exception {
+  const SyncOutboxEnqueueException(this.entityType, this.entityId);
+
+  final String entityType;
+  final String entityId;
+
+  @override
+  String toString() =>
+      'Failed to persist outbox task type=$entityType entityId=$entityId';
 }
 
 class SyncOutboxService {
@@ -129,6 +141,27 @@ class SyncOutboxService {
     if (saved) {
       _triggerAutoSyncAfterEnqueue();
     }
+  }
+
+  Future<void> enqueueUpsertHealthRecord(HealthRecord record) async {
+    debugPrint(
+      '[SYNC][OUTBOX] enqueue type=health_record_upsert '
+      'entityId=${record.id}',
+    );
+    final saved = await _saveOrReplacePendingTask(
+      entityType: 'health_record_upsert',
+      entityId: record.id,
+      payload: <String, dynamic>{
+        'operation': 'upsert',
+        'id': record.id,
+        'dogId': record.dogId,
+      },
+    );
+    if (saved) {
+      _triggerAutoSyncAfterEnqueue();
+      return;
+    }
+    throw SyncOutboxEnqueueException('health_record_upsert', record.id);
   }
 
   Future<List<SyncTask>> fetchPendingTasks({int limit = 20}) async {
@@ -266,6 +299,7 @@ class SyncOutboxService {
       'session_delete',
       'dog_upsert',
       'dog_delete',
+      'health_record_upsert',
     },
   }) {
     return _resetFailedTasksForRetry(
@@ -282,6 +316,7 @@ class SyncOutboxService {
       'session_delete',
       'dog_upsert',
       'dog_delete',
+      'health_record_upsert',
     },
   }) {
     return _resetFailedTasksForRetry(
@@ -437,6 +472,23 @@ class SyncOutboxService {
     );
   }
 
+  Future<void> markTaskWaitingForDependency(
+    String taskId,
+    Object error,
+  ) async {
+    final existing = _box.get(taskId);
+    if (existing == null) return;
+    await _box.put(
+      taskId,
+      existing.copyWith(
+        status: SyncStatus.pending,
+        lastAttemptAt: _now(),
+        lastError: error.toString(),
+        nextAttemptAt: null,
+      ),
+    );
+  }
+
   Future<void> resetStaleInProgressTasks({
     Duration staleAfter = const Duration(minutes: 10),
   }) async {
@@ -485,6 +537,50 @@ class SyncOutboxService {
     } catch (error) {
       debugPrint(
         '[SYNC][OUTBOX] queue failed type=$entityType entityId=$entityId '
+        'error=$error',
+      );
+      return false;
+    }
+  }
+
+  Future<bool> _saveOrReplacePendingTask({
+    required String entityType,
+    required String entityId,
+    required Map<String, dynamic> payload,
+  }) async {
+    MapEntry<dynamic, SyncTask>? pendingEntry;
+    for (final entry in _box.toMap().entries) {
+      if (entry.value.status == SyncStatus.pending &&
+          entry.value.entityType == entityType &&
+          entry.value.entityId == entityId) {
+        pendingEntry = entry;
+        break;
+      }
+    }
+    if (pendingEntry == null) {
+      return _saveTask(
+        entityType: entityType,
+        entityId: entityId,
+        payload: payload,
+      );
+    }
+    try {
+      final existing = pendingEntry.value;
+      await _box.put(
+        pendingEntry.key,
+        SyncTask(
+          taskId: existing.taskId,
+          entityType: entityType,
+          entityId: entityId,
+          payload: payload,
+          status: SyncStatus.pending,
+          createdAt: existing.createdAt,
+        ),
+      );
+      return true;
+    } catch (error) {
+      debugPrint(
+        '[SYNC][OUTBOX] replace failed type=$entityType entityId=$entityId '
         'error=$error',
       );
       return false;

@@ -9,10 +9,12 @@ import '../data/hive_boxes.dart';
 import '../data/hive_path_service.dart';
 import '../domain/models/active_session_draft.dart';
 import '../models/dog.dart';
+import '../models/dog_media_asset.dart';
 import '../models/dog_milestone_state.dart';
 import '../models/dog_membership.dart';
 import '../models/gps_track.dart';
 import '../models/hunt_session.dart';
+import '../models/health_record.dart';
 import '../models/map_settings.dart';
 import '../models/ownership_transfer.dart';
 import '../models/outbox_entry.dart';
@@ -106,6 +108,16 @@ class HiveLifecycleService {
       name: dogMilestoneStateBoxName,
       open: (attempts) =>
           _openBoxOnce<DogMilestoneState>(dogMilestoneStateBoxName, attempts),
+    ),
+    _BoxDescriptor<DogMediaAsset>(
+      name: dogMediaAssetsBoxName,
+      open: (attempts) =>
+          _openBoxOnce<DogMediaAsset>(dogMediaAssetsBoxName, attempts),
+    ),
+    _BoxDescriptor<HealthRecord>(
+      name: healthRecordsBoxName,
+      open: (attempts) =>
+          _openBoxOnce<HealthRecord>(healthRecordsBoxName, attempts),
     ),
     _BoxDescriptor<ActiveSessionDraft>(
       name: activeSessionDraftBoxName,

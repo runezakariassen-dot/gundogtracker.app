@@ -7,12 +7,21 @@ import '../../data/local/sync_state_store.dart';
 import '../../models/dog.dart';
 import '../../models/gps_track.dart';
 import '../../models/hunt_session.dart';
+import '../../models/health_record.dart';
 import '../../models/sync_task.dart';
 import '../hive_lifecycle_service.dart';
 import 'firestore_dog_sync_service.dart';
 import 'firestore_session_sync_service.dart';
+import 'firestore_health_record_sync_service.dart';
 import 'network_awareness_service.dart';
 import 'sync_merge_policy.dart';
+
+typedef HealthRecordFetchHandler = Future<List<HealthRecord>> Function({
+  required String cloudDogId,
+  required String localDogId,
+  String? localDogKey,
+  DateTime? updatedAfter,
+});
 
 class PullSyncService {
   PullSyncService({
@@ -23,6 +32,9 @@ class PullSyncService {
     SyncOutboxService? outboxService,
     Box<Dog>? dogBox,
     Box<HuntSession>? sessionBox,
+    FirestoreHealthRecordSyncService? healthRecordSyncService,
+    HealthRecordFetchHandler? healthRecordFetchHandler,
+    Box<HealthRecord>? healthRecordBox,
     DateTime Function()? now,
   })  : _dogSyncService = dogSyncService ?? FirestoreDogSyncService.instance,
         _sessionSyncService =
@@ -34,6 +46,9 @@ class PullSyncService {
             outboxService ?? SyncOutboxService(enableAutoSync: false),
         _dogBox = dogBox,
         _sessionBox = sessionBox,
+        _healthRecordSyncService = healthRecordSyncService,
+        _healthRecordFetchHandler = healthRecordFetchHandler,
+        _healthRecordBox = healthRecordBox,
         _now = now ?? DateTime.now;
 
   final FirestoreDogSyncService _dogSyncService;
@@ -43,6 +58,9 @@ class PullSyncService {
   final SyncOutboxService _outboxService;
   final Box<Dog>? _dogBox;
   final Box<HuntSession>? _sessionBox;
+  final FirestoreHealthRecordSyncService? _healthRecordSyncService;
+  final HealthRecordFetchHandler? _healthRecordFetchHandler;
+  final Box<HealthRecord>? _healthRecordBox;
   final DateTime Function() _now;
 
   Future<void> pullAllVisibleData() async {
@@ -75,6 +93,10 @@ class PullSyncService {
           continue;
         }
         await _pullSessionsForDog(
+          dog,
+          updatedAfter: lastSuccessfulPullAt,
+        );
+        await _pullHealthRecordsForDog(
           dog,
           updatedAfter: lastSuccessfulPullAt,
         );
@@ -294,6 +316,54 @@ class PullSyncService {
       case MergeDecision.equal:
         debugPrint('[SYNC][PULL] equal/noop session: $sessionId');
         break;
+    }
+  }
+
+  Future<void> _pullHealthRecordsForDog(
+    Dog dog, {
+    DateTime? updatedAfter,
+  }) async {
+    if (_healthRecordBox == null && !Hive.isBoxOpen(healthRecordsBoxName)) {
+      return;
+    }
+    final cloudDogId = dog.cloudId?.trim();
+    if (cloudDogId == null || cloudDogId.isEmpty) return;
+
+    final fetch = _healthRecordFetchHandler;
+    final records = fetch != null
+        ? await fetch(
+            cloudDogId: cloudDogId,
+            localDogId: dog.id,
+            localDogKey: dog.dogKey,
+            updatedAfter: updatedAfter,
+          )
+        : await (_healthRecordSyncService ??
+                FirestoreHealthRecordSyncService.instance)
+            .fetchHealthRecordsForDog(
+            cloudDogId: cloudDogId,
+            localDogId: dog.id,
+            localDogKey: dog.dogKey,
+            updatedAfter: updatedAfter,
+          );
+
+    final box = _healthRecordBox ?? healthRecordsBox();
+    for (final cloudRecord in records) {
+      final localRecord = box.get(cloudRecord.id);
+      if (localRecord != null && localRecord.dogId != dog.id) {
+        debugPrint(
+          '[SYNC][HEALTH] skipped record assigned to another local dog: '
+          '${cloudRecord.id}',
+        );
+        continue;
+      }
+      final decision = SyncMergePolicy.forHealthRecord(
+        local: localRecord,
+        cloud: cloudRecord,
+      );
+      if (decision == MergeDecision.insert ||
+          decision == MergeDecision.cloudNewer) {
+        await box.put(cloudRecord.id, cloudRecord);
+      }
     }
   }
 

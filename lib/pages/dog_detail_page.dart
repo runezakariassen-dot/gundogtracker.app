@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_types_as_parameter_names, depend_on_referenced_packages, deprecated_member_use, prefer_const_constructors, use_build_context_synchronously
+// ignore_for_file: avoid_types_as_parameter_names, depend_on_referenced_packages, deprecated_member_use, prefer_const_constructors, use_build_context_synchronously, unused_element
 // lib/pages/dog_detail_page.dart
 import 'dart:async';
 import 'dart:io';
@@ -23,6 +23,7 @@ import '../domain/milestones/milestone_helpers.dart';
 import '../domain/repositories/dog_milestone_state_repository.dart';
 import '../domain/sessions/session_visibility.dart';
 import '../domain/services/dog_milestone_display_service.dart';
+import '../data/local/sync_outbox_service.dart';
 import '../models/dog.dart';
 import '../models/dog_heat_cycle_log.dart';
 import '../models/dog_membership.dart';
@@ -30,6 +31,10 @@ import '../models/dog_sex.dart';
 import '../models/hunt_session.dart';
 import '../models/ownership_transfer.dart';
 import '../models/share_invitation.dart';
+import '../services/dog_profile_image_resolver.dart';
+import '../services/dog_profile_media_download_guard.dart';
+import '../services/dog_profile_media_download_service.dart';
+import '../services/dog_profile_media_update_service.dart';
 import '../services/dog_photo_storage.dart';
 import 'session_media_image_helper.dart';
 import '../services/hive_lifecycle_service.dart';
@@ -46,6 +51,7 @@ import '../utils/dog_image_path_resolver.dart';
 import '../domain/user/app_user.dart';
 import 'dog_editor_page.dart';
 import 'dog_media_library_page.dart';
+import 'dog_health_journal_page.dart';
 
 @visibleForTesting
 Role? resolveHighestActiveRoleForUserIds({
@@ -154,6 +160,13 @@ class _DogDetailPageState extends State<DogDetailPage> {
   int _heatCycleRefreshTick = 0;
 
   final DogHeatCycleRepository _heatCycleRepository = DogHeatCycleRepository();
+  final DogProfileImageResolver _profileImageResolver =
+      DogProfileImageResolver();
+  final DogProfileMediaDownloadGuard _profileMediaDownloadGuard =
+      DogProfileMediaDownloadGuard();
+  final DogProfileMediaDownloadService _profileMediaDownloadService =
+      DogProfileMediaDownloadService();
+  final SyncOutboxService _syncOutboxService = SyncOutboxService();
 
   final Set<String> _ownerEmailEnsured = <String>{};
   bool _wmShowTitle = true;
@@ -480,6 +493,10 @@ class _DogDetailPageState extends State<DogDetailPage> {
 
       if (!mounted) return;
       setState(() => _avatarRevision++);
+      await _tryUploadProfilePhotoToCloud(
+        dog: dog.copyWith(imagePath: savedPath),
+        savedPath: savedPath,
+      );
     } catch (error, stack) {
       debugPrint('🐕 [PHOTO] Error picking photo: $error');
       debugPrint('$stack');
@@ -488,6 +505,81 @@ class _DogDetailPageState extends State<DogDetailPage> {
         SnackBar(content: Text(l10n.dog_detail_snackbar_image_save_failed)),
       );
     }
+  }
+
+  Future<void> _tryUploadProfilePhotoToCloud({
+    required Dog dog,
+    required String savedPath,
+  }) async {
+    final resolvedCloudId = dog.cloudId?.trim();
+    final dogCloudId = (resolvedCloudId == null || resolvedCloudId.isEmpty)
+        ? dog.id.trim()
+        : resolvedCloudId;
+    if (dogCloudId.isEmpty) {
+      debugPrint(
+        '[DOG][PROFILE_MEDIA] Skipping cloud upload: missing cloudId and dog.id fallback',
+      );
+      return;
+    }
+    if (dog.dogKey.trim().isEmpty) {
+      debugPrint('[DOG][PROFILE_MEDIA] Skipping cloud upload: missing dogKey');
+      return;
+    }
+    final currentUserUid = _activeFirebaseUid;
+    if (currentUserUid == null || currentUserUid.isEmpty) {
+      debugPrint(
+        '[DOG][PROFILE_MEDIA] Skipping cloud upload: missing Firebase uid',
+      );
+      return;
+    }
+    final absolutePath = DogImagePathResolver.toAbsolute(savedPath);
+    if (absolutePath == null || absolutePath.trim().isEmpty) {
+      debugPrint(
+        '[DOG][PROFILE_MEDIA] Skipping cloud upload: could not resolve absolute image path',
+      );
+      return;
+    }
+
+    try {
+      final file = File(absolutePath);
+      final sizeBytes = await file.exists() ? await file.length() : null;
+      final updatedDog =
+          await DogProfileMediaUpdateService().uploadAndSetProfileMediaId(
+        dog: dog.copyWith(cloudId: dogCloudId),
+        localImagePath: absolutePath,
+        currentUserUid: currentUserUid,
+        contentType: 'image/jpeg',
+        sizeBytes: sizeBytes,
+      );
+      await _syncOutboxService.enqueueUpsertDog(updatedDog);
+    } catch (error, stack) {
+      debugPrint('[DOG][PROFILE_MEDIA] cloud upload failed: $error');
+      debugPrint('$stack');
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.dog_detail_snackbar_image_save_failed)),
+      );
+    }
+  }
+
+  void _scheduleProfileMediaDownloadIfNeeded(Dog dog) {
+    if (!_profileMediaDownloadGuard.markAttemptIfEligible(dog)) {
+      return;
+    }
+    Future.microtask(() async {
+      if (!mounted) return;
+      try {
+        final asset =
+            await _profileMediaDownloadService.downloadProfileImageForDog(dog);
+        if (asset != null && mounted) {
+          setState(() => _avatarRevision++);
+        }
+      } catch (error, stack) {
+        debugPrint('[DOG][PROFILE_MEDIA] cloud download failed: $error');
+        debugPrint('$stack');
+      }
+    });
   }
 
   Dog? _resolveDog(Box<Dog> box) {
@@ -1311,6 +1403,26 @@ class _DogDetailPageState extends State<DogDetailPage> {
     );
   }
 
+  void _openHealthJournal(Dog dog) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => DogHealthJournalPage(dog: dog),
+      ),
+    );
+  }
+
+  Widget _buildHealthJournalEntry(Dog dog, AppLocalizations l10n) {
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.medical_information_outlined),
+        title: Text(l10n.healthJournalTitle),
+        subtitle: Text(l10n.healthJournalEntrySubtitle),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => _openHealthJournal(dog),
+      ),
+    );
+  }
+
   Widget _buildNextMilestoneSection({
     required BuildContext context,
     required int totalStands,
@@ -1716,6 +1828,12 @@ class _DogDetailPageState extends State<DogDetailPage> {
                     });
                   } on ShareException catch (error) {
                     _showShareError(error);
+                  } catch (_) {
+                    if (!mounted) return;
+                    final l10n = AppLocalizations.of(context)!;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.share_error_dialog_title)),
+                    );
                   } finally {
                     if (mounted) setState(() => _isSendingInvite = false);
                   }
@@ -2469,7 +2587,8 @@ class _DogDetailPageState extends State<DogDetailPage> {
           }
         }
         final storedPath = dog.imagePath;
-        final resolvedAvatarPath = DogImagePathResolver.toAbsolute(storedPath);
+        final resolvedAvatarPath = _profileImageResolver.resolve(dog);
+        _scheduleProfileMediaDownloadIfNeeded(dog);
 
         if (storedPath != null &&
             storedPath.startsWith('/') &&
@@ -2505,28 +2624,17 @@ class _DogDetailPageState extends State<DogDetailPage> {
             const SizedBox(height: 16),
             _buildMediaLibraryEntry(dog),
             const SizedBox(height: 16),
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => _showPhotoOptions(dog),
-              child: SizedBox(
-                width: 140,
-                height: 140,
-                child: Center(
-                  child: _buildAvatar(
-                    dogId: dog.id,
-                    absolutePath: resolvedAvatarPath,
-                    revision: _avatarRevision,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
+            _buildHealthJournalEntry(dog, l10n),
+            const SizedBox(height: 16),
             SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.photo_camera),
-                label: Text(l10n.dog_detail_button_edit_photo),
-                onPressed: () => _showPhotoOptions(dog),
+              width: 140,
+              height: 140,
+              child: Center(
+                child: _buildAvatar(
+                  dogId: dog.id,
+                  absolutePath: resolvedAvatarPath,
+                  revision: _avatarRevision,
+                ),
               ),
             ),
             const SizedBox(height: 12),

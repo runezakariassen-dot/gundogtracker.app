@@ -25,6 +25,55 @@ service cloud.firestore {
         ).data.status == 'active';
     }
 
+    function canManageDogMedia(dogId) {
+      return isDogMember(dogId)
+        && get(
+          /databases/$(database)/documents/dogs/$(dogId)/members/$(request.auth.uid)
+        ).data.role in ['owner', 'editor', 'admin'];
+    }
+
+    function canWriteDogHealth(dogId) {
+      return isDogMember(dogId)
+        && get(
+          /databases/$(database)/documents/dogs/$(dogId)/members/$(request.auth.uid)
+        ).data.role in ['owner', 'editor', 'admin'];
+    }
+
+    function isNullableString(value) {
+      return value == null || value is string;
+    }
+
+    function isCalendarDateString(value) {
+      return value is string
+        && value.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    function isValidHealthRecordData(data) {
+      return data.schemaVersion == 1
+        && data.id is string
+        && data.cloudDogId is string
+        && data.type is string
+        && data.title is string
+        && isCalendarDateString(data.recordedDate)
+        && data.repeatKind is string
+        && data.createdByUserId is string
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp
+        && isNullableString(data.dogKey)
+        && isNullableString(data.description)
+        && isNullableString(data.productName)
+        && isNullableString(data.dose)
+        && (data.nextDueDate == null
+          || isCalendarDateString(data.nextDueDate))
+        && (data.deletedAt == null || data.deletedAt is timestamp)
+        && (
+          (data.repeatKind == 'customDays'
+            && data.customDays is int
+            && data.customDays > 0)
+          || (data.repeatKind != 'customDays' && data.customDays == null)
+        );
+    }
+
     function isOwnerMemberCreate(dogId, memberId) {
       return isSignedIn()
         && memberId == request.auth.uid
@@ -140,6 +189,40 @@ service cloud.firestore {
 
       match /sessions/{sessionId} {
         allow read, create, update: if isDogMember(dogId);
+      }
+
+      match /tracks/{trackId} {
+        allow read, create, update: if isDogMember(dogId);
+      }
+
+      match /media/{mediaId} {
+        allow read: if isDogMember(dogId);
+        allow create, update, delete: if canManageDogMedia(dogId);
+      }
+
+      match /healthRecords/{healthRecordId} {
+        allow read: if isDogMember(dogId);
+        allow create: if canWriteDogHealth(dogId)
+          && request.resource.data.id == healthRecordId
+          && request.resource.data.cloudDogId == dogId
+          && isValidHealthRecordData(request.resource.data);
+        allow update: if canWriteDogHealth(dogId)
+          && isValidHealthRecordData(request.resource.data)
+          && request.resource.data.id == healthRecordId
+          && request.resource.data.id == resource.data.id
+          && request.resource.data.cloudDogId == dogId
+          && request.resource.data.cloudDogId == resource.data.cloudDogId
+          && request.resource.data.createdAt == resource.data.createdAt
+          && (
+            ('createdByUserId' in resource.data
+              && request.resource.data.createdByUserId == resource.data.createdByUserId)
+            || (!('createdByUserId' in resource.data)
+              && 'createdBy' in resource.data
+              && request.resource.data.createdByUserId == resource.data.createdBy)
+          )
+          && request.resource.data.schemaVersion == resource.data.schemaVersion
+          && request.resource.data.dogKey == resource.data.dogKey
+          && request.resource.data.updatedAt >= resource.data.updatedAt;
       }
     }
 

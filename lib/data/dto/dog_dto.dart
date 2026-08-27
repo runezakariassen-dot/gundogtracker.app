@@ -35,6 +35,7 @@ Dog dogFromJson(Map<String, dynamic> json) {
     watermarkUseDarkText: _readBool(json['watermarkUseDarkText']) ?? false,
     cloudId: _readString(json['cloudId']),
     cloudOwnerUid: _readString(json['cloudOwnerUid']),
+    profileMediaId: _readString(json['profileMediaId']),
     deletedAt: _parseDate(json['deletedAt']),
   );
 }

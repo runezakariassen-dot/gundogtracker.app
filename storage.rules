@@ -1,0 +1,56 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function memberPath(dogId) {
+      return /databases/(default)/documents/dogs/$(dogId)/members/$(request.auth.uid);
+    }
+
+    function activeMembership(dogId) {
+      return isSignedIn()
+        && firestore.exists(memberPath(dogId))
+        && firestore.get(memberPath(dogId)).data.status == 'active';
+    }
+
+    function activeRole(dogId) {
+      return firestore.get(memberPath(dogId)).data.role;
+    }
+
+    function canManageDogProfileMedia(dogId) {
+      return activeMembership(dogId)
+        && activeRole(dogId) in ['owner', 'editor', 'admin'];
+    }
+
+    function canWriteSessionMedia(dogId) {
+      // TODO(shared-media): Allow all active members to upload media to their
+      // own sessions once media metadata includes createdByUid/session ownership
+      // and the app writes it transactionally with the Storage object.
+      return activeMembership(dogId)
+        && activeRole(dogId) in ['owner', 'editor', 'admin'];
+    }
+
+    match /dogs/{dogId}/profile/{mediaId}/original {
+      allow read: if activeMembership(dogId);
+      allow create, update, delete: if canManageDogProfileMedia(dogId);
+    }
+
+    match /dogs/{dogId}/profile/{mediaId}/thumb.jpg {
+      allow read: if activeMembership(dogId);
+      allow create, update, delete: if canManageDogProfileMedia(dogId);
+    }
+
+    match /dogs/{dogId}/sessions/{sessionId}/media/{mediaId}/original {
+      allow read: if activeMembership(dogId);
+      allow create, update, delete: if canWriteSessionMedia(dogId);
+    }
+
+    match /dogs/{dogId}/sessions/{sessionId}/media/{mediaId}/thumb.jpg {
+      allow read: if activeMembership(dogId);
+      allow create, update, delete: if canWriteSessionMedia(dogId);
+    }
+  }
+}

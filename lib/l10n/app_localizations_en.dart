@@ -12,12 +12,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appName => 'Fuglehund';
 
   @override
-  String get app_store_identity_subtitle =>
-      'Offline hunting log for pointing dogs';
+  String get app_store_identity_subtitle => 'Offline hunting log for pointing dogs';
 
   @override
-  String get app_store_identity_short_description =>
-      'Log sessions, track progress, and build your dog\'s history – even offline.';
+  String get app_store_identity_short_description => 'Log sessions, track progress, and build your dog\'s history – even offline.';
 
   @override
   String get common_ok => 'OK';
@@ -88,15 +86,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get boot_restore_title => 'Restoring backup…';
 
   @override
-  String get boot_restore_body =>
-      'Do not close the app.\n\nWe block data access while the restore runs to avoid Hive issues.';
+  String get boot_restore_body => 'Do not close the app.\n\nWe block data access while the restore runs to avoid Hive issues.';
 
   @override
   String get boot_restart_title => 'Backup restored ✅';
 
   @override
-  String get boot_restart_body =>
-      'The app will close now so changes can load.\n\nReopen the app afterwards.';
+  String get boot_restart_body => 'The app will close now so changes can load.\n\nReopen the app afterwards.';
 
   @override
   String get qr_scan_title => 'Scan QR';
@@ -132,15 +128,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get advanced_statistics_export => 'Export';
 
   @override
-  String get advanced_statistics_no_progress_data =>
-      'No progress data available';
+  String get advanced_statistics_no_progress_data => 'No progress data available';
 
   @override
   String get advanced_statistics_no_season_data => 'No seasonal data available';
 
   @override
-  String get advanced_statistics_need_two_dogs =>
-      'Need at least 2 dogs to compare';
+  String get advanced_statistics_need_two_dogs => 'Need at least 2 dogs to compare';
 
   @override
   String get advanced_statistics_exporting => 'Exporting...';
@@ -163,12 +157,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get advanced_statistics_stand_rate_per_hour => 'Stand-rate per hour';
 
   @override
-  String get advanced_statistics_bird_contacts_per_session =>
-      'Bird contacts per session';
+  String get advanced_statistics_bird_contacts_per_session => 'Bird contacts per session';
 
   @override
-  String get advanced_statistics_average_flushes_per_session =>
-      'Average flushes per session';
+  String get advanced_statistics_average_flushes_per_session => 'Average flushes per session';
 
   @override
   String get advanced_statistics_success_rate => 'Success rate';
@@ -200,8 +192,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get advanced_statistics_average_points_per_session_over_time =>
-      'Average points per session over time';
+  String get advanced_statistics_average_points_per_session_over_time => 'Average points per session over time';
 
   @override
   String get advanced_statistics_trend_analysis => 'Trend analysis';
@@ -239,24 +230,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get advanced_statistics_export_reports => 'Export reports';
 
   @override
-  String get advanced_statistics_export_statistics_csv =>
-      'Export statistics as CSV';
+  String get advanced_statistics_export_statistics_csv => 'Export statistics as CSV';
 
   @override
-  String get advanced_statistics_contains_comparison_all_dogs =>
-      'Contains comparison of all dogs with key figures.';
+  String get advanced_statistics_contains_comparison_all_dogs => 'Contains comparison of all dogs with key figures.';
 
   @override
-  String get advanced_statistics_export_sessions_csv =>
-      'Export all session data as CSV';
+  String get advanced_statistics_export_sessions_csv => 'Export all session data as CSV';
 
   @override
-  String get advanced_statistics_sessions_csv_description =>
-      'Detailed overview of all hunt sessions with all fields.';
+  String get advanced_statistics_sessions_csv_description => 'Detailed overview of all hunt sessions with all fields.';
 
   @override
-  String get advanced_statistics_generate_text_report_description =>
-      'Generate a text summary of all statistics.';
+  String get advanced_statistics_generate_text_report_description => 'Generate a text summary of all statistics.';
 
   @override
   String get advanced_statistics_export_session_data => 'Export session data';
@@ -267,8 +253,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get advanced_statistics_generate_readable_text_report =>
-      'Generate a readable text report with all statistics.';
+  String get advanced_statistics_generate_readable_text_report => 'Generate a readable text report with all statistics.';
 
   @override
   String stats_week_label(int week) {
@@ -374,8 +359,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stats_no_sessions_registered => 'No sessions registered yet';
 
   @override
-  String get stats_no_sessions_empty_body =>
-      'Log your first session to see trends and statistics over time.';
+  String get stats_no_sessions_empty_body => 'Log your first session to see trends and statistics over time.';
 
   @override
   String get stats_no_sessions_empty_cta => 'Start a session';
@@ -470,8 +454,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dog_editor_delete_dog_title => 'Delete dog';
 
   @override
-  String get dog_editor_delete_dog_body =>
-      'Do you want to delete the dog? This can\'t be undone.';
+  String get dog_editor_delete_dog_body => 'Do you want to delete the dog? This can\'t be undone.';
 
   @override
   String get dog_editor_remove_shared_dog => 'Remove from my dogs';
@@ -483,12 +466,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dog_editor_remove_shared_dog_title => 'Remove from my dogs';
 
   @override
-  String get dog_editor_remove_shared_dog_body =>
-      'Do you want to remove this shared dog from your list?';
+  String get dog_editor_remove_shared_dog_body => 'Do you want to remove this shared dog from your list?';
 
   @override
-  String get dog_editor_remove_shared_dog_explanation =>
-      'The dog will only be removed for you. The owner and other shared users will keep access.';
+  String get dog_editor_remove_shared_dog_explanation => 'The dog will only be removed for you. The owner and other shared users will keep access.';
 
   @override
   String get dog_editor_remove_shared_dog_confirm => 'Remove';
@@ -497,8 +478,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dog_editor_discard_changes_title => 'Discard changes?';
 
   @override
-  String get dog_editor_discard_changes_body =>
-      'Your changes haven\'t been saved yet.';
+  String get dog_editor_discard_changes_body => 'Your changes haven\'t been saved yet.';
 
   @override
   String get dog_editor_discard_changes_confirm => 'Discard';
@@ -507,8 +487,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dog_editor_intro_title => 'Add your dog';
 
   @override
-  String get dog_editor_intro_body =>
-      'You can start simple now. A name is enough to get going, and you can fill in more details later.';
+  String get dog_editor_intro_body => 'You can start simple now. A name is enough to get going, and you can fill in more details later.';
 
   @override
   String get dog_editor_button_cancel => 'Cancel';
@@ -619,8 +598,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dog_memorial_story_label => 'Story / memories';
 
   @override
-  String get dog_memorial_story_hint =>
-      'Write more about the dog, hunting memories, awards or personality';
+  String get dog_memorial_story_hint => 'Write more about the dog, hunting memories, awards or personality';
 
   @override
   String get dog_detail_snackbar_invite_accepted => 'Invitation accepted';
@@ -641,12 +619,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dog_detail_snackbar_request_cancelled => 'Request cancelled';
 
   @override
-  String get dog_detail_snackbar_image_save_failed =>
-      'Could not save the photo.';
+  String get dog_detail_snackbar_image_save_failed => 'Could not save the photo.';
 
   @override
-  String get dog_detail_snackbar_pedigree_invalid =>
-      'The pedigree link is invalid or can’t be opened.';
+  String get dog_detail_snackbar_pedigree_invalid => 'The pedigree link is invalid or can’t be opened.';
 
   @override
   String get dog_detail_photo_source_gallery => 'Choose from photos';
@@ -732,8 +708,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get invitation_summary_generic =>
-      'You have received a dog invitation.';
+  String get invitation_summary_generic => 'You have received a dog invitation.';
 
   @override
   String get invite_accept => 'Accept';
@@ -769,8 +744,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dog_detail_role_confirm_admin_title => 'Grant administrator role?';
 
   @override
-  String get dog_detail_role_confirm_admin_message =>
-      'Administrators can manage access for this dog.';
+  String get dog_detail_role_confirm_admin_message => 'Administrators can manage access for this dog.';
 
   @override
   String get share_role_owner => 'Owner';
@@ -793,8 +767,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get dog_detail_share_disabled_explanation =>
-      'You don\'t have permission to share this dog.';
+  String get dog_detail_share_disabled_explanation => 'You don\'t have permission to share this dog.';
 
   @override
   String get share_accept_title => 'Accept share';
@@ -812,8 +785,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get share_error_dialog_title => 'Share failed';
 
   @override
-  String get share_error_not_owner =>
-      'Only the owner or an administrator can share the dog.';
+  String get share_error_not_owner => 'Only the owner or an administrator can share the dog.';
 
   @override
   String get share_error_invite_not_found => 'Invite not found.';
@@ -831,8 +803,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get share_error_already_has_access => 'You already have access.';
 
   @override
-  String get share_error_already_invited =>
-      'This email has already been invited.';
+  String get share_error_already_invited => 'This email has already been invited.';
 
   @override
   String get share_error_invalid_role => 'Invalid role.';
@@ -841,23 +812,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get share_error_invalid_email => 'Invalid email address.';
 
   @override
-  String get membership_role_error_not_authorized =>
-      'You do not have permission to change this role.';
+  String get membership_role_error_not_authorized => 'You do not have permission to change this role.';
 
   @override
   String get membership_role_error_membership_not_found => 'Member not found.';
 
   @override
-  String get membership_role_error_cannot_edit_self =>
-      'You cannot change your own role.';
+  String get membership_role_error_cannot_edit_self => 'You cannot change your own role.';
 
   @override
-  String get membership_role_error_owner_locked =>
-      'Owner role can only be changed through ownership transfer.';
+  String get membership_role_error_owner_locked => 'Owner role can only be changed through ownership transfer.';
 
   @override
-  String get membership_role_error_cannot_promote_to_admin =>
-      'Administrators cannot assign or change administrator roles.';
+  String get membership_role_error_cannot_promote_to_admin => 'Administrators cannot assign or change administrator roles.';
 
   @override
   String get share_error_dog_not_found_title => 'Dog not found';
@@ -866,12 +833,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get share_error_dog_not_found_detail => 'No dog matches that code.';
 
   @override
-  String get transfer_error_not_owner =>
-      'Only the owner can decline the transfer request.';
+  String get transfer_error_not_owner => 'Only the owner can decline the transfer request.';
 
   @override
-  String get transfer_error_not_recipient =>
-      'You are not the recipient of this request.';
+  String get transfer_error_not_recipient => 'You are not the recipient of this request.';
 
   @override
   String get transfer_error_not_found => 'Transfer request not found.';
@@ -883,12 +848,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transfer_error_not_pending => 'Transfer request is not pending.';
 
   @override
-  String get transfer_error_cannot_transfer_to_self =>
-      'Cannot transfer ownership to yourself.';
+  String get transfer_error_cannot_transfer_to_self => 'Cannot transfer ownership to yourself.';
 
   @override
-  String get transfer_error_cancelled =>
-      'Transfer request has already been declined.';
+  String get transfer_error_cancelled => 'Transfer request has already been declined.';
 
   @override
   String get role_owner => 'Owner';
@@ -909,8 +872,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dog_editor_owner_email_hint => 'name@example.com';
 
   @override
-  String get dog_editor_owner_email_required_error =>
-      'Enter a valid email for the owner.';
+  String get dog_editor_owner_email_required_error => 'Enter a valid email for the owner.';
 
   @override
   String get dog_detail_section_owner_request_title => 'Ownership requested';
@@ -944,8 +906,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dog_detail_watermark_section_title => 'Watermark';
 
   @override
-  String get dog_detail_watermark_info =>
-      'A watermark is required when sharing dog photos.';
+  String get dog_detail_watermark_info => 'A watermark is required when sharing dog photos.';
 
   @override
   String get dog_detail_watermark_toggle_title => 'Show title';
@@ -966,8 +927,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get session_image_viewer_watermark_toggle_title => 'Show title';
 
   @override
-  String get session_image_viewer_watermark_toggle_official_name =>
-      'Show official name';
+  String get session_image_viewer_watermark_toggle_official_name => 'Show official name';
 
   @override
   String get session_image_viewer_watermark_toggle_nickname => 'Show nickname';
@@ -994,8 +954,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get session_image_viewer_watermark_preset_contrast => 'Contrast';
 
   @override
-  String get dog_detail_watermark_share_missing_photo =>
-      'Could not find an image to share.';
+  String get dog_detail_watermark_share_missing_photo => 'Could not find an image to share.';
 
   @override
   String get dog_detail_watermark_share_error => 'Failed to share the image.';
@@ -1061,8 +1020,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dog_detail_farewell_prefix => 'Farewell';
 
   @override
-  String dog_detail_farewell_age_sentence(
-      Object name, Object years, Object months, Object days) {
+  String dog_detail_farewell_age_sentence(Object name, Object years, Object months, Object days) {
     return '$name was $years $months $days old';
   }
 
@@ -1117,35 +1075,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dog_heat_cycle_delete_title => 'Delete heat cycle';
 
   @override
-  String get dog_heat_cycle_delete_body =>
-      'Do you want to delete this heat cycle entry?';
+  String get dog_heat_cycle_delete_body => 'Do you want to delete this heat cycle entry?';
 
   @override
   String get dog_heat_cycle_info_title => 'Heat cycle info';
 
   @override
-  String get dog_heat_cycle_info_line_1 =>
-      'Heat cycles in female dogs often happen around 1-2 times per year, but this varies between individuals.';
+  String get dog_heat_cycle_info_line_1 => 'Heat cycles in female dogs often happen around 1-2 times per year, but this varies between individuals.';
 
   @override
-  String get dog_heat_cycle_info_line_2 =>
-      'The duration is often around 2-3 weeks, but can vary.';
+  String get dog_heat_cycle_info_line_2 => 'The duration is often around 2-3 weeks, but can vary.';
 
   @override
-  String get dog_heat_cycle_info_line_3 =>
-      'During heat, the dog may be less focused, show behavior changes, or perform differently in training/hunting.';
+  String get dog_heat_cycle_info_line_3 => 'During heat, the dog may be less focused, show behavior changes, or perform differently in training/hunting.';
 
   @override
-  String get dog_heat_cycle_info_line_4 =>
-      'Be extra attentive around other dogs.';
+  String get dog_heat_cycle_info_line_4 => 'Be extra attentive around other dogs.';
 
   @override
-  String get dog_heat_cycle_info_line_5 =>
-      'Adjust training based on the dog\'s condition and behavior.';
+  String get dog_heat_cycle_info_line_5 => 'Adjust training based on the dog\'s condition and behavior.';
 
   @override
-  String get dog_heat_cycle_info_line_6 =>
-      'Contact a veterinarian if there is unusual bleeding, pain, signs of illness, or concern.';
+  String get dog_heat_cycle_info_line_6 => 'Contact a veterinarian if there is unusual bleeding, pain, signs of illness, or concern.';
 
   @override
   String get milestone_first_session_title => 'First session completed';
@@ -1235,52 +1186,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get home_empty_title => 'Start your journey with your hunting dog';
 
   @override
-  String get home_empty_body =>
-      'Log sessions, track progress, and build a history for your dog – session by session.';
+  String get home_empty_body => 'Log sessions, track progress, and build a history for your dog – session by session.';
 
   @override
-  String get home_empty_bullet_progress =>
-      'See development over time – stand, flushes and activity.';
+  String get home_empty_bullet_progress => 'See development over time – stand, flushes and activity.';
 
   @override
-  String get home_empty_bullet_training =>
-      'Train better – see what actually pays off.';
+  String get home_empty_bullet_training => 'Train better – see what actually pays off.';
 
   @override
-  String get home_empty_bullet_history =>
-      'Hunting history you actually use – season after season, area by area.';
+  String get home_empty_bullet_history => 'Hunting history you actually use – season after season, area by area.';
 
   @override
   String get home_addDog_button => 'Add dog';
 
   @override
-  String get home_empty_next_step =>
-      'Start by adding your dog. Then when you\'re ready, log your first session and build your history from day one.';
+  String get home_empty_next_step => 'Start by adding your dog. Then when you\'re ready, log your first session and build your history from day one.';
 
   @override
   String get home_first_session_title => 'Ready for your first session?';
 
   @override
-  String get home_first_session_body =>
-      'You\'ve got your dog registered. Next step is to log your first session – that\'s where your history and stats begin.';
+  String get home_first_session_body => 'You\'ve got your dog registered. Next step is to log your first session – that\'s where your history and stats begin.';
 
   @override
-  String get home_empty_offline_note =>
-      'You can use the app completely offline. All data is stored locally on your phone.';
+  String get home_empty_offline_note => 'You can use the app completely offline. All data is stored locally on your phone.';
 
   @override
   String get home_dashboard_goal_title => 'Personal goal';
 
   @override
-  String get home_dashboard_goal_prompt =>
-      'Set a personal goal in Settings to track your stands progress.';
+  String get home_dashboard_goal_prompt => 'Set a personal goal in Settings to track your stands progress.';
 
   @override
   String get home_dashboard_latest_session_title => 'Latest session';
 
   @override
-  String get home_dashboard_latest_session_empty =>
-      'No sessions registered yet.';
+  String get home_dashboard_latest_session_empty => 'No sessions registered yet.';
 
   @override
   String get home_dashboard_latest_session_unknown_dog => 'Unknown dog';
@@ -1289,15 +1231,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get home_dashboard_quick_action_title => 'Quick action';
 
   @override
-  String get home_dashboard_quick_action_body =>
-      'Ready for the next session? Start logging with one tap.';
+  String get home_dashboard_quick_action_body => 'Ready for the next session? Start logging with one tap.';
 
   @override
   String get home_visible_empty_title => 'No dogs available';
 
   @override
-  String get home_visible_empty_body =>
-      'This account has no dogs yet. Check invitations or ask someone to share a dog with you.';
+  String get home_visible_empty_body => 'This account has no dogs yet. Check invitations or ask someone to share a dog with you.';
 
   @override
   String get home_visible_empty_button => 'Open invitations';
@@ -1320,8 +1260,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get home_noDogsRegistered => 'No dogs registered';
 
   @override
-  String get home_primaryActionSubtitle =>
-      'Notes first. Use the + buttons in the fields.';
+  String get home_primaryActionSubtitle => 'Notes first. Use the + buttons in the fields.';
 
   @override
   String get home_top10_points_title => 'Top 10 – Points';
@@ -1451,8 +1390,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get map_page_snackbar_no_tracks_to_focus => 'No tracks to focus on';
 
   @override
-  String get map_page_dialog_delete_downloaded_map_body =>
-      'Do you want to delete this downloaded map?';
+  String get map_page_dialog_delete_downloaded_map_body => 'Do you want to delete this downloaded map?';
 
   @override
   String get map_download_title => 'Download map';
@@ -1476,8 +1414,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get map_delete_offline_title => 'Delete offline map';
 
   @override
-  String get map_delete_offline_body =>
-      'This deletes downloaded map tiles for the selected style.';
+  String get map_delete_offline_body => 'This deletes downloaded map tiles for the selected style.';
 
   @override
   String get map_delete_offline_cancel => 'Cancel';
@@ -1507,12 +1444,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get map_me => 'Me';
 
   @override
-  String get hunt_session_snackbar_export_ready_opening_share =>
-      'Export ready, opening share…';
+  String get hunt_session_snackbar_export_ready_opening_share => 'Export ready, opening share…';
 
   @override
-  String get hunt_session_snackbar_gpx_export_failed_see_log =>
-      'GPX export failed. See log.';
+  String get hunt_session_snackbar_gpx_export_failed_see_log => 'GPX export failed. See log.';
 
   @override
   String get session_gpx_import_label => 'Import GPX';
@@ -1536,8 +1471,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get session_form_no_dogs_registered => 'No dogs registered.';
 
   @override
-  String get session_form_no_dogs_help =>
-      'Add a dog first, then you can start your first session.';
+  String get session_form_no_dogs_help => 'Add a dog first, then you can start your first session.';
 
   @override
   String get session_summary_sessions_label => 'Sessions:';
@@ -1546,15 +1480,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get session_summary_total_time_label => 'Total time:';
 
   @override
-  String get session_summary_total_bird_contacts_label =>
-      'Total bird contacts:';
+  String get session_summary_total_bird_contacts_label => 'Total bird contacts:';
 
   @override
   String get session_summary_total_points_label => 'Total points:';
 
   @override
-  String get session_summary_total_secondary_points_label =>
-      'Total secondary points:';
+  String get session_summary_total_secondary_points_label => 'Total secondary points:';
 
   @override
   String get session_summary_total_tomstand_label => 'Total tomstand:';
@@ -1671,8 +1603,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get session_error_gpx_import => 'GPX import failed. See log.';
 
   @override
-  String get session_error_location_services_disabled =>
-      'Location services are disabled';
+  String get session_error_location_services_disabled => 'Location services are disabled';
 
   @override
   String get session_error_no_gps => 'No GPS access';
@@ -1689,8 +1620,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get session_error_select_dog_first => 'Select a dog first';
 
   @override
-  String get session_error_no_track_export =>
-      'This session has no track to export';
+  String get session_error_no_track_export => 'This session has no track to export';
 
   @override
   String get session_error_track_empty => 'Track is missing or empty';
@@ -1710,8 +1640,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get session_media_save_failed => 'Could not save the media file';
 
   @override
-  String get session_media_video_missing =>
-      'Video missing or was not saved correctly';
+  String get session_media_video_missing => 'Video missing or was not saved correctly';
 
   @override
   String get session_media_video_open_failed => 'Could not open video';
@@ -1902,8 +1831,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get session_detail_saved_sessions_title => 'Saved sessions';
 
   @override
-  String get session_detail_empty_sessions_for_selected_dog =>
-      'No sessions for the selected dog';
+  String get session_detail_empty_sessions_for_selected_dog => 'No sessions for the selected dog';
 
   @override
   String get session_detail_empty_dogs_registered => 'No dogs registered.';
@@ -1966,8 +1894,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get session_detail_field_location_label => 'Location';
 
   @override
-  String get session_detail_field_active_time_minutes_label =>
-      'Active time (min)';
+  String get session_detail_field_active_time_minutes_label => 'Active time (min)';
 
   @override
   String get session_detail_field_bird_contacts_label => 'Bird contacts';
@@ -2019,8 +1946,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get session_detail_help_notes_first =>
-      'Notes first. Counters with + in the field.';
+  String get session_detail_help_notes_first => 'Notes first. Counters with + in the field.';
 
   @override
   String session_detail_stats_sessions_count(int count) {
@@ -2070,19 +1996,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get session_detail_confirm_delete_title => 'Delete session?';
 
   @override
-  String get session_detail_confirm_delete_body =>
-      'This action cannot be undone.';
+  String get session_detail_confirm_delete_body => 'This action cannot be undone.';
 
   @override
   String get session_detail_media_delete_title => 'Remove attachment?';
 
   @override
-  String get session_detail_media_delete_body =>
-      'The attachment will be permanently removed from the session.';
+  String get session_detail_media_delete_body => 'The attachment will be permanently removed from the session.';
 
   @override
-  String session_detail_saved_session_summary(int durationMinutes, int birds,
-      int stand, int secondaryPoints, int tomstandCount, int flushes) {
+  String session_detail_saved_session_summary(int durationMinutes, int birds, int stand, int secondaryPoints, int tomstandCount, int flushes) {
     return 'Time: $durationMinutes min, Birds: $birds, Points: $stand, Secondary: $secondaryPoints, Tomstand: $tomstandCount, Flushes: $flushes';
   }
 
@@ -2093,8 +2016,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get session_detail_button_export_gpx => 'Export GPX';
 
   @override
-  String get session_detail_error_gpx_too_few_points =>
-      'Too few GPX points in the file';
+  String get session_detail_error_gpx_too_few_points => 'Too few GPX points in the file';
 
   @override
   String session_detail_helper_duration_hours_minutes(int hours, int minutes) {
@@ -2111,8 +2033,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get session_detail_bird_species_button_label => 'Select bird species';
 
   @override
-  String get session_detail_bird_species_empty_selection =>
-      'No species selected';
+  String get session_detail_bird_species_empty_selection => 'No species selected';
 
   @override
   String get session_detail_bird_species_empty_saved => 'No species saved yet';
@@ -2258,8 +2179,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get session_detail_gpx_replace_title => 'Replace track?';
 
   @override
-  String get session_detail_gpx_replace_body =>
-      'This will replace the existing track. Continue?';
+  String get session_detail_gpx_replace_body => 'This will replace the existing track. Continue?';
 
   @override
   String get session_detail_gpx_replace_confirm => 'Replace';
@@ -2281,8 +2201,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get session_detail_empty_media => 'No media added';
 
   @override
-  String session_detail_helper_duration_minutes_seconds(
-      int minutes, int seconds) {
+  String session_detail_helper_duration_minutes_seconds(int minutes, int seconds) {
     return '${minutes}m ${seconds}s';
   }
 
@@ -2355,23 +2274,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stats_info_active_time_title => 'Active time';
 
   @override
-  String get stats_info_active_time_body_1 =>
-      'Total time the dog has been working.';
+  String get stats_info_active_time_body_1 => 'Total time the dog has been working.';
 
   @override
-  String get stats_info_active_time_body_2 =>
-      'Used to assess workload and consistency.';
+  String get stats_info_active_time_body_2 => 'Used to assess workload and consistency.';
 
   @override
   String get stats_info_session_count_title => 'Sessions';
 
   @override
-  String get stats_info_session_count_body_1 =>
-      'How often the dog has been active.';
+  String get stats_info_session_count_body_1 => 'How often the dog has been active.';
 
   @override
-  String get stats_info_session_count_body_2 =>
-      'Shows training and hunting frequency.';
+  String get stats_info_session_count_body_2 => 'Shows training and hunting frequency.';
 
   @override
   String get stats_v1_overview_title => 'V1 overview';
@@ -2441,8 +2356,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String stats_stand_flush_tooltip(
-      String month, int year, String stand, String flush) {
+  String stats_stand_flush_tooltip(String month, int year, String stand, String flush) {
     return '$month $year: Points $stand, Flushes $flush';
   }
 
@@ -2450,12 +2364,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stats_info_points_flushes_title => 'Points and flushes';
 
   @override
-  String get stats_info_points_flushes_body_1 =>
-      'Shows the number of points and flushes over time.';
+  String get stats_info_points_flushes_body_1 => 'Shows the number of points and flushes over time.';
 
   @override
-  String get stats_info_points_flushes_body_2 =>
-      'Gives insight into the dog’s field work and hunting pattern.';
+  String get stats_info_points_flushes_body_2 => 'Gives insight into the dog’s field work and hunting pattern.';
 
   @override
   String get stats_none => 'None';
@@ -2478,8 +2390,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stats_info_sessions_body_1 => 'How often the dog has been active.';
 
   @override
-  String get stats_info_sessions_body_2 =>
-      'Shows training and hunting frequency.';
+  String get stats_info_sessions_body_2 => 'Shows training and hunting frequency.';
 
   @override
   String get stats_no_birds_down_yet => 'No birds down registered yet';
@@ -2494,23 +2405,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stats_info_birds_down_title => 'Birds down';
 
   @override
-  String get stats_info_birds_down_body_1 =>
-      'Number of birds down per calendar year.';
+  String get stats_info_birds_down_body_1 => 'Number of birds down per calendar year.';
 
   @override
-  String get stats_info_birds_down_body_2 =>
-      'Provides a basis for year-to-year comparison.';
+  String get stats_info_birds_down_body_2 => 'Provides a basis for year-to-year comparison.';
 
   @override
   String get stats_info_birds_distribution_title => 'Birds down distribution';
 
   @override
-  String get stats_info_birds_distribution_body_1 =>
-      'Shows which species were taken in the selected year.';
+  String get stats_info_birds_distribution_body_1 => 'Shows which species were taken in the selected year.';
 
   @override
-  String get stats_info_birds_distribution_body_2 =>
-      'Gives an overview of harvest and variation.';
+  String get stats_info_birds_distribution_body_2 => 'Gives an overview of harvest and variation.';
 
   @override
   String get stats_label_year => 'Year';
@@ -2552,31 +2459,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get home_no_dogs_title => 'No dogs registered yet';
 
   @override
-  String get home_no_dogs_message =>
-      'Register your dogs to log training, hunting, and trials. You’ll get a clear history and a better view of progress over time.';
+  String get home_no_dogs_message => 'Register your dogs to log training, hunting, and trials. You’ll get a clear history and a better view of progress over time.';
 
   @override
-  String get home_no_dogs_bullet_history =>
-      'History: keep sessions, notes, and locations in one place';
+  String get home_no_dogs_bullet_history => 'History: keep sessions, notes, and locations in one place';
 
   @override
-  String get home_no_dogs_bullet_progress =>
-      'Progress: track points, flushes, and active time over time';
+  String get home_no_dogs_bullet_progress => 'Progress: track points, flushes, and active time over time';
 
   @override
-  String get home_no_dogs_bullet_stats =>
-      'Stats: meaningful trends that support your hunting';
+  String get home_no_dogs_bullet_stats => 'Stats: meaningful trends that support your hunting';
 
   @override
-  String get home_wisdom_empty =>
-      'A calm beginning leads to better hunting than haste.';
+  String get home_wisdom_empty => 'A calm beginning leads to better hunting than haste.';
 
   @override
   String get wisdom_001 => 'A calm dog learns faster than a stressed one.';
 
   @override
-  String get wisdom_002 =>
-      'What you train today, you’ll get back in the autumn.';
+  String get wisdom_002 => 'What you train today, you’ll get back in the autumn.';
 
   @override
   String get wisdom_003 => 'Repeat less. Wait more.';
@@ -2588,8 +2489,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wisdom_005 => 'Progress often happens between sessions.';
 
   @override
-  String get wisdom_006 =>
-      'A timely break is better than one repetition too many.';
+  String get wisdom_006 => 'A timely break is better than one repetition too many.';
 
   @override
   String get wisdom_007 => 'Patience is the most underrated exercise.';
@@ -2613,8 +2513,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wisdom_013 => 'Steadiness is a choice the dog learns to make.';
 
   @override
-  String get wisdom_014 =>
-      'Pressure creates movement. Time creates steadiness.';
+  String get wisdom_014 => 'Pressure creates movement. Time creates steadiness.';
 
   @override
   String get wisdom_015 => 'A good point doesn’t need an audience.';
@@ -2659,8 +2558,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wisdom_028 => 'Let the dog find the solution.';
 
   @override
-  String get wisdom_029 =>
-      'A bird dog’s strength is independence with direction.';
+  String get wisdom_029 => 'A bird dog’s strength is independence with direction.';
 
   @override
   String get wisdom_030 => 'The field remembers everything.';
@@ -2810,8 +2708,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wisdom_078 => 'Good handling is often invisible.';
 
   @override
-  String get wisdom_079 =>
-      'When the dog succeeds, it’s because you were predictable.';
+  String get wisdom_079 => 'When the dog succeeds, it’s because you were predictable.';
 
   @override
   String get wisdom_080 => 'Don’t chase speed. Chase quality.';
@@ -2820,15 +2717,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wisdom_081 => 'Give the dog time to finish thinking.';
 
   @override
-  String get wisdom_082 =>
-      'A ‘no’ without anger is worth more than ten ‘yes’ with stress.';
+  String get wisdom_082 => 'A ‘no’ without anger is worth more than ten ‘yes’ with stress.';
 
   @override
   String get wisdom_083 => 'Stop before you have to stop.';
 
   @override
-  String get wisdom_084 =>
-      'You’re always training, even when you think you’re just walking.';
+  String get wisdom_084 => 'You’re always training, even when you think you’re just walking.';
 
   @override
   String get wisdom_085 => 'The bird reveals the gaps. Train the gaps.';
@@ -2840,8 +2735,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wisdom_087 => 'A light hand builds heavy cooperation.';
 
   @override
-  String get wisdom_088 =>
-      'When things go sideways: slow down, increase clarity.';
+  String get wisdom_088 => 'When things go sideways: slow down, increase clarity.';
 
   @override
   String get wisdom_089 => 'A reliable routine beats a perfect plan.';
@@ -2868,8 +2762,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_profile_email_invalid => 'Enter a valid email address';
 
   @override
-  String get settings_profile_personal_goal_stands_label =>
-      'Personal stands goal';
+  String get settings_profile_personal_goal_stands_label => 'Personal stands goal';
 
   @override
   String get settings_profile_personal_goal_section_title => 'Progress';
@@ -2890,8 +2783,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get settings_profile_personal_goal_celebration_generic =>
-      'Congratulations! You reached your goal 🎉';
+  String get settings_profile_personal_goal_celebration_generic => 'Congratulations! You reached your goal 🎉';
 
   @override
   String settings_profile_personal_goal_celebration_named(Object name) {
@@ -2915,8 +2807,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String settings_profile_birthday_greeting_dogs_named(
-      Object name, Object dogs) {
+  String settings_profile_birthday_greeting_dogs_named(Object name, Object dogs) {
     return 'Happy birthday, $name! Greetings from $dogs 🎉';
   }
 
@@ -2924,8 +2815,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_notification_birthday_title => 'Happy birthday!';
 
   @override
-  String get settings_notification_birthday_body =>
-      'Wishing you a wonderful day 🎉';
+  String get settings_notification_birthday_body => 'Wishing you a wonderful day 🎉';
 
   @override
   String get settings_notification_goal_title => 'You reached your goal!';
@@ -2991,8 +2881,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_change_password_new_password => 'New password';
 
   @override
-  String get settings_change_password_confirm_password =>
-      'Confirm new password';
+  String get settings_change_password_confirm_password => 'Confirm new password';
 
   @override
   String get settings_change_password_submit => 'Update password';
@@ -3004,26 +2893,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_reset_password_button => 'Forgot password';
 
   @override
-  String get settings_reset_password_sent =>
-      'Check your email for a reset link';
+  String get settings_reset_password_sent => 'Check your email for a reset link';
 
   @override
-  String get settings_reset_password_no_email =>
-      'No email on record to reset password';
+  String get settings_reset_password_no_email => 'No email on record to reset password';
 
   @override
   String get settings_change_password_error_fields => 'Fill in all fields';
 
   @override
-  String get settings_change_password_error_mismatch =>
-      'New password and confirmation must match';
+  String get settings_change_password_error_mismatch => 'New password and confirmation must match';
 
   @override
   String get forgot_password_title => 'Forgot password';
 
   @override
-  String get forgot_password_description =>
-      'Enter your email address and we will send you a link to reset your password.';
+  String get forgot_password_description => 'Enter your email address and we will send you a link to reset your password.';
 
   @override
   String get forgot_password_email_label => 'Email';
@@ -3038,15 +2923,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forgot_password_error_invalid => 'Enter a valid email address.';
 
   @override
-  String get forgot_password_check_spam_hint =>
-      'Check your inbox. If the email doesn\'t show up, check Spam/Junk.';
+  String get forgot_password_check_spam_hint => 'Check your inbox. If the email doesn\'t show up, check Spam/Junk.';
 
   @override
   String get signup_title => 'Create account';
 
   @override
-  String get signup_intro =>
-      'Create an account with email and password to get started.';
+  String get signup_intro => 'Create an account with email and password to get started.';
 
   @override
   String get signup_email_label => 'Email';
@@ -3064,19 +2947,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signup_success => 'Account created.';
 
   @override
-  String get signup_error_email_in_use =>
-      'This email address is already in use.';
+  String get signup_error_email_in_use => 'This email address is already in use.';
 
   @override
   String get signup_error_invalid_email => 'Enter a valid email address.';
 
   @override
-  String get signup_error_weak_password =>
-      'Password must be at least 6 characters.';
+  String get signup_error_weak_password => 'Password must be at least 6 characters.';
 
   @override
-  String get signup_error_operation_not_allowed =>
-      'Account creation is not available right now.';
+  String get signup_error_operation_not_allowed => 'Account creation is not available right now.';
 
   @override
   String get signup_error_network => 'Check your connection and try again.';
@@ -3094,12 +2974,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signup_validation_password_missing => 'Enter a password.';
 
   @override
-  String get signup_validation_password_short =>
-      'Password must be at least 6 characters.';
+  String get signup_validation_password_short => 'Password must be at least 6 characters.';
 
   @override
-  String get signup_validation_password_repeat_missing =>
-      'Repeat the password.';
+  String get signup_validation_password_repeat_missing => 'Repeat the password.';
 
   @override
   String get signup_validation_password_mismatch => 'Passwords do not match.';
@@ -3138,23 +3016,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_milestones_enabled_title => 'Milestones';
 
   @override
-  String get settings_milestones_enabled_subtitle =>
-      'Show small moments when your dog reaches important steps.';
+  String get settings_milestones_enabled_subtitle => 'Show small moments when your dog reaches important steps.';
 
   @override
   String get settings_milestones_goal_title => 'Milestone goals';
 
   @override
-  String get settings_milestones_goal_subtitle =>
-      'Set seasonal and personal target stand points.';
+  String get settings_milestones_goal_subtitle => 'Set seasonal and personal target stand points.';
 
   @override
-  String get settings_milestones_season_goal_title =>
-      'Season target (stand points)';
+  String get settings_milestones_season_goal_title => 'Season target (stand points)';
 
   @override
-  String get settings_milestones_personal_goal_title =>
-      'Personal target (stand points)';
+  String get settings_milestones_personal_goal_title => 'Personal target (stand points)';
 
   @override
   String milestone_goal_achieved(String dogName, String goalTitle) {
@@ -3165,12 +3039,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_haptics_enabled_title => 'Haptics for milestones';
 
   @override
-  String get settings_haptics_enabled_subtitle =>
-      'Subtle vibration when milestones are achieved.';
+  String get settings_haptics_enabled_subtitle => 'Subtle vibration when milestones are achieved.';
 
   @override
-  String get settings_restore_in_progress =>
-      'Restore in progress… Please wait.';
+  String get settings_restore_in_progress => 'Restore in progress… Please wait.';
 
   @override
   String get settings_section_backup => 'Backup';
@@ -3182,8 +3054,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_backup_exporting => 'Exporting…';
 
   @override
-  String get settings_backup_subtitle =>
-      'Export/import dogs, sessions, tracks, milestones, and media.';
+  String get settings_backup_subtitle => 'Export/import dogs, sessions, tracks, milestones, and media.';
 
   @override
   String get settings_backup_import_action => 'Import backup (ZIP)';
@@ -3192,8 +3063,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_backup_importing => 'Importing…';
 
   @override
-  String get settings_backup_import_description =>
-      'Select a backup zip to restore data.';
+  String get settings_backup_import_description => 'Select a backup zip to restore data.';
 
   @override
   String get settings_backup_where_title => 'Where is backup stored?';
@@ -3236,8 +3106,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get auth_profile_pending_title => 'Creating profile…';
 
   @override
-  String get auth_profile_pending_body =>
-      'Waiting for the backend document to exist. Tap \"Try again\" to re-check.';
+  String get auth_profile_pending_body => 'Waiting for the backend document to exist. Tap \"Try again\" to re-check.';
 
   @override
   String get auth_loading_waiting => 'Preparing sign-in…';
@@ -3246,12 +3115,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get auth_profile_load_failed_title => 'Could not load your profile';
 
   @override
-  String get auth_profile_load_failed_body =>
-      'Try again in a moment. If the problem continues, close and reopen the app.';
+  String get auth_profile_load_failed_body => 'Try again in a moment. If the problem continues, close and reopen the app.';
 
   @override
-  String get auth_profile_timeout_error =>
-      'Could not find the user profile within a few seconds. Check your network or try again.';
+  String get auth_profile_timeout_error => 'Could not find the user profile within a few seconds. Check your network or try again.';
 
   @override
   String get settings_backup_failed_unknown => 'Unknown error.';
@@ -3265,8 +3132,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_backup_restore_dialog_title => 'Restore backup';
 
   @override
-  String get settings_backup_restore_dialog_content =>
-      'This will restore data from a ZIP backup.\n\nTip: Restart the app once the import finishes.';
+  String get settings_backup_restore_dialog_content => 'This will restore data from a ZIP backup.\n\nTip: Restart the app once the import finishes.';
 
   @override
   String get settings_backup_restore_dialog_confirm => 'Restore';
@@ -3275,12 +3141,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_backup_restore_prompt_title => 'Restore complete';
 
   @override
-  String get settings_backup_restore_prompt_message =>
-      'Restore finished. Restart the app now?';
+  String get settings_backup_restore_prompt_message => 'Restore finished. Restart the app now?';
 
   @override
-  String get settings_backup_restore_saved =>
-      'Restore saved. Restart the app when convenient.';
+  String get settings_backup_restore_saved => 'Restore saved. Restart the app when convenient.';
 
   @override
   String get settings_backup_restore_complete => 'Import complete';
@@ -3297,8 +3161,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_backup_restore_pending => 'Importing backup…';
 
   @override
-  String get settings_backup_restore_pending_message =>
-      'Restoring backup… please wait.';
+  String get settings_backup_restore_pending_message => 'Restoring backup… please wait.';
 
   @override
   String get settings_section_appearance => 'Appearance';
@@ -3307,8 +3170,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_season_title => 'Season theme';
 
   @override
-  String get settings_season_subtitle =>
-      'Colors for the top and bottom of the screen.';
+  String get settings_season_subtitle => 'Colors for the top and bottom of the screen.';
 
   @override
   String get settings_season_auto => 'Automatic';
@@ -3329,15 +3191,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_feedback_send_subtitle => 'Opens email with app info.';
 
   @override
-  String get settings_feedback_bug_subtitle =>
-      'Opens email with a bug report template.';
+  String get settings_feedback_bug_subtitle => 'Opens email with a bug report template.';
 
   @override
   String get settings_feedback_copy_subtitle => 'Copies app and device info.';
 
   @override
-  String get settings_feedback_suggest_subtitle =>
-      'Send suggestions via email.';
+  String get settings_feedback_suggest_subtitle => 'Send suggestions via email.';
 
   @override
   String get settings_feedback_error_open_email => 'Couldn\'t open email.';
@@ -3352,8 +3212,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_diagnostics_title => 'Advanced diagnostics';
 
   @override
-  String get settings_diagnostics_subtitle =>
-      'Tools for troubleshooting and support.';
+  String get settings_diagnostics_subtitle => 'Tools for troubleshooting and support.';
 
   @override
   String get settings_diagnostics_outbox_label => 'Outbox';
@@ -3374,44 +3233,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_diagnostics_action_dog_restore_title => 'Refresh dogs';
 
   @override
-  String get settings_diagnostics_action_dog_restore_subtitle =>
-      'Fetches available dogs from the cloud into local storage.';
+  String get settings_diagnostics_action_dog_restore_subtitle => 'Fetches available dogs from the cloud into local storage.';
 
   @override
-  String get settings_diagnostics_action_session_fetch_title =>
-      'Check cloud sessions';
+  String get settings_diagnostics_action_session_fetch_title => 'Check cloud sessions';
 
   @override
-  String get settings_diagnostics_action_session_fetch_subtitle =>
-      'Fetches sessions for the first dog linked to the cloud.';
+  String get settings_diagnostics_action_session_fetch_subtitle => 'Fetches sessions for the first dog linked to the cloud.';
 
   @override
-  String get settings_diagnostics_action_session_restore_title =>
-      'Restore sessions locally';
+  String get settings_diagnostics_action_session_restore_title => 'Restore sessions locally';
 
   @override
-  String get settings_diagnostics_action_session_restore_subtitle =>
-      'Stores cloud sessions locally for the first linked dog.';
+  String get settings_diagnostics_action_session_restore_subtitle => 'Stores cloud sessions locally for the first linked dog.';
 
   @override
-  String get settings_diagnostics_action_process_outbox_title =>
-      'Run sync queue now';
+  String get settings_diagnostics_action_process_outbox_title => 'Run sync queue now';
 
   @override
-  String get settings_diagnostics_action_process_outbox_subtitle =>
-      'Processes pending sync tasks once.';
+  String get settings_diagnostics_action_process_outbox_subtitle => 'Processes pending sync tasks once.';
 
   @override
-  String get settings_diagnostics_action_retry_outbox_title =>
-      'Reset failed sync tasks';
+  String get settings_diagnostics_action_retry_outbox_title => 'Reset failed sync tasks';
 
   @override
-  String get settings_diagnostics_action_retry_outbox_subtitle =>
-      'Moves failed sync tasks back to the queue for another attempt.';
+  String get settings_diagnostics_action_retry_outbox_subtitle => 'Moves failed sync tasks back to the queue for another attempt.';
 
   @override
-  String get settings_diagnostics_missing_cloud_dog =>
-      'No local dog linked to the cloud was found.';
+  String get settings_diagnostics_missing_cloud_dog => 'No local dog linked to the cloud was found.';
 
   @override
   String settings_diagnostics_dog_restore_success(Object count) {
@@ -3444,8 +3293,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get settings_diagnostics_outbox_process_success =>
-      'The sync queue was processed.';
+  String get settings_diagnostics_outbox_process_success => 'The sync queue was processed.';
 
   @override
   String settings_diagnostics_outbox_process_failed(Object error) {
@@ -3475,15 +3323,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_sound_on_app_start_title => 'Sound on app start';
 
   @override
-  String get settings_sound_on_app_start_subtitle =>
-      'Play grouse sound when the app starts';
+  String get settings_sound_on_app_start_subtitle => 'Play grouse sound when the app starts';
 
   @override
   String get settings_sound_on_milestone_title => 'Sound on milestones';
 
   @override
-  String get settings_sound_on_milestone_subtitle =>
-      'Play sound when you achieve a milestone';
+  String get settings_sound_on_milestone_subtitle => 'Play sound when you achieve a milestone';
 
   @override
   String get milestones_achieved_title => 'Achieved milestones';
@@ -3562,8 +3408,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get milestone_dog_fallback_name => 'The dog';
 
   @override
-  String milestone_achieved_sentence(
-      Object dog, Object milestone, Object date, Object age) {
+  String milestone_achieved_sentence(Object dog, Object milestone, Object date, Object age) {
     return '$dog achieved “$milestone” on $date$age';
   }
 
@@ -3607,8 +3452,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subscription_product_title => 'Fuglehund Pro';
 
   @override
-  String get subscription_description =>
-      'Unlock unlimited dogs and unlimited sessions.';
+  String get subscription_description => 'Unlock unlimited dogs and unlimited sessions.';
 
   @override
   String get subscription_benefit_unlimited_dogs => 'Unlimited dogs';
@@ -3638,32 +3482,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subscription_restore_success => 'Restore has started.';
 
   @override
-  String get subscription_limit_dogs_reached =>
-      'The free plan is full for dogs. Upgrade to Pro to add more.';
+  String get subscription_limit_dogs_reached => 'The free plan is full for dogs. Upgrade to Pro to add more.';
 
   @override
-  String get subscription_limit_sessions_reached =>
-      'The free plan is full for sessions. Upgrade to Pro to save more.';
+  String get subscription_limit_sessions_reached => 'The free plan is full for sessions. Upgrade to Pro to save more.';
 
   @override
-  String get subscription_error_load_status =>
-      'Could not load subscription status right now.';
+  String get subscription_error_load_status => 'Could not load subscription status right now.';
 
   @override
-  String get subscription_error_purchase_start =>
-      'Could not start the purchase right now.';
+  String get subscription_error_purchase_start => 'Could not start the purchase right now.';
 
   @override
-  String get subscription_error_product_unavailable =>
-      'The product is not available in the store right now.';
+  String get subscription_error_product_unavailable => 'The product is not available in the store right now.';
 
   @override
-  String get subscription_error_restore_purchase =>
-      'Could not restore purchases right now.';
+  String get subscription_error_restore_purchase => 'Could not restore purchases right now.';
 
   @override
-  String get subscription_error_manage_open =>
-      'Could not open the subscription page.';
+  String get subscription_error_manage_open => 'Could not open the subscription page.';
 
   @override
   String get feedback_send_title => 'Send feedback';
@@ -3690,20 +3527,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get feedback_suggest_title => 'Idea for a new milestone:';
 
   @override
-  String get feedback_suggest_question_what_to_celebrate =>
-      'What should be celebrated?';
+  String get feedback_suggest_question_what_to_celebrate => 'What should be celebrated?';
 
   @override
-  String get feedback_suggest_question_why_important =>
-      'Why is this important in practice?';
+  String get feedback_suggest_question_why_important => 'Why is this important in practice?';
 
   @override
-  String get feedback_suggest_question_when_should_trigger =>
-      'When should it trigger?';
+  String get feedback_suggest_question_when_should_trigger => 'When should it trigger?';
 
   @override
-  String get feedback_suggest_trigger_hint =>
-      '(first time, every 10th, every 100th, other)';
+  String get feedback_suggest_trigger_hint => '(first time, every 10th, every 100th, other)';
 
   @override
   String get feedback_suggest_comments => 'Any comments:';
@@ -3726,12 +3559,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get home_continueActiveSessionMissingDogTitle =>
-      'Active session cannot be restored';
+  String get home_continueActiveSessionMissingDogTitle => 'Active session cannot be restored';
 
   @override
-  String get home_continueActiveSessionMissingDogSubtitle =>
-      'The dog is no longer available. You can discard the draft.';
+  String get home_continueActiveSessionMissingDogSubtitle => 'The dog is no longer available. You can discard the draft.';
 
   @override
   String get home_continueActiveSessionButton => 'Continue active session';
@@ -3749,8 +3580,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get home_endActiveSessionConfirmTitle => 'End active session?';
 
   @override
-  String get home_endActiveSessionConfirmSubtitle =>
-      'Are you sure you want to discard the active session?';
+  String get home_endActiveSessionConfirmSubtitle => 'Are you sure you want to discard the active session?';
 
   @override
   String get milestones_category_firsts => 'Firsts';
@@ -3795,8 +3625,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get session_field_session_button => 'Start field session';
 
   @override
-  String get session_field_session_help =>
-      'For logging while you are out with your dog';
+  String get session_field_session_help => 'For logging while you are out with your dog';
 
   @override
   String get session_manual_registration_button => 'Register session manually';
@@ -3808,12 +3637,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get session_options_info_title => 'What do the options mean?';
 
   @override
-  String get session_options_info_field_body =>
-      'Use this when you are out with your dog and want to start logging right away.';
+  String get session_options_info_field_body => 'Use this when you are out with your dog and want to start logging right away.';
 
   @override
-  String get session_options_info_manual_body =>
-      'Use this when you want to add a previous training session, hunt, or trial.';
+  String get session_options_info_manual_body => 'Use this when you want to add a previous training session, hunt, or trial.';
 
   @override
   String get settings_section_account => 'Account';
@@ -3823,4 +3650,169 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings_not_signed_in => 'Not signed in';
+
+  @override
+  String get healthJournalTitle => 'Health journal';
+
+  @override
+  String get healthJournalEntrySubtitle => 'Vaccinations, treatments, and other health events';
+
+  @override
+  String get healthJournalEmptyTitle => 'No health records yet';
+
+  @override
+  String get healthJournalEmptyBody => 'Record vaccinations, treatments, veterinary visits, and other health events.';
+
+  @override
+  String get healthJournalAddRecord => 'Add record';
+
+  @override
+  String get healthJournalNewRecord => 'New record';
+
+  @override
+  String get healthJournalEditRecord => 'Edit record';
+
+  @override
+  String get healthJournalType => 'Type';
+
+  @override
+  String get healthJournalRecordTitle => 'Title';
+
+  @override
+  String get healthJournalRecordedAt => 'Date performed';
+
+  @override
+  String get healthJournalNextDueAt => 'Next date';
+
+  @override
+  String get healthJournalRepeat => 'Repeat';
+
+  @override
+  String get healthJournalProduct => 'Product';
+
+  @override
+  String get healthJournalDose => 'Dose';
+
+  @override
+  String get healthJournalNote => 'Note';
+
+  @override
+  String get healthJournalCustomDays => 'Number of days';
+
+  @override
+  String get healthJournalCustomDaysError => 'Enter a positive whole number';
+
+  @override
+  String get healthJournalTitleRequired => 'Title is required';
+
+  @override
+  String get healthJournalNotSet => 'Not set';
+
+  @override
+  String get healthJournalDeleteRecord => 'Delete record';
+
+  @override
+  String get healthJournalDeleteTitle => 'Delete record?';
+
+  @override
+  String get healthJournalDeleteBody => 'The record will be removed from the health journal.';
+
+  @override
+  String get healthJournalLoadError => 'Could not read the local health journal.';
+
+  @override
+  String get healthJournalSaveError => 'Could not save the record.';
+
+  @override
+  String get healthJournalDeleteError => 'Could not delete the record.';
+
+  @override
+  String get healthJournalToday => 'Today';
+
+  @override
+  String healthJournalOverdueDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Overdue by $days days',
+      one: 'Overdue by 1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String healthJournalInDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'In $days days',
+      one: 'In 1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String healthJournalNextDate(String date) {
+    return 'Next: $date';
+  }
+
+  @override
+  String get healthTypeTickTreatment => 'Tick treatment';
+
+  @override
+  String get healthTypeDeworming => 'Deworming';
+
+  @override
+  String get healthTypeVaccination => 'Vaccination';
+
+  @override
+  String get healthTypeMedication => 'Medication';
+
+  @override
+  String get healthTypeVeterinaryVisit => 'Veterinary visit';
+
+  @override
+  String get healthTypeAllergy => 'Allergy';
+
+  @override
+  String get healthTypeInjury => 'Injury';
+
+  @override
+  String get healthTypeSurgery => 'Surgery';
+
+  @override
+  String get healthTypeWeight => 'Weight';
+
+  @override
+  String get healthTypeHipElbowXray => 'Hip/elbow X-ray';
+
+  @override
+  String get healthTypeEyeExamination => 'Eye examination';
+
+  @override
+  String get healthTypeDnaTest => 'DNA test';
+
+  @override
+  String get healthTypeInsurance => 'Insurance';
+
+  @override
+  String get healthTypeOther => 'Other';
+
+  @override
+  String get healthRepeatNone => 'None';
+
+  @override
+  String get healthRepeatMonthly => 'Monthly';
+
+  @override
+  String get healthRepeatEveryThreeMonths => 'Every 3 months';
+
+  @override
+  String get healthRepeatEverySixMonths => 'Every 6 months';
+
+  @override
+  String get healthRepeatYearly => 'Yearly';
+
+  @override
+  String get healthRepeatCustomDays => 'Custom number of days';
 }

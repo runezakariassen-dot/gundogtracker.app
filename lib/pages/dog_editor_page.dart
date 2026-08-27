@@ -21,6 +21,7 @@ import '../models/dog.dart';
 import '../models/dog_membership.dart';
 import '../models/dog_sex.dart';
 import '../pages/dog_detail_page.dart';
+import '../services/dog_profile_media_update_service.dart';
 import '../services/dog_photo_storage.dart';
 import '../services/cloud/firestore_dog_sync_service.dart';
 import '../services/hive_lifecycle_service.dart';
@@ -159,6 +160,7 @@ class _DogEditorPageState extends State<DogEditorPage> {
   List<String> _breedOptions = [];
   String? _selectedBreed;
   String? _selectedImagePath;
+  bool _profilePhotoChanged = false;
   bool _registeredDead = false;
   ProfileHeroTextAnchor _heroTextAnchor = ProfileHeroTextAnchor.bottomLeft;
   double _heroTextScale = 1.0;
@@ -311,6 +313,7 @@ class _DogEditorPageState extends State<DogEditorPage> {
 
         await _persistDogLocally(updated);
         await _enqueueDogAutosync(updated);
+        await _tryUploadProfilePhotoToCloud(updated);
       } else {
         final currentUid = currentUserId;
         final memberships = currentUid == null
@@ -721,7 +724,10 @@ class _DogEditorPageState extends State<DogEditorPage> {
       if (!mounted) {
         return;
       }
-      setState(() => _selectedImagePath = savedPath);
+      setState(() {
+        _selectedImagePath = savedPath;
+        _profilePhotoChanged = true;
+      });
     } catch (error, stackTrace) {
       debugPrint('[DOG][EDITOR] Failed to save profile photo: $error');
       debugPrint('$stackTrace');
@@ -1264,6 +1270,72 @@ class _DogEditorPageState extends State<DogEditorPage> {
       debugPrint('[TF][SYNC] dog autosync queued: ${dog.id}');
     }
     await _syncOutboxService.enqueueUpsertDog(dog);
+  }
+
+  Future<void> _tryUploadProfilePhotoToCloud(Dog dog) async {
+    if (!_profilePhotoChanged) {
+      return;
+    }
+    final selectedImagePath = _selectedImagePath?.trim();
+    if (selectedImagePath == null || selectedImagePath.isEmpty) {
+      debugPrint(
+        '[DOG][PROFILE_MEDIA] editor cloud upload skipped: missing selected image path',
+      );
+      return;
+    }
+    final resolvedCloudId = dog.cloudId?.trim();
+    final dogCloudId = (resolvedCloudId == null || resolvedCloudId.isEmpty)
+        ? dog.id.trim()
+        : resolvedCloudId;
+    if (dogCloudId.isEmpty) {
+      debugPrint(
+        '[DOG][PROFILE_MEDIA] editor cloud upload skipped: missing cloudId and dog.id fallback',
+      );
+      return;
+    }
+    if (dog.dogKey.trim().isEmpty) {
+      debugPrint(
+        '[DOG][PROFILE_MEDIA] editor cloud upload skipped: missing dogKey',
+      );
+      return;
+    }
+    String? currentUserUid;
+    try {
+      currentUserUid = FirebaseAuth.instance.currentUser?.uid.trim();
+    } catch (_) {
+      currentUserUid = null;
+    }
+    if (currentUserUid == null || currentUserUid.isEmpty) {
+      debugPrint(
+        '[DOG][PROFILE_MEDIA] editor cloud upload skipped: missing Firebase uid',
+      );
+      return;
+    }
+    final absolutePath = DogImagePathResolver.toAbsolute(selectedImagePath);
+    if (absolutePath == null || absolutePath.trim().isEmpty) {
+      debugPrint(
+        '[DOG][PROFILE_MEDIA] editor cloud upload skipped: could not resolve absolute image path',
+      );
+      return;
+    }
+
+    try {
+      final file = File(absolutePath);
+      final sizeBytes = await file.exists() ? await file.length() : null;
+      final updatedDog =
+          await DogProfileMediaUpdateService().uploadAndSetProfileMediaId(
+        dog: dog.copyWith(cloudId: dogCloudId),
+        localImagePath: absolutePath,
+        currentUserUid: currentUserUid,
+        contentType: 'image/jpeg',
+        sizeBytes: sizeBytes,
+      );
+      await _syncOutboxService.enqueueUpsertDog(updatedDog);
+      _profilePhotoChanged = false;
+    } catch (error, stackTrace) {
+      debugPrint('[DOG][PROFILE_MEDIA] editor cloud upload failed: $error');
+      debugPrint('$stackTrace');
+    }
   }
 
   dynamic _findDogHiveKey(String dogId, {String? fallbackDogKey}) {

@@ -35,7 +35,9 @@ jobs:
         run: fvm flutter pub get
 
       - name: Format check
-        run: dart format --output=none --set-exit-if-changed .
+        run: |
+          dart format --output=none .
+          git diff --exit-code
 
       - name: Analyze
         run: fvm flutter analyze

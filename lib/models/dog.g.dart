@@ -50,13 +50,14 @@ class DogAdapter extends TypeAdapter<Dog> {
       cloudOwnerUid: fields[26] as String?,
       deletedAt: fields[27] as DateTime?,
       memorialStory: fields[28] as String?,
+      profileMediaId: fields[29] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Dog obj) {
     writer
-      ..writeByte(29)
+      ..writeByte(30)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -114,7 +115,9 @@ class DogAdapter extends TypeAdapter<Dog> {
       ..writeByte(27)
       ..write(obj.deletedAt)
       ..writeByte(28)
-      ..write(obj.memorialStory);
+      ..write(obj.memorialStory)
+      ..writeByte(29)
+      ..write(obj.profileMediaId);
   }
 
   @override
