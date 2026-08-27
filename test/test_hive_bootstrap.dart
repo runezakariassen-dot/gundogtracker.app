@@ -6,6 +6,7 @@ import 'package:jakthund_app/data/hive_boxes.dart';
 import 'package:jakthund_app/domain/models/active_session_draft.dart';
 import 'package:jakthund_app/models/achieved_milestone.dart';
 import 'package:jakthund_app/models/dog.dart';
+import 'package:jakthund_app/models/dog_media_asset.dart';
 import 'package:jakthund_app/models/dog_milestone_state.dart';
 import 'package:jakthund_app/models/gps_point.dart';
 import 'package:jakthund_app/models/gps_track.dart';
@@ -18,6 +19,7 @@ Future<Directory> initHiveForTests({required String prefix}) async {
   Hive.init(tempDir.path);
 
   _registerAdapter(DogAdapter());
+  _registerAdapter(DogMediaAssetAdapter());
   _registerAdapter(AchievedMilestoneAdapter());
   _registerAdapter(DogMilestoneStateAdapter());
   _registerAdapter(HuntSessionAdapter());
@@ -36,6 +38,7 @@ Future<Directory> initHiveForTests({required String prefix}) async {
     Hive.openBox<dynamic>(appSettingsBoxName),
     Hive.openBox<DateTime>(milestoneSeenBoxName),
     Hive.openBox<DogMilestoneState>(dogMilestoneStateBoxName),
+    Hive.openBox<DogMediaAsset>(dogMediaAssetsBoxName),
     Hive.openBox<ActiveSessionDraft>(activeSessionDraftBoxName),
   ]);
 

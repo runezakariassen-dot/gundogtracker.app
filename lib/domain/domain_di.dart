@@ -59,12 +59,16 @@ class DomainDi {
     );
   }
 
-  static SharingService sharingService({UserIdentityService? identityService}) {
+  static SharingService sharingService({
+    UserIdentityService? identityService,
+    CloudShareInviteWriter? cloudShareInviteWriter,
+  }) {
     return SharingService(
       identityService: identityService,
       inviteRepository: inviteRepository(),
       membershipRepository: membershipRepository(),
       dogRepository: dogRepository(),
+      cloudShareInviteWriter: cloudShareInviteWriter,
     );
   }
 

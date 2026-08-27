@@ -58,8 +58,10 @@ void main() {
     );
     await syncTasksBox().clear();
 
-    final invite = await DomainDi.sharingService(identityService: identity)
-        .createShareInvite(
+    final invite = await DomainDi.sharingService(
+      identityService: identity,
+      cloudShareInviteWriter: (_) async {},
+    ).createShareInvite(
       dogKey: dog.dogKey,
       recipientEmail: 'runa@example.com',
     );

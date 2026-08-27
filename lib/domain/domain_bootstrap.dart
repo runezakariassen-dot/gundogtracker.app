@@ -13,6 +13,7 @@ import '../models/dog_milestone_state.dart';
 import '../models/dog_membership.dart';
 import '../models/dog_sex.dart';
 import '../models/hunt_session.dart';
+import '../models/health_record.dart';
 import '../models/outbox_entry.dart';
 import '../models/ownership_transfer.dart';
 import '../models/share_invitation.dart';
@@ -39,6 +40,7 @@ Future<void> initDomainLayer() async {
 void registerDomainAdapters() {
   _registerAdapterIfNeeded(DogAdapter());
   _registerAdapterIfNeeded(DogMediaAssetAdapter());
+  _registerAdapterIfNeeded(HealthRecordAdapter());
   _registerAdapterIfNeeded(AchievedMilestoneAdapter());
   _registerAdapterIfNeeded(DogMilestoneStateAdapter());
   _registerAdapterIfNeeded(DogMembershipAdapter());

@@ -8,6 +8,7 @@ import 'package:jakthund_app/models/dog.dart';
 import 'package:jakthund_app/models/dog_membership.dart';
 import 'package:jakthund_app/models/dog_sex.dart';
 import 'package:jakthund_app/models/hunt_session.dart';
+import 'package:jakthund_app/models/health_record.dart';
 import 'package:jakthund_app/models/session_type.dart';
 import 'package:jakthund_app/models/session_type_adapter.dart';
 import 'package:jakthund_app/models/share_invitation.dart';
@@ -354,6 +355,89 @@ void main() {
     expect(dogBox.length, 1);
     expect(sessionBox.length, 1);
     expect(sessionBox.get('session-1')?.notes, 'full fetch session');
+  });
+
+  test('health pull applies cloud-newer tombstones and preserves local-newer',
+      () async {
+    if (!Hive.isAdapterRegistered(50)) {
+      Hive.registerAdapter(HealthRecordAdapter());
+    }
+    final healthBox = await Hive.openBox<HealthRecord>('health_records_test');
+    final dog = _buildDog();
+    final oldLocal = _healthRecord(
+      id: 'cloud-newer',
+      updatedAt: DateTime.utc(2026, 1, 1),
+    );
+    final newLocal = _healthRecord(
+      id: 'local-newer',
+      updatedAt: DateTime.utc(2026, 1, 5),
+    );
+    final otherDogLocal = _healthRecord(
+      id: 'wrong-dog',
+      dogId: 'another-local-dog',
+      title: 'Other dog value',
+      updatedAt: DateTime.utc(2026, 1, 1),
+    );
+    await healthBox.put(oldLocal.id, oldLocal);
+    await healthBox.put(newLocal.id, newLocal);
+    await healthBox.put(otherDogLocal.id, otherDogLocal);
+    fakeDogSync = FakeFirestoreDogSyncService(dogsToReturn: <Dog>[dog]);
+    final deletedAt = DateTime.utc(2026, 1, 4);
+    final service = PullSyncService(
+      dogSyncService: fakeDogSync,
+      sessionSyncService: fakeSessionSync,
+      networkAwarenessService: fakeNetwork,
+      syncStateStore: syncStateStore,
+      outboxService: outboxService,
+      dogBox: dogBox,
+      sessionBox: sessionBox,
+      healthRecordBox: healthBox,
+      healthRecordFetchHandler: ({
+        required String cloudDogId,
+        required String localDogId,
+        String? localDogKey,
+        DateTime? updatedAfter,
+      }) async {
+        return <HealthRecord>[
+          _healthRecord(
+            id: 'cloud-newer',
+            dogId: localDogId,
+            title: 'Cloud tombstone',
+            updatedAt: deletedAt,
+            deletedAt: deletedAt,
+          ),
+          _healthRecord(
+            id: 'local-newer',
+            dogId: localDogId,
+            title: 'Stale cloud value',
+            updatedAt: DateTime.utc(2026, 1, 2),
+          ),
+          _healthRecord(
+            id: 'wrong-dog',
+            dogId: localDogId,
+            title: 'Must not cross dogs',
+            updatedAt: DateTime.utc(2026, 1, 6),
+          ),
+          _healthRecord(
+            id: 'new-record',
+            dogId: localDogId,
+            title: 'Inserted from cloud',
+            updatedAt: DateTime.utc(2026, 1, 3),
+          ),
+        ];
+      },
+    );
+
+    await service.pullAllVisibleData();
+
+    expect(healthBox.get('cloud-newer')?.deletedAt, deletedAt);
+    expect(healthBox.get('cloud-newer')?.title, 'Cloud tombstone');
+    expect(healthBox.get('local-newer')?.title, 'Local value');
+    expect(healthBox.get('wrong-dog')?.title, 'Other dog value');
+    expect(healthBox.get('wrong-dog')?.dogId, 'another-local-dog');
+    expect(healthBox.get('new-record')?.title, 'Inserted from cloud');
+    expect(healthBox.get('new-record')?.dogId, dog.id);
+    expect(outboxBox, isEmpty);
   });
 
   test('later pull with cursor uses delta fetch', () async {
@@ -791,6 +875,25 @@ HuntSession _buildSession({
     flushes: 1,
     notes: notes,
     sessionType: SessionType.training,
+    updatedAt: updatedAt,
+    deletedAt: deletedAt,
+  );
+}
+
+HealthRecord _healthRecord({
+  required String id,
+  String dogId = 'local-dog-1',
+  String title = 'Local value',
+  required DateTime updatedAt,
+  DateTime? deletedAt,
+}) {
+  return HealthRecord(
+    id: id,
+    dogId: dogId,
+    type: HealthRecordType.other,
+    title: title,
+    recordedAt: DateTime.utc(2026, 1, 1),
+    createdAt: DateTime.utc(2026, 1, 1),
     updatedAt: updatedAt,
     deletedAt: deletedAt,
   );

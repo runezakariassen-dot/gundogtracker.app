@@ -30,10 +30,8 @@ class DogProfileMediaDownloadService {
     DogProfileMediaDownloadClock? clock,
   })  : _localRepository = localRepository ?? LocalDogMediaRepository(),
         _cacheService = cacheService ?? DogMediaCacheService(),
-        _fetchMetadata = fetchMetadata ??
-            _defaultFetchMetadata(cloudService ?? DogMediaCloudService()),
-        _downloadFile = downloadFile ??
-            _defaultDownloadFile(cloudService ?? DogMediaCloudService()),
+        _fetchMetadata = fetchMetadata ?? _defaultFetchMetadata(cloudService),
+        _downloadFile = downloadFile ?? _defaultDownloadFile(cloudService),
         _clock = clock ?? DateTime.now;
 
   final LocalDogMediaRepository _localRepository;
@@ -172,24 +170,26 @@ class DogProfileMediaDownloadService {
   }
 
   static DogProfileMediaFetchMetadata _defaultFetchMetadata(
-    DogMediaCloudService cloudService,
+    DogMediaCloudService? cloudService,
   ) {
     return ({
       required String dogId,
       required String mediaId,
     }) {
-      return cloudService.readMediaMetadata(dogId: dogId, mediaId: mediaId);
+      final service = cloudService ?? DogMediaCloudService();
+      return service.readMediaMetadata(dogId: dogId, mediaId: mediaId);
     };
   }
 
   static DogProfileMediaDownloadFile _defaultDownloadFile(
-    DogMediaCloudService cloudService,
+    DogMediaCloudService? cloudService,
   ) {
     return ({
       required String storagePath,
       required String localPath,
     }) {
-      return cloudService.downloadFileToPath(
+      final service = cloudService ?? DogMediaCloudService();
+      return service.downloadFileToPath(
         storagePath: storagePath,
         localPath: localPath,
       );

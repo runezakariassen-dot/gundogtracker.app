@@ -5,6 +5,7 @@ import '../models/dog_media_asset.dart';
 import '../models/dog_milestone_state.dart';
 import '../models/dog_membership.dart';
 import '../models/hunt_session.dart';
+import '../models/health_record.dart';
 import '../models/ownership_transfer.dart';
 import '../models/share_invitation.dart';
 import '../models/sync_task.dart';
@@ -29,6 +30,7 @@ const String breedCatalogBoxName = 'breed_catalog';
 const String activeSessionDraftBoxName = 'active_session_draft';
 const String dogMilestoneStateBoxName = 'dog_milestone_state';
 const String dogMediaAssetsBoxName = 'dog_media_assets_v1';
+const String healthRecordsBoxName = 'healthRecordsBox_v1';
 const String dogMilestoneStateLegacyBoxName = 'dogMilestoneStateBox_v1';
 const String mapSettingsBoxName = 'mapSettings';
 const String gpsTracksBoxName = 'gpsTracksBox_v1';
@@ -95,3 +97,6 @@ Box<DogMilestoneState> dogMilestoneStateBox() =>
 
 Box<DogMediaAsset> dogMediaAssetsBox() =>
     HiveLifecycleService.getBox<DogMediaAsset>(dogMediaAssetsBoxName);
+
+Box<HealthRecord> healthRecordsBox() =>
+    HiveLifecycleService.getBox<HealthRecord>(healthRecordsBoxName);

@@ -1685,6 +1685,16 @@
     "description": "Label for showing which account is currently signed in."
   },
   "settings_not_signed_in": "Ikke logget ind",
+  "healthJournalTitle": "Sundhedsjournal",
+  "healthJournalEntrySubtitle": "Vacciner, behandlinger og andre sundhedshændelser",
+  "healthJournalEmptyTitle": "Ingen sundhedsoptegnelser endnu",
+  "healthJournalEmptyBody": "Registrer vacciner, behandlinger, dyrlægebesøg og andre sundhedshændelser.",
+  "healthJournalAddRecord": "Tilføj optegnelse", "healthJournalNewRecord": "Ny optegnelse", "healthJournalEditRecord": "Rediger optegnelse", "healthJournalType": "Type", "healthJournalRecordTitle": "Titel", "healthJournalRecordedAt": "Dato udført", "healthJournalNextDueAt": "Næste dato", "healthJournalRepeat": "Gentagelse", "healthJournalProduct": "Produkt", "healthJournalDose": "Dosis", "healthJournalNote": "Notat", "healthJournalCustomDays": "Antal dage", "healthJournalCustomDaysError": "Angiv et positivt heltal", "healthJournalTitleRequired": "Titel er påkrævet", "healthJournalNotSet": "Ikke angivet",
+  "healthJournalDeleteRecord": "Slet optegnelse", "healthJournalDeleteTitle": "Slet optegnelsen?", "healthJournalDeleteBody": "Optegnelsen fjernes fra sundhedsjournalen.", "healthJournalLoadError": "Kunne ikke læse sundhedsjournalen lokalt.", "healthJournalSaveError": "Kunne ikke gemme optegnelsen.", "healthJournalDeleteError": "Kunne ikke slette optegnelsen.",
+  "healthJournalToday": "I dag", "healthJournalOverdueDays": "{days, plural, =1{Forfalden med 1 dag} other{Forfalden med {days} dage}}", "healthJournalInDays": "{days, plural, =1{Om 1 dag} other{Om {days} dage}}", "healthJournalNextDate": "Næste: {date}",
+  "@healthJournalOverdueDays": {"placeholders": {"days": {"type": "int"}}}, "@healthJournalInDays": {"placeholders": {"days": {"type": "int"}}}, "@healthJournalNextDate": {"placeholders": {"date": {"type": "String"}}},
+  "healthTypeTickTreatment": "Flåtmiddel", "healthTypeDeworming": "Ormekur", "healthTypeVaccination": "Vaccine", "healthTypeMedication": "Medicin", "healthTypeVeterinaryVisit": "Dyrlægebesøg", "healthTypeAllergy": "Allergi", "healthTypeInjury": "Skade", "healthTypeSurgery": "Operation", "healthTypeWeight": "Vægt", "healthTypeHipElbowXray": "HD/AD-røntgen", "healthTypeEyeExamination": "Øjenlysning", "healthTypeDnaTest": "DNA-test", "healthTypeInsurance": "Forsikring", "healthTypeOther": "Andet",
+  "healthRepeatNone": "Ingen", "healthRepeatMonthly": "Månedligt", "healthRepeatEveryThreeMonths": "Hver 3. måned", "healthRepeatEverySixMonths": "Hver 6. måned", "healthRepeatYearly": "Årligt", "healthRepeatCustomDays": "Brugerdefineret antal dage",
   "@settings_not_signed_in": {
     "description": "Message shown when no user is currently signed in."
   }

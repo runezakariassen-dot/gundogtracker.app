@@ -51,6 +51,7 @@ import '../utils/dog_image_path_resolver.dart';
 import '../domain/user/app_user.dart';
 import 'dog_editor_page.dart';
 import 'dog_media_library_page.dart';
+import 'dog_health_journal_page.dart';
 
 @visibleForTesting
 Role? resolveHighestActiveRoleForUserIds({
@@ -1402,6 +1403,26 @@ class _DogDetailPageState extends State<DogDetailPage> {
     );
   }
 
+  void _openHealthJournal(Dog dog) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => DogHealthJournalPage(dog: dog),
+      ),
+    );
+  }
+
+  Widget _buildHealthJournalEntry(Dog dog, AppLocalizations l10n) {
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.medical_information_outlined),
+        title: Text(l10n.healthJournalTitle),
+        subtitle: Text(l10n.healthJournalEntrySubtitle),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => _openHealthJournal(dog),
+      ),
+    );
+  }
+
   Widget _buildNextMilestoneSection({
     required BuildContext context,
     required int totalStands,
@@ -2602,6 +2623,8 @@ class _DogDetailPageState extends State<DogDetailPage> {
             _buildAccessSection(dog, l10n),
             const SizedBox(height: 16),
             _buildMediaLibraryEntry(dog),
+            const SizedBox(height: 16),
+            _buildHealthJournalEntry(dog, l10n),
             const SizedBox(height: 16),
             SizedBox(
               width: 140,

@@ -64,8 +64,7 @@ import 'app_localizations_sv.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -73,8 +72,7 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate =
-      _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -86,8 +84,7 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
     delegate,
     GlobalMaterialLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,
@@ -1912,8 +1909,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{name} was {years} {months} {days} old'**
-  String dog_detail_farewell_age_sentence(
-      Object name, Object years, Object months, Object days);
+  String dog_detail_farewell_age_sentence(Object name, Object years, Object months, Object days);
 
   /// No description provided for @dog_detail_next_milestones_title.
   ///
@@ -3575,8 +3571,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Time: {durationMinutes} min, Birds: {birds}, Points: {stand}, Secondary: {secondaryPoints}, Tomstand: {tomstandCount}, Flushes: {flushes}'**
-  String session_detail_saved_session_summary(int durationMinutes, int birds,
-      int stand, int secondaryPoints, int tomstandCount, int flushes);
+  String session_detail_saved_session_summary(int durationMinutes, int birds, int stand, int secondaryPoints, int tomstandCount, int flushes);
 
   /// No description provided for @session_detail_button_exporting.
   ///
@@ -3948,8 +3943,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{minutes}m {seconds}s'**
-  String session_detail_helper_duration_minutes_seconds(
-      int minutes, int seconds);
+  String session_detail_helper_duration_minutes_seconds(int minutes, int seconds);
 
   /// Formatted duration when only seconds exist.
   ///
@@ -4207,8 +4201,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{month} {year}: Points {stand}, Flushes {flush}'**
-  String stats_stand_flush_tooltip(
-      String month, int year, String stand, String flush);
+  String stats_stand_flush_tooltip(String month, int year, String stand, String flush);
 
   /// No description provided for @stats_info_points_flushes_title.
   ///
@@ -5078,8 +5071,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Happy birthday, {name}! Greetings from {dogs} 🎉'**
-  String settings_profile_birthday_greeting_dogs_named(
-      Object name, Object dogs);
+  String settings_profile_birthday_greeting_dogs_named(Object name, Object dogs);
 
   /// No description provided for @settings_notification_birthday_title.
   ///
@@ -6189,8 +6181,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{dog} achieved “{milestone}” on {date}{age}'**
-  String milestone_achieved_sentence(
-      Object dog, Object milestone, Object date, Object age);
+  String milestone_achieved_sentence(Object dog, Object milestone, Object date, Object age);
 
   /// No description provided for @milestone_bird_threshold_label.
   ///
@@ -6617,10 +6608,303 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not signed in'**
   String get settings_not_signed_in;
+
+  /// No description provided for @healthJournalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Health journal'**
+  String get healthJournalTitle;
+
+  /// No description provided for @healthJournalEntrySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vaccinations, treatments, and other health events'**
+  String get healthJournalEntrySubtitle;
+
+  /// No description provided for @healthJournalEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No health records yet'**
+  String get healthJournalEmptyTitle;
+
+  /// No description provided for @healthJournalEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Record vaccinations, treatments, veterinary visits, and other health events.'**
+  String get healthJournalEmptyBody;
+
+  /// No description provided for @healthJournalAddRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Add record'**
+  String get healthJournalAddRecord;
+
+  /// No description provided for @healthJournalNewRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'New record'**
+  String get healthJournalNewRecord;
+
+  /// No description provided for @healthJournalEditRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit record'**
+  String get healthJournalEditRecord;
+
+  /// No description provided for @healthJournalType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get healthJournalType;
+
+  /// No description provided for @healthJournalRecordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get healthJournalRecordTitle;
+
+  /// No description provided for @healthJournalRecordedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Date performed'**
+  String get healthJournalRecordedAt;
+
+  /// No description provided for @healthJournalNextDueAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Next date'**
+  String get healthJournalNextDueAt;
+
+  /// No description provided for @healthJournalRepeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat'**
+  String get healthJournalRepeat;
+
+  /// No description provided for @healthJournalProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Product'**
+  String get healthJournalProduct;
+
+  /// No description provided for @healthJournalDose.
+  ///
+  /// In en, this message translates to:
+  /// **'Dose'**
+  String get healthJournalDose;
+
+  /// No description provided for @healthJournalNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get healthJournalNote;
+
+  /// No description provided for @healthJournalCustomDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of days'**
+  String get healthJournalCustomDays;
+
+  /// No description provided for @healthJournalCustomDaysError.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a positive whole number'**
+  String get healthJournalCustomDaysError;
+
+  /// No description provided for @healthJournalTitleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Title is required'**
+  String get healthJournalTitleRequired;
+
+  /// No description provided for @healthJournalNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get healthJournalNotSet;
+
+  /// No description provided for @healthJournalDeleteRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete record'**
+  String get healthJournalDeleteRecord;
+
+  /// No description provided for @healthJournalDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete record?'**
+  String get healthJournalDeleteTitle;
+
+  /// No description provided for @healthJournalDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The record will be removed from the health journal.'**
+  String get healthJournalDeleteBody;
+
+  /// No description provided for @healthJournalLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read the local health journal.'**
+  String get healthJournalLoadError;
+
+  /// No description provided for @healthJournalSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the record.'**
+  String get healthJournalSaveError;
+
+  /// No description provided for @healthJournalDeleteError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete the record.'**
+  String get healthJournalDeleteError;
+
+  /// No description provided for @healthJournalToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get healthJournalToday;
+
+  /// No description provided for @healthJournalOverdueDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Overdue by 1 day} other{Overdue by {days} days}}'**
+  String healthJournalOverdueDays(int days);
+
+  /// No description provided for @healthJournalInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{In 1 day} other{In {days} days}}'**
+  String healthJournalInDays(int days);
+
+  /// No description provided for @healthJournalNextDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: {date}'**
+  String healthJournalNextDate(String date);
+
+  /// No description provided for @healthTypeTickTreatment.
+  ///
+  /// In en, this message translates to:
+  /// **'Tick treatment'**
+  String get healthTypeTickTreatment;
+
+  /// No description provided for @healthTypeDeworming.
+  ///
+  /// In en, this message translates to:
+  /// **'Deworming'**
+  String get healthTypeDeworming;
+
+  /// No description provided for @healthTypeVaccination.
+  ///
+  /// In en, this message translates to:
+  /// **'Vaccination'**
+  String get healthTypeVaccination;
+
+  /// No description provided for @healthTypeMedication.
+  ///
+  /// In en, this message translates to:
+  /// **'Medication'**
+  String get healthTypeMedication;
+
+  /// No description provided for @healthTypeVeterinaryVisit.
+  ///
+  /// In en, this message translates to:
+  /// **'Veterinary visit'**
+  String get healthTypeVeterinaryVisit;
+
+  /// No description provided for @healthTypeAllergy.
+  ///
+  /// In en, this message translates to:
+  /// **'Allergy'**
+  String get healthTypeAllergy;
+
+  /// No description provided for @healthTypeInjury.
+  ///
+  /// In en, this message translates to:
+  /// **'Injury'**
+  String get healthTypeInjury;
+
+  /// No description provided for @healthTypeSurgery.
+  ///
+  /// In en, this message translates to:
+  /// **'Surgery'**
+  String get healthTypeSurgery;
+
+  /// No description provided for @healthTypeWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get healthTypeWeight;
+
+  /// No description provided for @healthTypeHipElbowXray.
+  ///
+  /// In en, this message translates to:
+  /// **'Hip/elbow X-ray'**
+  String get healthTypeHipElbowXray;
+
+  /// No description provided for @healthTypeEyeExamination.
+  ///
+  /// In en, this message translates to:
+  /// **'Eye examination'**
+  String get healthTypeEyeExamination;
+
+  /// No description provided for @healthTypeDnaTest.
+  ///
+  /// In en, this message translates to:
+  /// **'DNA test'**
+  String get healthTypeDnaTest;
+
+  /// No description provided for @healthTypeInsurance.
+  ///
+  /// In en, this message translates to:
+  /// **'Insurance'**
+  String get healthTypeInsurance;
+
+  /// No description provided for @healthTypeOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get healthTypeOther;
+
+  /// No description provided for @healthRepeatNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get healthRepeatNone;
+
+  /// No description provided for @healthRepeatMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get healthRepeatMonthly;
+
+  /// No description provided for @healthRepeatEveryThreeMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 3 months'**
+  String get healthRepeatEveryThreeMonths;
+
+  /// No description provided for @healthRepeatEverySixMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 6 months'**
+  String get healthRepeatEverySixMonths;
+
+  /// No description provided for @healthRepeatYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get healthRepeatYearly;
+
+  /// No description provided for @healthRepeatCustomDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom number of days'**
+  String get healthRepeatCustomDays;
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -6629,29 +6913,27 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['da', 'en', 'nb', 'sv'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['da', 'en', 'nb', 'sv'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'da':
-      return AppLocalizationsDa();
-    case 'en':
-      return AppLocalizationsEn();
-    case 'nb':
-      return AppLocalizationsNb();
-    case 'sv':
-      return AppLocalizationsSv();
+    case 'da': return AppLocalizationsDa();
+    case 'en': return AppLocalizationsEn();
+    case 'nb': return AppLocalizationsNb();
+    case 'sv': return AppLocalizationsSv();
   }
 
   throw FlutterError(
-      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.'
+  );
 }

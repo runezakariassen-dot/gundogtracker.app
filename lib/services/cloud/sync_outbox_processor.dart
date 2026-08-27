@@ -6,10 +6,12 @@ import '../../data/hive_boxes.dart';
 import '../../data/local/sync_outbox_service.dart';
 import '../../models/dog.dart';
 import '../../models/hunt_session.dart';
+import '../../models/health_record.dart';
 import '../../models/session_type.dart';
 import '../../models/sync_task.dart';
 import 'firestore_dog_sync_service.dart';
 import 'firestore_session_sync_service.dart';
+import 'firestore_health_record_sync_service.dart';
 import 'network_awareness_service.dart';
 
 typedef DogUpsertHandler = Future<Dog> Function(Dog dog);
@@ -23,6 +25,19 @@ typedef SessionDeleteHandler = Future<void> Function({
   required HuntSession session,
 });
 typedef SyncedDogPersistence = Future<void> Function(Dog dog);
+typedef HealthRecordUpsertHandler = Future<void> Function({
+  required HealthRecord record,
+  required String cloudDogId,
+});
+
+class MissingHealthRecordDogCloudIdException implements Exception {
+  const MissingHealthRecordDogCloudIdException(this.recordId);
+
+  final String recordId;
+
+  @override
+  String toString() => 'Missing dog cloudId for health record: $recordId';
+}
 
 class SyncOutboxProcessor {
   SyncOutboxProcessor({
@@ -35,6 +50,10 @@ class SyncOutboxProcessor {
     SessionUpsertHandler? sessionUpsertHandler,
     SessionDeleteHandler? sessionDeleteHandler,
     SyncedDogPersistence? persistSyncedDog,
+    FirestoreHealthRecordSyncService? healthRecordSyncService,
+    HealthRecordUpsertHandler? healthRecordUpsertHandler,
+    Box<HealthRecord>? healthRecordBox,
+    Box<Dog>? dogBox,
   })  : _outboxService = outboxService ?? SyncOutboxService(),
         _dogSyncService = dogSyncService ?? FirestoreDogSyncService.instance,
         _sessionSyncService =
@@ -45,7 +64,11 @@ class SyncOutboxProcessor {
         _dogDeleteHandler = dogDeleteHandler,
         _sessionUpsertHandler = sessionUpsertHandler,
         _sessionDeleteHandler = sessionDeleteHandler,
-        _persistSyncedDog = persistSyncedDog;
+        _persistSyncedDog = persistSyncedDog,
+        _healthRecordSyncService = healthRecordSyncService,
+        _healthRecordUpsertHandler = healthRecordUpsertHandler,
+        _healthRecordBox = healthRecordBox,
+        _dogBox = dogBox;
 
   final SyncOutboxService _outboxService;
   final FirestoreDogSyncService _dogSyncService;
@@ -56,6 +79,10 @@ class SyncOutboxProcessor {
   final SessionUpsertHandler? _sessionUpsertHandler;
   final SessionDeleteHandler? _sessionDeleteHandler;
   final SyncedDogPersistence? _persistSyncedDog;
+  final FirestoreHealthRecordSyncService? _healthRecordSyncService;
+  final HealthRecordUpsertHandler? _healthRecordUpsertHandler;
+  final Box<HealthRecord>? _healthRecordBox;
+  final Box<Dog>? _dogBox;
 
   Future<void> runOnce({int limit = 20}) async {
     debugPrint('[SYNC][PROCESSOR] started limit=$limit');
@@ -83,6 +110,13 @@ class SyncOutboxProcessor {
         debugPrint(
           '[SYNC][PROCESSOR] success type=${task.entityType} '
           'entityId=${task.entityId}',
+        );
+      } on MissingHealthRecordDogCloudIdException catch (error) {
+        failureCount++;
+        await _outboxService.markTaskWaitingForDependency(task.taskId, error);
+        debugPrint(
+          '[SYNC][PROCESSOR] waiting type=${task.entityType} '
+          'entityId=${task.entityId} error=$error',
         );
       } catch (error, stackTrace) {
         failureCount++;
@@ -155,6 +189,23 @@ class SyncOutboxProcessor {
         final session = _mapSessionPayloadToModel(payload: payload);
         await _deleteSession(sessionId: sessionId, session: session);
         return;
+      case 'health_record_upsert':
+      case 'health_record:upsert':
+        final recordId = task.entityId.trim();
+        if (recordId.isEmpty) {
+          throw const FormatException('Missing health record id.');
+        }
+        final record = (_healthRecordBox ?? healthRecordsBox()).get(recordId);
+        if (record == null) {
+          throw StateError('Missing local health record: $recordId');
+        }
+        final dog = _findDog(record.dogId);
+        final cloudDogId = dog?.cloudId?.trim();
+        if (cloudDogId == null || cloudDogId.isEmpty) {
+          throw MissingHealthRecordDogCloudIdException(recordId);
+        }
+        await _upsertHealthRecord(record, cloudDogId);
+        return;
     }
 
     throw StateError('Unsupported task type: ${task.entityType}');
@@ -210,6 +261,29 @@ class SyncOutboxProcessor {
       return persistSyncedDog(dog);
     }
     return _persistDogWithCloudMetadata(dog);
+  }
+
+  Dog? _findDog(String dogId) {
+    for (final dog in (_dogBox ?? dogsBox()).values) {
+      if (dog.id == dogId) return dog;
+    }
+    return null;
+  }
+
+  Future<void> _upsertHealthRecord(
+    HealthRecord record,
+    String cloudDogId,
+  ) {
+    final handler = _healthRecordUpsertHandler;
+    if (handler != null) {
+      return handler(record: record, cloudDogId: cloudDogId);
+    }
+    return (_healthRecordSyncService ??
+            FirestoreHealthRecordSyncService.instance)
+        .upsertHealthRecord(
+      record: record,
+      cloudDogId: cloudDogId,
+    );
   }
 
   Map<String, dynamic> _normalizePayload(Map<String, dynamic> payload) {
