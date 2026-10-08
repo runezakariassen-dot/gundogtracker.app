@@ -214,6 +214,7 @@ class SubscriptionService {
   bool _purchaseStartInProgress = false;
   bool _storeAvailable = false;
   bool _initialized = false;
+  Future<SubscriptionViewData>? _refreshInProgress;
 
   Box<dynamic> get _box =>
       _settingsBox ?? HiveLifecycleService.getBox<dynamic>(appSettingsBoxName);
@@ -258,7 +259,13 @@ class SubscriptionService {
     _emitState();
   }
 
-  Future<SubscriptionViewData> refresh() async {
+  Future<SubscriptionViewData> refresh() {
+    return _refreshInProgress ??= _refresh().whenComplete(() {
+      _refreshInProgress = null;
+    });
+  }
+
+  Future<SubscriptionViewData> _refresh() async {
     await init();
     await _clearLegacyPermanentProFlag();
     await _expireStoredEntitlementIfNeeded();
@@ -284,6 +291,15 @@ class SubscriptionService {
 
   bool canCreateSession({required int currentSessionCount}) {
     return isPro || currentSessionCount < freeSessionLimit;
+  }
+
+  Future<bool> canCreateSessionAfterRefreshIfUnknown({
+    required int currentSessionCount,
+  }) async {
+    if (state.value.status == SubscriptionStatus.unknown) {
+      await refresh();
+    }
+    return canCreateSession(currentSessionCount: currentSessionCount);
   }
 
   Future<SubscriptionPurchaseResult> purchaseMonthly() async {

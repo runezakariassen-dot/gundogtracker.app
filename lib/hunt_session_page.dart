@@ -49,6 +49,7 @@ import 'package:jakthund_app/services/media_storage.dart';
 import 'package:jakthund_app/services/user_identity_service.dart';
 import 'package:jakthund_app/ui/components/meta_chip.dart';
 import 'package:jakthund_app/ui/milestones/milestone_celebration_presenter.dart';
+import 'package:jakthund_app/ui/subscription/pro_upgrade_sheet.dart';
 import 'package:jakthund_app/l10n/app_localizations.dart';
 import 'package:jakthund_app/ui/text/text_helpers.dart';
 import 'package:jakthund_app/utils/dog_label_resolver.dart';
@@ -1821,12 +1822,23 @@ class _HuntSessionPageState extends State<HuntSessionPage>
 
       final activeSessionCount =
           _sessionsBox.values.where((session) => !session.isDeleted).length;
-      if (!SubscriptionService.instance.canCreateSession(
+      final canCreateSession = await SubscriptionService.instance
+          .canCreateSessionAfterRefreshIfUnknown(
         currentSessionCount: activeSessionCount,
-      )) {
+      );
+      if (!canCreateSession) {
+        if (!mounted) return;
+        if (SubscriptionService.instance.state.value.status ==
+            SubscriptionStatus.unknown) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.subscription_error_load_status)),
+          );
+          return;
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.subscription_limit_sessions_reached)),
         );
+        await showProUpgradeSheet(context);
         return;
       }
 

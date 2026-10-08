@@ -23,10 +23,14 @@ class _FakeSubscriptionStoreClient implements SubscriptionStoreClient {
   int restoreCalls = 0;
   int completeCalls = 0;
   int buyCalls = 0;
+  int purchaseStreamCalls = 0;
   Completer<bool>? buyCompleter;
 
   @override
-  Stream<List<StorePurchaseUpdate>> get purchaseStream => _controller.stream;
+  Stream<List<StorePurchaseUpdate>> get purchaseStream {
+    purchaseStreamCalls += 1;
+    return _controller.stream;
+  }
 
   @override
   Future<bool> buy(StoreProduct product) {
@@ -488,6 +492,92 @@ void main() {
       service.canCreateSession(currentSessionCount: freeSessionLimit),
       isFalse,
     );
+  });
+
+  test('unknown state refreshes and allows a persisted active Pro session',
+      () async {
+    await service.dispose();
+    await settingsBox.put(
+      'subscriptionEntitlementProductId',
+      monthlyProductId,
+    );
+    await settingsBox.put(
+      'subscriptionEntitlementTransactionDate',
+      now.subtract(const Duration(days: 1)).millisecondsSinceEpoch,
+    );
+    await settingsBox.put(
+      'subscriptionEntitlementExpiresAt',
+      now.add(const Duration(days: 10)).millisecondsSinceEpoch,
+    );
+
+    service = SubscriptionService(
+      storeClient: storeClient,
+      settingsBox: settingsBox,
+      clock: () => now,
+    );
+
+    expect(service.state.value.status, SubscriptionStatus.unknown);
+    expect(
+      await service.canCreateSessionAfterRefreshIfUnknown(
+        currentSessionCount: freeSessionLimit,
+      ),
+      isTrue,
+    );
+    expect(service.state.value.status, SubscriptionStatus.active);
+  });
+
+  test('unknown state refreshes and blocks confirmed free session at limit',
+      () async {
+    await service.dispose();
+    service = SubscriptionService(
+      storeClient: storeClient,
+      settingsBox: settingsBox,
+      clock: () => now,
+    );
+
+    expect(service.state.value.status, SubscriptionStatus.unknown);
+    expect(
+      await service.canCreateSessionAfterRefreshIfUnknown(
+        currentSessionCount: freeSessionLimit,
+      ),
+      isFalse,
+    );
+    expect(service.state.value.status, SubscriptionStatus.inactive);
+  });
+
+  test('known Pro session check does not require another refresh', () async {
+    final activeState = waitForSubscriptionState(
+      (data) => data.status == SubscriptionStatus.active,
+    );
+    storeClient.emit(monthlyUpdate(StorePurchaseStatus.purchased));
+    await activeState;
+
+    expect(
+      await service.canCreateSessionAfterRefreshIfUnknown(
+        currentSessionCount: freeSessionLimit,
+      ),
+      isTrue,
+    );
+  });
+
+  test('known free user remains allowed below the free session limit',
+      () async {
+    expect(service.state.value.status, SubscriptionStatus.inactive);
+    expect(
+      await service.canCreateSessionAfterRefreshIfUnknown(
+        currentSessionCount: freeSessionLimit - 1,
+      ),
+      isTrue,
+    );
+  });
+
+  test('repeated refreshes keep a single purchase stream subscription',
+      () async {
+    await service.init();
+    await service.refresh();
+    await service.refresh();
+
+    expect(storeClient.purchaseStreamCalls, 1);
   });
 
   test('purchase start returns while store dialog remains pending', () async {

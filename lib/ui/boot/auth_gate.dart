@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../../data/hive_boxes.dart';
 import '../../domain/domain_constants.dart';
 import '../../domain/subscription/subscription_service.dart';
+import '../../domain/subscription/subscription_startup_refresher.dart';
 import '../../domain/user/app_user.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/hive_lifecycle_service.dart';
@@ -30,6 +31,12 @@ class AuthGate extends StatefulWidget {
 
 class _AuthGateState extends State<AuthGate> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  late final SubscriptionStartupRefresher _subscriptionStartupRefresher =
+      SubscriptionStartupRefresher(
+    () async {
+      await SubscriptionService.instance.refresh();
+    },
+  );
 
   AppUser? _profile;
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
@@ -48,6 +55,7 @@ class _AuthGateState extends State<AuthGate> {
     _profileError = null;
     _isWaitingForProfile = false;
     _lastUser = null;
+    _subscriptionStartupRefresher.reset();
   }
 
   void _refreshProfile() {
@@ -148,6 +156,22 @@ class _AuthGateState extends State<AuthGate> {
     });
   }
 
+  void _scheduleSubscriptionRefresh(User user) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(_refreshSubscriptionForUser(user.uid));
+    });
+  }
+
+  Future<void> _refreshSubscriptionForUser(String userId) async {
+    try {
+      await _subscriptionStartupRefresher.refreshForUser(userId);
+      debugPrint('[AUTH] refreshed subscription state for user $userId');
+    } catch (e) {
+      debugPrint('[AUTH] failed to refresh subscription state: $e');
+    }
+  }
+
   String _storedIdentity() {
     final settings = HiveLifecycleService.getBox<dynamic>(appSettingsBoxName);
     return (settings.get(currentUserIdKey) as String?)?.trim() ?? '';
@@ -234,10 +258,7 @@ class _AuthGateState extends State<AuthGate> {
     }
 
     try {
-      await SubscriptionService.instance.refresh();
-      debugPrint('[AUTH] refreshed subscription state for new user');
-    } catch (e) {
-      debugPrint('[AUTH] failed to refresh subscription state: $e');
+      await _refreshSubscriptionForUser(newUid);
     } finally {
       if (mounted) {
         setState(() => _userSwitchInProgress = false);
@@ -305,6 +326,9 @@ class _AuthGateState extends State<AuthGate> {
             _scheduleUserSwitch(user);
           } else if (_storedIdentity().isEmpty) {
             _scheduleIdentitySync(user);
+          }
+          if (!_isActualUserSwitch(user)) {
+            _scheduleSubscriptionRefresh(user);
           }
           _scheduleProfileLoad(user);
         }
