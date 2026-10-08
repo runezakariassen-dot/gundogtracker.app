@@ -16,6 +16,7 @@ import '../services/dog_photo_storage.dart';
 import '../services/hive_lifecycle_service.dart';
 import '../services/media_storage.dart';
 import '../services/notification_service.dart';
+import '../services/push_notification_service.dart';
 import '../ui/locale/locale_controller.dart';
 
 class AppStartupService {
@@ -48,6 +49,9 @@ class AppStartupService {
 
     await runDomainBootstrapTasks();
     await _ensureFirebaseSignedIn();
+    unawaited(PushNotificationService.instance.start().catchError((error) {
+      debugPrint('[PUSH] startup registration failed: $error');
+    }));
     try {
       debugPrint('[CLOUD][DOG] fetch hook reached');
       await FirestoreDogSyncService.instance.fetchAccessibleDogs();

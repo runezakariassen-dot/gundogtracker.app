@@ -67,7 +67,7 @@ void main() {
     );
 
     expect(client.initializeCalls, 1);
-    expect(client.requestPermissionCalls, 1);
+    expect(client.requestPermissionCalls, 0);
     expect(client.canceledIds,
         contains(NotificationService.birthdayNotificationId));
     expect(client.schedules, hasLength(1));
@@ -108,5 +108,19 @@ void main() {
       client.shown.single.id,
       NotificationService.goalNotificationBaseId + 25,
     );
+  });
+
+  test('foreground shared-dog notification uses remote channel', () async {
+    final client = _FakeLocalNotificationsClient();
+    final service = NotificationService(client: client);
+
+    await service.showSharedDogSessionNotification(
+      title: 'GundogTracker',
+      body: 'Ny økt registrert for Zoë',
+    );
+
+    expect(client.shown, hasLength(1));
+    expect(client.shown.single.title, 'GundogTracker');
+    expect(client.shown.single.body, 'Ny økt registrert for Zoë');
   });
 }

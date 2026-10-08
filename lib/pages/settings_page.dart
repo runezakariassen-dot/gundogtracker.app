@@ -1,5 +1,6 @@
 // ignore_for_file: control_flow_in_finally, deprecated_member_use, use_build_context_synchronously
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -32,6 +33,7 @@ import '../data/local/sync_outbox_service.dart';
 import '../services/dog_photo_storage.dart';
 import '../services/hive_lifecycle_service.dart';
 import '../services/notification_service.dart';
+import '../services/push_notification_service.dart';
 import '../ui/settings/feedback/feedback_service.dart';
 import '../ui/settings/subscription/subscription_section.dart';
 import '../ui/locale/locale_controller.dart';
@@ -44,10 +46,12 @@ class SettingsPage extends StatefulWidget {
     super.key,
     this.subscriptionService,
     this.notificationService,
+    this.pushNotificationService,
   });
 
   final SubscriptionService? subscriptionService;
   final AppNotificationService? notificationService;
+  final PushNotificationService? pushNotificationService;
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -105,6 +109,66 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _isPersistingGoalCelebration = false;
   bool _isPersistingBirthdayGreeting = false;
   late final AppNotificationService _notificationService;
+  late final PushNotificationService _pushNotificationService;
+  bool _sharedDogSessionNotificationsEnabled = true;
+  bool _isLoadingSharedDogSessionPreference = true;
+  bool _isSavingSharedDogSessionPreference = false;
+
+  Future<void> _loadSharedDogSessionPreference() async {
+    final uid = _currentUserOrNull()?.uid;
+    if (uid == null) {
+      if (mounted) {
+        setState(() => _isLoadingSharedDogSessionPreference = false);
+      }
+      return;
+    }
+    try {
+      final enabled = await _pushNotificationService
+          .getSharedDogSessionCreatedPreference(uid);
+      if (!mounted) return;
+      setState(() {
+        _sharedDogSessionNotificationsEnabled = enabled;
+        _isLoadingSharedDogSessionPreference = false;
+      });
+    } catch (error) {
+      debugPrint('[PUSH] failed to load notification preference: $error');
+      if (mounted) {
+        setState(() => _isLoadingSharedDogSessionPreference = false);
+      }
+    }
+  }
+
+  Future<void> _setSharedDogSessionPreference(bool enabled) async {
+    final uid = _currentUserOrNull()?.uid;
+    if (uid == null || _isSavingSharedDogSessionPreference) return;
+    final previous = _sharedDogSessionNotificationsEnabled;
+    setState(() {
+      _sharedDogSessionNotificationsEnabled = enabled;
+      _isSavingSharedDogSessionPreference = true;
+    });
+    try {
+      await _pushNotificationService.setSharedDogSessionCreatedPreference(
+        uid,
+        enabled,
+      );
+    } catch (error) {
+      debugPrint('[PUSH] failed to save notification preference: $error');
+      if (!mounted) return;
+      setState(() => _sharedDogSessionNotificationsEnabled = previous);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!
+                .settings_notifications_shared_dog_save_failed,
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSavingSharedDogSessionPreference = false);
+      }
+    }
+  }
 
   Future<void> _triggerDebugDogRestore() async {
     if (!kDebugMode) return;
@@ -957,6 +1021,7 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() => _isSigningOut = true);
 
     try {
+      await _pushNotificationService.deactivateCurrentUser();
       await FirebaseAuth.instance.signOut();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1022,6 +1087,8 @@ class _SettingsPageState extends State<SettingsPage> {
     super.initState();
     _notificationService =
         widget.notificationService ?? NotificationService.instance;
+    _pushNotificationService =
+        widget.pushNotificationService ?? PushNotificationService.instance;
     _settingsBox = HiveLifecycleService.getBox<dynamic>(appSettingsBoxName);
     _settingsRepository = SettingsRepository(_settingsBox);
     _sessionsBox = HiveLifecycleService.getBox<HuntSession>(sessionsBoxName);
@@ -1033,6 +1100,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _scheduleBirthdayReminderNotification();
     _schedulePersonalGoalCelebrationCheck();
     _scheduleBirthdayGreetingCheck();
+    unawaited(_loadSharedDogSessionPreference());
   }
 
   Future<void> _exportBackupZip() async {
@@ -1477,6 +1545,27 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                       ],
                     ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  Text(l10n.settings_section_notifications,
+                      style: sectionStyle),
+                  const SizedBox(height: 8),
+                  SwitchListTile(
+                    key: const Key('settings_shared_dog_session_notifications'),
+                    title: Text(
+                      l10n.settings_notifications_shared_dog_session_title,
+                    ),
+                    subtitle: Text(
+                      l10n.settings_notifications_shared_dog_session_subtitle,
+                    ),
+                    value: _sharedDogSessionNotificationsEnabled,
+                    onChanged: _isLoadingSharedDogSessionPreference ||
+                            _isSavingSharedDogSessionPreference
+                        ? null
+                        : _setSharedDogSessionPreference,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8),
                   ),
 
                   const SizedBox(height: 24),

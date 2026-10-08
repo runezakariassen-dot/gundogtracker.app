@@ -18,6 +18,7 @@ dependencies:
   firebase_auth: ^5.7.0
   cloud_firestore: ^5.6.12
   firebase_storage: ^12.4.10
+  firebase_messaging: ^15.2.10
 
   # Data processing
   csv: ^6.0.0

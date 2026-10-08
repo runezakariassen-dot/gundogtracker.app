@@ -2304,6 +2304,10 @@
   "@healthJournalNextDate": {"placeholders": {"date": {"type": "String"}}},
   "healthTypeTickTreatment": "Fästingmedel", "healthTypeDeworming": "Avmaskning", "healthTypeVaccination": "Vaccination", "healthTypeMedication": "Medicin", "healthTypeVeterinaryVisit": "Veterinärbesök", "healthTypeAllergy": "Allergi", "healthTypeInjury": "Skada", "healthTypeSurgery": "Operation", "healthTypeWeight": "Vikt", "healthTypeHipElbowXray": "HD/AD-röntgen", "healthTypeEyeExamination": "Ögonlysning", "healthTypeDnaTest": "DNA-test", "healthTypeInsurance": "Försäkring", "healthTypeOther": "Annat",
   "healthRepeatNone": "Ingen", "healthRepeatMonthly": "Månadsvis", "healthRepeatEveryThreeMonths": "Var 3:e månad", "healthRepeatEverySixMonths": "Var 6:e månad", "healthRepeatYearly": "Årligen", "healthRepeatCustomDays": "Anpassat antal dagar",
+  "settings_section_notifications": "Notiser",
+  "settings_notifications_shared_dog_session_title": "Nytt pass för delad hund",
+  "settings_notifications_shared_dog_session_subtitle": "Meddela mig när en annan användare registrerar ett pass för en delad hund.",
+  "settings_notifications_shared_dog_save_failed": "Det gick inte att spara notisinställningen. Försök igen.",
   "@settings_not_signed_in": {
     "description": "Message shown when no user is currently signed in."
   }

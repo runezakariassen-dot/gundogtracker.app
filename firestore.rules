@@ -142,6 +142,11 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
+
+      match /devices/{deviceId} {
+        allow read, create, update, delete: if isSignedIn()
+          && request.auth.uid == userId;
+      }
     }
 
     match /{path=**}/members/{memberId} {

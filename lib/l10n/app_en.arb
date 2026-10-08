@@ -2142,6 +2142,10 @@
   "@healthJournalOverdueDays": {"placeholders": {"days": {"type": "int"}}}, "@healthJournalInDays": {"placeholders": {"days": {"type": "int"}}}, "@healthJournalNextDate": {"placeholders": {"date": {"type": "String"}}},
   "healthTypeTickTreatment": "Tick treatment", "healthTypeDeworming": "Deworming", "healthTypeVaccination": "Vaccination", "healthTypeMedication": "Medication", "healthTypeVeterinaryVisit": "Veterinary visit", "healthTypeAllergy": "Allergy", "healthTypeInjury": "Injury", "healthTypeSurgery": "Surgery", "healthTypeWeight": "Weight", "healthTypeHipElbowXray": "Hip/elbow X-ray", "healthTypeEyeExamination": "Eye examination", "healthTypeDnaTest": "DNA test", "healthTypeInsurance": "Insurance", "healthTypeOther": "Other",
   "healthRepeatNone": "None", "healthRepeatMonthly": "Monthly", "healthRepeatEveryThreeMonths": "Every 3 months", "healthRepeatEverySixMonths": "Every 6 months", "healthRepeatYearly": "Yearly", "healthRepeatCustomDays": "Custom number of days",
+  "settings_section_notifications": "Notifications",
+  "settings_notifications_shared_dog_session_title": "New session on shared dog",
+  "settings_notifications_shared_dog_session_subtitle": "Notify me when another user registers a session for a shared dog.",
+  "settings_notifications_shared_dog_save_failed": "Could not save the notification setting. Please try again.",
   "@settings_not_signed_in": {
     "description": "Message shown when no user is currently signed in."
   }

@@ -6,6 +6,11 @@ import 'package:timezone/timezone.dart' as tz;
 abstract class AppNotificationService {
   Future<void> init();
 
+  Future<void> showSharedDogSessionNotification({
+    required String title,
+    required String body,
+  });
+
   Future<void> scheduleBirthdayReminder({
     required DateTime? birthDate,
     required String title,
@@ -126,6 +131,7 @@ class NotificationService implements AppNotificationService {
 
   static const int birthdayNotificationId = 3001;
   static const int goalNotificationBaseId = 4000;
+  static const int remoteNotificationBaseId = 5000;
 
   final LocalNotificationsClient _client;
   bool _isInitialized = false;
@@ -157,10 +163,29 @@ class NotificationService implements AppNotificationService {
         _isTimezoneInitialized = true;
       }
       await _client.initialize(settings);
-      await _client.requestPermissions();
       _isInitialized = true;
     } catch (error, stackTrace) {
       debugPrint('[NOTIFICATION] init failed: $error');
+      debugPrint(stackTrace.toString());
+    }
+  }
+
+  @override
+  Future<void> showSharedDogSessionNotification({
+    required String title,
+    required String body,
+  }) async {
+    await init();
+    try {
+      await _client.show(
+        id: remoteNotificationBaseId +
+            DateTime.now().millisecondsSinceEpoch.remainder(1000000),
+        title: title,
+        body: body,
+        details: _remoteDetails,
+      );
+    } catch (error, stackTrace) {
+      debugPrint('[NOTIFICATION] foreground remote show failed: $error');
       debugPrint(stackTrace.toString());
     }
   }
@@ -236,6 +261,20 @@ class NotificationService implements AppNotificationService {
         'jakthund_local_notifications',
         'Local notifications',
         channelDescription: 'Birthday and goal reached reminders',
+        importance: Importance.high,
+        priority: Priority.high,
+      ),
+      iOS: DarwinNotificationDetails(),
+      macOS: DarwinNotificationDetails(),
+    );
+  }
+
+  NotificationDetails get _remoteDetails {
+    return const NotificationDetails(
+      android: AndroidNotificationDetails(
+        'jakthund_shared_dog_sessions',
+        'Shared dog sessions',
+        channelDescription: 'New sessions registered for shared dogs',
         importance: Importance.high,
         priority: Priority.high,
       ),

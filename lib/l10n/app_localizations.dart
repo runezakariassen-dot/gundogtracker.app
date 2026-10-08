@@ -6902,6 +6902,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Custom number of days'**
   String get healthRepeatCustomDays;
+
+  /// No description provided for @settings_section_notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get settings_section_notifications;
+
+  /// No description provided for @settings_notifications_shared_dog_session_title.
+  ///
+  /// In en, this message translates to:
+  /// **'New session on shared dog'**
+  String get settings_notifications_shared_dog_session_title;
+
+  /// No description provided for @settings_notifications_shared_dog_session_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify me when another user registers a session for a shared dog.'**
+  String get settings_notifications_shared_dog_session_subtitle;
+
+  /// No description provided for @settings_notifications_shared_dog_save_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the notification setting. Please try again.'**
+  String get settings_notifications_shared_dog_save_failed;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

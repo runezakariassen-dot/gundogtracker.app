@@ -2117,6 +2117,10 @@
   "healthRepeatEverySixMonths": "Hver 6. måned",
   "healthRepeatYearly": "Årlig",
   "healthRepeatCustomDays": "Egendefinert antall dager",
+  "settings_section_notifications": "Varsler",
+  "settings_notifications_shared_dog_session_title": "Ny økt på delt hund",
+  "settings_notifications_shared_dog_session_subtitle": "Varsle meg når en annen bruker registrerer en økt på en delt hund.",
+  "settings_notifications_shared_dog_save_failed": "Kunne ikke lagre varselinnstillingen. Prøv igjen.",
   "@settings_not_signed_in": {
     "description": "Message shown when no user is currently signed in."
   }

@@ -1695,6 +1695,10 @@
   "@healthJournalOverdueDays": {"placeholders": {"days": {"type": "int"}}}, "@healthJournalInDays": {"placeholders": {"days": {"type": "int"}}}, "@healthJournalNextDate": {"placeholders": {"date": {"type": "String"}}},
   "healthTypeTickTreatment": "Flåtmiddel", "healthTypeDeworming": "Ormekur", "healthTypeVaccination": "Vaccine", "healthTypeMedication": "Medicin", "healthTypeVeterinaryVisit": "Dyrlægebesøg", "healthTypeAllergy": "Allergi", "healthTypeInjury": "Skade", "healthTypeSurgery": "Operation", "healthTypeWeight": "Vægt", "healthTypeHipElbowXray": "HD/AD-røntgen", "healthTypeEyeExamination": "Øjenlysning", "healthTypeDnaTest": "DNA-test", "healthTypeInsurance": "Forsikring", "healthTypeOther": "Andet",
   "healthRepeatNone": "Ingen", "healthRepeatMonthly": "Månedligt", "healthRepeatEveryThreeMonths": "Hver 3. måned", "healthRepeatEverySixMonths": "Hver 6. måned", "healthRepeatYearly": "Årligt", "healthRepeatCustomDays": "Brugerdefineret antal dage",
+  "settings_section_notifications": "Notifikationer",
+  "settings_notifications_shared_dog_session_title": "Ny session på delt hund",
+  "settings_notifications_shared_dog_session_subtitle": "Giv mig besked, når en anden bruger registrerer en session for en delt hund.",
+  "settings_notifications_shared_dog_save_failed": "Notifikationsindstillingen kunne ikke gemmes. Prøv igen.",
   "@settings_not_signed_in": {
     "description": "Message shown when no user is currently signed in."
   }

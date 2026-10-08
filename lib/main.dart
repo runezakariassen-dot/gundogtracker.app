@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 
@@ -9,6 +10,13 @@ import 'services/app_startup_service.dart';
 import 'ui/boot/app_bootstrapper.dart';
 import 'ui/boot/app_restart_controller.dart';
 import 'ui/locale/locale_controller.dart';
+
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+}
 
 Future<void> main() async {
   FlutterError.onError = (details) {
@@ -27,6 +35,7 @@ Future<void> main() async {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
+      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
       final localeController = await AppStartupService.ensureInitialized();
 

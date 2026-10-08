@@ -3815,4 +3815,16 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get healthRepeatCustomDays => 'Anpassat antal dagar';
+
+  @override
+  String get settings_section_notifications => 'Notiser';
+
+  @override
+  String get settings_notifications_shared_dog_session_title => 'Nytt pass för delad hund';
+
+  @override
+  String get settings_notifications_shared_dog_session_subtitle => 'Meddela mig när en annan användare registrerar ett pass för en delad hund.';
+
+  @override
+  String get settings_notifications_shared_dog_save_failed => 'Det gick inte att spara notisinställningen. Försök igen.';
 }
