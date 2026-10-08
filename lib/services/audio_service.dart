@@ -16,7 +16,7 @@ class AudioService {
   Future<void> playStartupSound() async {
     try {
       await _audioPlayer.play(
-        AssetSource('sounds/rype.mp3'),
+        AssetSource('sounds/rype_startup.mp3'),
         volume: 0.5,
       );
     } catch (e) {
