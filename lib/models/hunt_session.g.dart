@@ -28,6 +28,7 @@ class HuntSessionAdapter extends TypeAdapter<HuntSession> {
       notes: fields[7] as String,
       secondaryPoints: fields[12] as int?,
       tomstandCount: fields[20] as int?,
+      sessionId: fields[21] as String?,
       trackKey: fields[8] as int?,
       trackId: fields[9] as String?,
       birdSpecies: (fields[10] as List?)?.cast<String>(),
@@ -44,7 +45,7 @@ class HuntSessionAdapter extends TypeAdapter<HuntSession> {
   @override
   void write(BinaryWriter writer, HuntSession obj) {
     writer
-      ..writeByte(21)
+      ..writeByte(22)
       ..writeByte(0)
       ..write(obj.dogId)
       ..writeByte(13)
@@ -67,6 +68,8 @@ class HuntSessionAdapter extends TypeAdapter<HuntSession> {
       ..write(obj.secondaryPoints)
       ..writeByte(20)
       ..write(obj.tomstandCount)
+      ..writeByte(21)
+      ..write(obj.sessionId)
       ..writeByte(8)
       ..write(obj.trackKey)
       ..writeByte(9)

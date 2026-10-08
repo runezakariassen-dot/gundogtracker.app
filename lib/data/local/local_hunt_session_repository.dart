@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hive/hive.dart';
 import 'package:uuid/uuid.dart';
 
@@ -6,10 +7,14 @@ import '../../domain/repositories/hunt_session_repository.dart';
 import '../../models/hunt_session.dart';
 
 class LocalHuntSessionRepository implements HuntSessionRepository {
-  LocalHuntSessionRepository({Box<HuntSession>? box})
-      : _box = box ?? sessionsBox();
+  LocalHuntSessionRepository({
+    Box<HuntSession>? box,
+    String? Function()? currentUserIdProvider,
+  })  : _box = box ?? sessionsBox(),
+        _currentUserIdProvider = currentUserIdProvider ?? _defaultCurrentUserId;
 
   final Box<HuntSession> _box;
+  final String? Function() _currentUserIdProvider;
   final Uuid _uuid = const Uuid();
 
   @override
@@ -30,7 +35,10 @@ class LocalHuntSessionRepository implements HuntSessionRepository {
     String? createdByUserId,
   }) async {
     final sessionId = _uuid.v4();
+    final creator =
+        _nonEmpty(createdByUserId) ?? _nonEmpty(_currentUserIdProvider());
     final session = HuntSession(
+      sessionId: sessionId,
       dogId: dogId,
       dogKey: dogKey,
       dateTime: startedAt,
@@ -44,7 +52,7 @@ class LocalHuntSessionRepository implements HuntSessionRepository {
       tomstandCount: tomstandCount,
       birdSpecies: birdSpecies,
       mediaPaths: mediaPaths,
-      createdByUserId: createdByUserId,
+      createdByUserId: creator,
     );
     await _box.put(sessionId, session);
     return sessionId;
@@ -118,5 +126,18 @@ class LocalHuntSessionRepository implements HuntSessionRepository {
       return 0;
     }
     return seconds ~/ 60;
+  }
+
+  static String? _defaultCurrentUserId() {
+    try {
+      return FirebaseAuth.instance.currentUser?.uid;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static String? _nonEmpty(String? value) {
+    final normalized = value?.trim();
+    return normalized == null || normalized.isEmpty ? null : normalized;
   }
 }

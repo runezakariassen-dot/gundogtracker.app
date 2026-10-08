@@ -108,6 +108,37 @@ void main() {
     expect(box.values.single.entityType, 'session_upsert');
   });
 
+  test('session outbox keeps stable id across enqueue and retry state',
+      () async {
+    final service = SyncOutboxService(
+      box: box,
+      enableAutoSync: false,
+    );
+    final session = HuntSession(
+      sessionId: 'stable-session-uuid',
+      dogId: 'dog-1',
+      dateTime: DateTime(2026, 1, 1),
+      location: '',
+      durationMinutes: 0,
+      birdsSeen: 0,
+      points: 0,
+      flushes: 0,
+      notes: '',
+      createdByUserId: 'user-a',
+    );
+
+    await service.enqueueUpsertSession('legacy-local-key', session);
+    final task = box.values.single;
+    await service.markTaskFailed(task.taskId, StateError('offline'));
+    await service.resetFailedTasksForRetry();
+
+    final retried = box.get(task.taskId)!;
+    expect(retried.entityId, 'stable-session-uuid');
+    expect(retried.payload['id'], 'stable-session-uuid');
+    expect(retried.payload['sessionId'], 'stable-session-uuid');
+    expect(retried.payload['createdByUserId'], 'user-a');
+  });
+
   test('local session delete enqueues tombstone task', () async {
     final service = SyncOutboxService(
       box: box,

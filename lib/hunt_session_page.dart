@@ -1794,12 +1794,10 @@ class _HuntSessionPageState extends State<HuntSessionPage>
         );
 
         await _sessionsBox.put(_editingSessionKey, updated);
-        await _syncOutboxService.enqueueUpsertSession(
-          _editingSessionKey!.toString(),
-          updated,
-        );
+        final sessionId = updated.sessionId ?? _editingSessionKey!.toString();
+        await _syncOutboxService.enqueueUpsertSession(sessionId, updated);
         await FirestoreSessionSyncService.instance.upsertSessionBestEffort(
-          sessionId: _editingSessionKey!.toString(),
+          sessionId: sessionId,
           session: updated,
         );
         await _hapticSuccess();
@@ -1854,8 +1852,11 @@ class _HuntSessionPageState extends State<HuntSessionPage>
       }
 
       final trackId = _importedTrackId;
+      final sessionId = _uuid.v4();
+      final createdByUserId = FirebaseAuth.instance.currentUser?.uid.trim();
 
       final session = HuntSession(
+        sessionId: sessionId,
         dogId: selectedDog.id,
         dateTime: _selectedDateTime ?? DateTime.now(),
         location: _locationController.text,
@@ -1873,10 +1874,12 @@ class _HuntSessionPageState extends State<HuntSessionPage>
         sessionType: _sessionType,
         birdsShotCount: shotCount,
         birdsShotSpecies: shotSpecies,
+        createdByUserId: createdByUserId == null || createdByUserId.isEmpty
+            ? null
+            : createdByUserId,
       );
 
       final sessionKey = await _sessionsBox.add(session);
-      final sessionId = sessionKey.toString();
       await _syncOutboxService.enqueueUpsertSession(sessionId, session);
       await FirestoreSessionSyncService.instance.upsertSessionBestEffort(
         sessionId: sessionId,
@@ -2502,14 +2505,15 @@ class _HuntSessionPageState extends State<HuntSessionPage>
       updatedAt: deletedAt,
       deletedAt: deletedAt,
     );
+    final sessionId = session.sessionId ?? sessionKey.toString();
 
     await _syncOutboxService.enqueueDeleteSession(
-      sessionKey.toString(),
+      sessionId,
       tombstone,
       deletedAt: deletedAt,
     );
     await FirestoreSessionSyncService.instance.tombstoneSessionBestEffort(
-      sessionId: sessionKey.toString(),
+      sessionId: sessionId,
       session: tombstone,
     );
 

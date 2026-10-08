@@ -188,7 +188,32 @@ service cloud.firestore {
       }
 
       match /sessions/{sessionId} {
-        allow read, create, update: if isDogMember(dogId);
+        allow read: if isDogMember(dogId);
+
+        allow create: if isDogMember(dogId)
+          && (
+            ('deletedAt' in request.resource.data)
+            || (
+              'createdByUserId' in request.resource.data
+              && request.resource.data.createdByUserId == request.auth.uid
+            )
+          );
+
+        allow update: if isDogMember(dogId)
+          && (
+            (
+              'createdByUserId' in resource.data
+              && request.resource.data.createdByUserId
+                == resource.data.createdByUserId
+            )
+            || (
+              !('createdByUserId' in resource.data)
+              && (
+                !('createdByUserId' in request.resource.data)
+                || request.resource.data.createdByUserId == request.auth.uid
+              )
+            )
+          );
       }
 
       match /tracks/{trackId} {

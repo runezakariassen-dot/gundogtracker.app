@@ -42,6 +42,9 @@ class HuntSession extends HiveObject implements JsonEncodable {
   @HiveField(20)
   final int tomstandCount;
 
+  @HiveField(21)
+  final String? sessionId;
+
   @HiveField(8)
   final int? trackKey;
 
@@ -91,6 +94,7 @@ class HuntSession extends HiveObject implements JsonEncodable {
     required this.notes,
     int? secondaryPoints,
     int? tomstandCount,
+    this.sessionId,
     this.trackKey,
     this.trackId,
     List<String>? birdSpecies,
@@ -122,6 +126,7 @@ class HuntSession extends HiveObject implements JsonEncodable {
     String? notes,
     int? secondaryPoints,
     int? tomstandCount,
+    String? sessionId,
     int? trackKey,
     String? trackId,
     List<String>? birdSpecies,
@@ -145,6 +150,7 @@ class HuntSession extends HiveObject implements JsonEncodable {
       notes: notes ?? this.notes,
       secondaryPoints: secondaryPoints ?? this.secondaryPoints,
       tomstandCount: tomstandCount ?? this.tomstandCount,
+      sessionId: sessionId ?? this.sessionId,
       trackKey: trackKey ?? this.trackKey,
       trackId: trackId ?? this.trackId,
       birdSpecies: birdSpecies ?? List<String>.from(this.birdSpecies),
@@ -174,6 +180,7 @@ class HuntSession extends HiveObject implements JsonEncodable {
       'notes': notes,
       'secondaryPoints': secondaryPoints,
       'tomstandCount': tomstandCount,
+      'sessionId': sessionId,
       'trackKey': trackKey,
       'trackId': trackId,
       'birdSpecies': birdSpecies,

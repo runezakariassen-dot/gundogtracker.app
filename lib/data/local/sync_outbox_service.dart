@@ -101,17 +101,18 @@ class SyncOutboxService {
     String sessionId,
     HuntSession session,
   ) async {
+    final effectiveSessionId = _sessionId(session, sessionId);
     debugPrint(
-      '[SYNC][OUTBOX] enqueue type=session_upsert entityId=$sessionId',
+      '[SYNC][OUTBOX] enqueue type=session_upsert entityId=$effectiveSessionId',
     );
     final saved = await _saveTask(
       entityType: 'session_upsert',
-      entityId: sessionId,
+      entityId: effectiveSessionId,
       payload: {
         ...session.toJson(),
         'operation': 'upsert',
-        'id': sessionId,
-        'sessionId': sessionId,
+        'id': effectiveSessionId,
+        'sessionId': effectiveSessionId,
       },
     );
     if (saved) {
@@ -124,16 +125,17 @@ class SyncOutboxService {
     HuntSession session, {
     DateTime? deletedAt,
   }) async {
+    final effectiveSessionId = _sessionId(session, sessionId);
     final effectiveDeletedAt = deletedAt?.toUtc() ?? _now().toUtc();
-    debugPrint('[SYNC][DELETE] enqueue session delete: $sessionId');
+    debugPrint('[SYNC][DELETE] enqueue session delete: $effectiveSessionId');
     final saved = await _saveTask(
       entityType: 'session_delete',
-      entityId: sessionId,
+      entityId: effectiveSessionId,
       payload: {
         ...session.toJson(),
         'operation': 'delete',
-        'id': sessionId,
-        'sessionId': sessionId,
+        'id': effectiveSessionId,
+        'sessionId': effectiveSessionId,
         'updatedAt': effectiveDeletedAt.toIso8601String(),
         'deletedAt': effectiveDeletedAt.toIso8601String(),
       },
@@ -141,6 +143,11 @@ class SyncOutboxService {
     if (saved) {
       _triggerAutoSyncAfterEnqueue();
     }
+  }
+
+  String _sessionId(HuntSession session, String fallback) {
+    final stableId = session.sessionId?.trim();
+    return stableId == null || stableId.isEmpty ? fallback : stableId;
   }
 
   Future<void> enqueueUpsertHealthRecord(HealthRecord record) async {

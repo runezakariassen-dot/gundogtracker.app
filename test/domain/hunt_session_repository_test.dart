@@ -91,6 +91,48 @@ void main() {
     expect(closed!.durationMinutes, 120);
   });
 
+  test('new sessions receive distinct stable ids and current creator',
+      () async {
+    await initDomainLayer();
+    final repo = LocalHuntSessionRepository(
+      currentUserIdProvider: () => 'user-a',
+    );
+
+    final firstId = await repo.createSession(
+      dogId: 'dog-1',
+      startedAt: DateTime(2026, 1, 1),
+    );
+    final secondId = await repo.createSession(
+      dogId: 'dog-1',
+      startedAt: DateTime(2026, 1, 2),
+    );
+
+    expect(firstId, isNot(secondId));
+    expect(firstId, isNot(matches(RegExp(r'^\d+$'))));
+    expect(secondId, isNot(matches(RegExp(r'^\d+$'))));
+    expect((await repo.getSession(firstId))!.sessionId, firstId);
+    expect((await repo.getSession(firstId))!.createdByUserId, 'user-a');
+    expect((await repo.getSession(secondId))!.sessionId, secondId);
+  });
+
+  test('editing preserves stable session id and creator', () async {
+    await initDomainLayer();
+    final repo = LocalHuntSessionRepository(
+      currentUserIdProvider: () => 'creator-a',
+    );
+    final sessionId = await repo.createSession(
+      dogId: 'dog-1',
+      startedAt: DateTime(2026, 1, 1),
+    );
+
+    await repo.updateSession(sessionId, notes: 'Oppdatert');
+    final updated = await repo.getSession(sessionId);
+
+    expect(updated!.sessionId, sessionId);
+    expect(updated.createdByUserId, 'creator-a');
+    expect(updated.notes, 'Oppdatert');
+  });
+
   test('listSessionsForDog hides deleted sessions', () async {
     await initDomainLayer();
     final repo = LocalHuntSessionRepository();

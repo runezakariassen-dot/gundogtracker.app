@@ -302,6 +302,7 @@ class SyncOutboxProcessor {
     );
 
     return HuntSession(
+      sessionId: _optionalString(payload, 'sessionId'),
       dogId: dogId,
       dogKey: _optionalString(payload, 'dogKey'),
       dateTime: _readDateTime(payload, 'dateTime') ?? DateTime.now(),

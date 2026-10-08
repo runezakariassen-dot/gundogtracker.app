@@ -1163,8 +1163,11 @@ class _SessionDetailPageState extends State<SessionDetailPage>
       }
 
       final trackId = _importedTrackId;
+      final sessionId = _uuid.v4();
+      final createdByUserId = FirebaseAuth.instance.currentUser?.uid.trim();
 
       final session = HuntSession(
+        sessionId: sessionId,
         dogId: _selectedDog!.id,
         dateTime: _selectedDateTime ?? DateTime.now(),
         location: _locationController.text,
@@ -1179,10 +1182,12 @@ class _SessionDetailPageState extends State<SessionDetailPage>
         trackId: trackId,
         birdSpecies: List<String>.from(_selectedBirdSpecies),
         mediaPaths: List<String>.from(_mediaPaths),
+        createdByUserId: createdByUserId == null || createdByUserId.isEmpty
+            ? null
+            : createdByUserId,
       );
 
       final sessionKey = await _sessionsBox.add(session);
-      final sessionId = sessionKey.toString();
       final newMilestoneIds = await _handleMilestones(
         session.dogId,
         session.dateTime,
@@ -1576,14 +1581,15 @@ class _SessionDetailPageState extends State<SessionDetailPage>
       updatedAt: deletedAt,
       deletedAt: deletedAt,
     );
+    final sessionId = session.sessionId ?? sessionKey.toString();
 
     await _syncOutboxService.enqueueDeleteSession(
-      sessionKey.toString(),
+      sessionId,
       tombstone,
       deletedAt: deletedAt,
     );
     await FirestoreSessionSyncService.instance.tombstoneSessionBestEffort(
-      sessionId: sessionKey.toString(),
+      sessionId: sessionId,
       session: tombstone,
     );
 

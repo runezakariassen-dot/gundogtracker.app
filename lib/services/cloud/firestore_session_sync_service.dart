@@ -28,14 +28,18 @@ class FirestoreSessionSyncService {
     required HuntSession session,
     required String cloudDogId,
   }) {
+    final effectiveSessionId = resolveSessionId(
+      session: session,
+      fallbackSessionId: sessionId,
+    );
     final startedAtUtc = session.dateTime.toUtc();
     final endedAtUtc = startedAtUtc.add(
       Duration(minutes: _nonNegative(session.durationMinutes)),
     );
 
     final payload = <String, dynamic>{
-      'id': sessionId,
-      'sessionId': sessionId,
+      'id': effectiveSessionId,
+      'sessionId': effectiveSessionId,
       'dogId': session.dogId,
       'cloudDogId': cloudDogId,
       'dogKey': _nonEmptyString(session.dogKey),
@@ -71,29 +75,40 @@ class FirestoreSessionSyncService {
     required String sessionId,
     required HuntSession session,
   }) async {
+    final effectiveSessionId = resolveSessionId(
+      session: session,
+      fallbackSessionId: sessionId,
+    );
     if (session.deletedAt != null) {
-      await tombstoneSession(sessionId: sessionId, session: session);
+      await tombstoneSession(
+        sessionId: effectiveSessionId,
+        session: session,
+      );
       return;
     }
 
-    _printLog('[CLOUD][SESSION] sync requested: $sessionId');
-    _printLog('[CLOUD][SESSION] sync start: $sessionId');
+    _printLog('[CLOUD][SESSION] sync requested: $effectiveSessionId');
+    _printLog('[CLOUD][SESSION] sync start: $effectiveSessionId');
 
     final dog = _findLocalDogById(session.dogId);
     final cloudDogId = dog?.cloudId;
     if (cloudDogId == null || cloudDogId.isEmpty) {
       _printLog(
         '[CLOUD][SESSION] skip sync, dog missing cloudId: '
-        'sessionId=$sessionId dogId=${session.dogId}',
+        'sessionId=$effectiveSessionId dogId=${session.dogId}',
       );
       return;
     }
 
     final currentUid = _auth.currentUser?.uid;
+    final creator = resolveCreatedByUserId(
+      session: session,
+      fallbackUserId: currentUid,
+    );
     final payload = mapSessionToFirestore(
-      sessionId: sessionId,
+      sessionId: effectiveSessionId,
       session: session.copyWith(
-        createdByUserId: session.createdByUserId ?? _nonEmptyString(currentUid),
+        createdByUserId: creator,
         updatedAt: session.updatedAt,
       ),
       cloudDogId: cloudDogId,
@@ -103,7 +118,7 @@ class FirestoreSessionSyncService {
         .collection('dogs')
         .doc(cloudDogId)
         .collection('sessions')
-        .doc(sessionId);
+        .doc(effectiveSessionId);
 
     try {
       final existingSnapshot = await sessionRef.get();
@@ -112,7 +127,7 @@ class FirestoreSessionSyncService {
         if (existingData != null) {
           final cloudSession = mapFirestoreSessionToSession(
             existingData,
-            sessionId,
+            effectiveSessionId,
             cloudDogId,
           );
           final decision = SyncMergePolicy.forSession(
@@ -124,7 +139,7 @@ class FirestoreSessionSyncService {
               _logMergeDecision(
                 entity: 'session',
                 decision: 'cloud newer',
-                id: sessionId,
+                id: effectiveSessionId,
                 localUpdatedAt: session.updatedAt,
                 cloudUpdatedAt: cloudSession.updatedAt,
               );
@@ -133,7 +148,7 @@ class FirestoreSessionSyncService {
               _logMergeDecision(
                 entity: 'session',
                 decision: 'equal/noop',
-                id: sessionId,
+                id: effectiveSessionId,
                 localUpdatedAt: session.updatedAt,
                 cloudUpdatedAt: cloudSession.updatedAt,
               );
@@ -142,7 +157,7 @@ class FirestoreSessionSyncService {
               _logMergeDecision(
                 entity: 'session',
                 decision: 'local newer',
-                id: sessionId,
+                id: effectiveSessionId,
                 localUpdatedAt: session.updatedAt,
                 cloudUpdatedAt: cloudSession.updatedAt,
               );
@@ -154,11 +169,13 @@ class FirestoreSessionSyncService {
       }
 
       _printLog(
-          '[CLOUD][SESSION] writing dogs/$cloudDogId/sessions/$sessionId');
+          '[CLOUD][SESSION] writing dogs/$cloudDogId/sessions/$effectiveSessionId');
       await sessionRef.set(payload, SetOptions(merge: true));
-      _printLog('[CLOUD][SESSION] sync success: $sessionId');
+      _printLog('[CLOUD][SESSION] sync success: $effectiveSessionId');
     } catch (error, stackTrace) {
-      _printLog('[CLOUD][SESSION] sync failed: $sessionId error=$error');
+      _printLog(
+        '[CLOUD][SESSION] sync failed: $effectiveSessionId error=$error',
+      );
       debugPrint(stackTrace.toString());
       rethrow;
     }
@@ -179,12 +196,16 @@ class FirestoreSessionSyncService {
     required String sessionId,
     required HuntSession session,
   }) async {
+    final effectiveSessionId = resolveSessionId(
+      session: session,
+      fallbackSessionId: sessionId,
+    );
     final dog = _findLocalDogById(session.dogId);
     final cloudDogId = dog?.cloudId;
     if (cloudDogId == null || cloudDogId.isEmpty) {
       _printLog(
         '[SYNC][DELETE] push tombstone skipped missing cloud dog: '
-        'sessionId=$sessionId dogId=${session.dogId}',
+        'sessionId=$effectiveSessionId dogId=${session.dogId}',
       );
       throw StateError('Missing cloud dog id for session tombstone.');
     }
@@ -194,12 +215,12 @@ class FirestoreSessionSyncService {
         .collection('dogs')
         .doc(cloudDogId)
         .collection('sessions')
-        .doc(sessionId);
+        .doc(effectiveSessionId);
 
     await sessionRef.set(
       <String, dynamic>{
-        'id': sessionId,
-        'sessionId': sessionId,
+        'id': effectiveSessionId,
+        'sessionId': effectiveSessionId,
         'dogId': session.dogId,
         'cloudDogId': cloudDogId,
         'dogKey': _nonEmptyString(session.dogKey),
@@ -210,8 +231,8 @@ class FirestoreSessionSyncService {
       SetOptions(merge: true),
     );
 
-    _printLog('[SYNC][DELETE] push tombstone success: $sessionId');
-    _printLog('[SYNC][DELETE] complete sessionId=$sessionId');
+    _printLog('[SYNC][DELETE] push tombstone success: $effectiveSessionId');
+    _printLog('[SYNC][DELETE] complete sessionId=$effectiveSessionId');
   }
 
   Future<void> tombstoneSessionBestEffort({
@@ -242,6 +263,7 @@ class FirestoreSessionSyncService {
     final deletedAt = _readDateTime(data['deletedAt']);
 
     return HuntSession(
+      sessionId: sessionId,
       dogId: _readString(data['dogId']) ?? dogCloudId,
       dogKey: _readString(data['dogKey']),
       dateTime: startedAt,
@@ -516,6 +538,28 @@ class FirestoreSessionSyncService {
 
     final minutes = endedAt.difference(startedAt).inMinutes;
     return minutes < 0 ? 0 : minutes;
+  }
+
+  @visibleForTesting
+  static String resolveSessionId({
+    required HuntSession session,
+    required String fallbackSessionId,
+  }) {
+    final stableId = session.sessionId?.trim();
+    return stableId == null || stableId.isEmpty ? fallbackSessionId : stableId;
+  }
+
+  @visibleForTesting
+  static String? resolveCreatedByUserId({
+    required HuntSession session,
+    String? fallbackUserId,
+  }) {
+    final existing = session.createdByUserId?.trim();
+    if (existing != null && existing.isNotEmpty) {
+      return existing;
+    }
+    final fallback = fallbackUserId?.trim();
+    return fallback == null || fallback.isEmpty ? null : fallback;
   }
 
   DateTime? _readDateTime(dynamic value) {

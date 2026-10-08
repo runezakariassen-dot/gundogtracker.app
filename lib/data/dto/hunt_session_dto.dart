@@ -136,6 +136,7 @@ class HuntSessionDto {
 
   HuntSession toModel() {
     return HuntSession(
+      sessionId: id,
       dogId: dogId,
       dogKey: dogKey,
       dateTime: dateTime,
