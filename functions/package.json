@@ -7,6 +7,7 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "tsc",
+    "test": "npm run build && node --test test/*.test.js",
     "lint": "eslint --ext .js,.ts src",
     "serve": "firebase emulators:start --only functions",
     "shell": "firebase functions:shell",

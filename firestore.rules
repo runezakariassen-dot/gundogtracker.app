@@ -274,5 +274,9 @@ service cloud.firestore {
           || resource.data.recipientUserId == request.auth.uid
         );
     }
+
+    match /notificationDeliveries/{deliveryId} {
+      allow read, write: if false;
+    }
   }
 }
