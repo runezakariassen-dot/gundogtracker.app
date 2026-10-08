@@ -139,6 +139,48 @@ void main() {
     expect(retried.payload['createdByUserId'], 'user-a');
   });
 
+  test('heat cycle outbox keeps stable id across retry reset', () async {
+    final service = SyncOutboxService(
+      box: box,
+      enableAutoSync: false,
+    );
+
+    await service.enqueueUpsertHeatCycle(
+      heatCycleId: 'heat-1',
+      dogId: 'dog-1',
+    );
+    final task = box.values.single;
+    await service.markTaskFailed(task.taskId, StateError('offline'));
+    await service.resetFailedTasksForRetry();
+
+    final retried = box.get(task.taskId)!;
+    expect(retried.entityType, 'heat_cycle_upsert');
+    expect(retried.entityId, 'heat-1');
+    expect(retried.payload['id'], 'heat-1');
+    expect(retried.payload['dogId'], 'dog-1');
+  });
+
+  test('heat cycle delete enqueues tombstone payload', () async {
+    final service = SyncOutboxService(
+      box: box,
+      enableAutoSync: false,
+    );
+    final deletedAt = DateTime.utc(2026, 4, 1, 10);
+
+    await service.enqueueDeleteHeatCycle(
+      heatCycleId: 'heat-2',
+      dogId: 'dog-2',
+      deletedAt: deletedAt,
+    );
+
+    final task = box.values.single;
+    expect(task.entityType, 'heat_cycle_delete');
+    expect(task.entityId, 'heat-2');
+    expect(task.payload['operation'], 'delete');
+    expect(task.payload['dogId'], 'dog-2');
+    expect(task.payload['deletedAt'], deletedAt.toIso8601String());
+  });
+
   test('local session delete enqueues tombstone task', () async {
     final service = SyncOutboxService(
       box: box,

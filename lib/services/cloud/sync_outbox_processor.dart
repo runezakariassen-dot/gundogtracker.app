@@ -3,13 +3,16 @@ import 'package:hive/hive.dart';
 
 import '../../data/dto/dog_dto.dart';
 import '../../data/hive_boxes.dart';
+import '../../domain/dogs/dog_heat_cycle_repository.dart';
 import '../../data/local/sync_outbox_service.dart';
 import '../../models/dog.dart';
+import '../../models/dog_heat_cycle_log.dart';
 import '../../models/hunt_session.dart';
 import '../../models/health_record.dart';
 import '../../models/session_type.dart';
 import '../../models/sync_task.dart';
 import 'firestore_dog_sync_service.dart';
+import 'firestore_heat_cycle_sync_service.dart';
 import 'firestore_session_sync_service.dart';
 import 'firestore_health_record_sync_service.dart';
 import 'network_awareness_service.dart';
@@ -29,6 +32,10 @@ typedef HealthRecordUpsertHandler = Future<void> Function({
   required HealthRecord record,
   required String cloudDogId,
 });
+typedef HeatCycleUpsertHandler = Future<void> Function({
+  required DogHeatCycleLog entry,
+  required String cloudDogId,
+});
 
 class MissingHealthRecordDogCloudIdException implements Exception {
   const MissingHealthRecordDogCloudIdException(this.recordId);
@@ -37,6 +44,15 @@ class MissingHealthRecordDogCloudIdException implements Exception {
 
   @override
   String toString() => 'Missing dog cloudId for health record: $recordId';
+}
+
+class MissingHeatCycleDogCloudIdException implements Exception {
+  const MissingHeatCycleDogCloudIdException(this.heatCycleId);
+
+  final String heatCycleId;
+
+  @override
+  String toString() => 'Missing dog cloudId for heat cycle: $heatCycleId';
 }
 
 class SyncOutboxProcessor {
@@ -53,6 +69,9 @@ class SyncOutboxProcessor {
     FirestoreHealthRecordSyncService? healthRecordSyncService,
     HealthRecordUpsertHandler? healthRecordUpsertHandler,
     Box<HealthRecord>? healthRecordBox,
+    FirestoreHeatCycleSyncService? heatCycleSyncService,
+    HeatCycleUpsertHandler? heatCycleUpsertHandler,
+    DogHeatCycleRepository? heatCycleRepository,
     Box<Dog>? dogBox,
   })  : _outboxService = outboxService ?? SyncOutboxService(),
         _dogSyncService = dogSyncService ?? FirestoreDogSyncService.instance,
@@ -68,6 +87,9 @@ class SyncOutboxProcessor {
         _healthRecordSyncService = healthRecordSyncService,
         _healthRecordUpsertHandler = healthRecordUpsertHandler,
         _healthRecordBox = healthRecordBox,
+        _heatCycleSyncService = heatCycleSyncService,
+        _heatCycleUpsertHandler = heatCycleUpsertHandler,
+        _heatCycleRepository = heatCycleRepository,
         _dogBox = dogBox;
 
   final SyncOutboxService _outboxService;
@@ -82,6 +104,9 @@ class SyncOutboxProcessor {
   final FirestoreHealthRecordSyncService? _healthRecordSyncService;
   final HealthRecordUpsertHandler? _healthRecordUpsertHandler;
   final Box<HealthRecord>? _healthRecordBox;
+  final FirestoreHeatCycleSyncService? _heatCycleSyncService;
+  final HeatCycleUpsertHandler? _heatCycleUpsertHandler;
+  final DogHeatCycleRepository? _heatCycleRepository;
   final Box<Dog>? _dogBox;
 
   Future<void> runOnce({int limit = 20}) async {
@@ -112,6 +137,13 @@ class SyncOutboxProcessor {
           'entityId=${task.entityId}',
         );
       } on MissingHealthRecordDogCloudIdException catch (error) {
+        failureCount++;
+        await _outboxService.markTaskWaitingForDependency(task.taskId, error);
+        debugPrint(
+          '[SYNC][PROCESSOR] waiting type=${task.entityType} '
+          'entityId=${task.entityId} error=$error',
+        );
+      } on MissingHeatCycleDogCloudIdException catch (error) {
         failureCount++;
         await _outboxService.markTaskWaitingForDependency(task.taskId, error);
         debugPrint(
@@ -206,6 +238,47 @@ class SyncOutboxProcessor {
         }
         await _upsertHealthRecord(record, cloudDogId);
         return;
+      case 'heat_cycle_upsert':
+      case 'heat_cycle:upsert':
+      case 'heat_cycle_delete':
+      case 'heat_cycle:delete':
+        final payload = _normalizePayload(task.payload);
+        final heatCycleId = task.entityId.trim();
+        if (heatCycleId.isEmpty) {
+          throw const FormatException('Missing heat cycle id.');
+        }
+        final dogId = _requiredString(
+          payload,
+          'dogId',
+          fallbackKeys: const ['dog_id'],
+        );
+        final entry = await (_heatCycleRepository ?? DogHeatCycleRepository())
+            .getById(dogId: dogId, heatCycleId: heatCycleId);
+        if (entry == null) {
+          throw StateError('Missing local heat cycle: $heatCycleId');
+        }
+        final dog = _findDog(dogId);
+        final cloudDogId = dog?.cloudId?.trim();
+        if (cloudDogId == null || cloudDogId.isEmpty) {
+          throw MissingHeatCycleDogCloudIdException(heatCycleId);
+        }
+
+        final latestHeatTask = _outboxService.latestTaskForEntityTypes(
+          entityTypes: const <String>{'heat_cycle_upsert', 'heat_cycle_delete'},
+          entityId: heatCycleId,
+        );
+        if (latestHeatTask != null &&
+            _normalize(latestHeatTask.entityType) == 'heat_cycle_delete' &&
+            _normalize(task.entityType) == 'heat_cycle_upsert' &&
+            latestHeatTask.taskId != task.taskId) {
+          debugPrint(
+            '[SYNC][DELETE] skipped stale heat cycle upsert: $heatCycleId',
+          );
+          return;
+        }
+
+        await _upsertHeatCycle(entry, cloudDogId);
+        return;
     }
 
     throw StateError('Unsupported task type: ${task.entityType}');
@@ -282,6 +355,21 @@ class SyncOutboxProcessor {
             FirestoreHealthRecordSyncService.instance)
         .upsertHealthRecord(
       record: record,
+      cloudDogId: cloudDogId,
+    );
+  }
+
+  Future<void> _upsertHeatCycle(
+    DogHeatCycleLog entry,
+    String cloudDogId,
+  ) {
+    final handler = _heatCycleUpsertHandler;
+    if (handler != null) {
+      return handler(entry: entry, cloudDogId: cloudDogId);
+    }
+    return (_heatCycleSyncService ?? FirestoreHeatCycleSyncService.instance)
+        .upsertHeatCycle(
+      entry: entry,
       cloudDogId: cloudDogId,
     );
   }

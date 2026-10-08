@@ -1,10 +1,15 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 
+import '../data/hive_boxes.dart';
+import '../domain/domain_constants.dart';
 import '../domain/dogs/dog_heat_cycle_repository.dart';
 import '../l10n/app_localizations.dart';
 import '../models/dog.dart';
 import '../models/dog_heat_cycle_log.dart';
+import '../models/dog_membership.dart';
 import '../models/dog_sex.dart';
 
 bool shouldShowHeatCycleSection(Dog dog) => dog.sex == DogSex.female;
@@ -30,8 +35,88 @@ class _DogHeatCycleSectionState extends State<DogHeatCycleSection> {
   @override
   void initState() {
     super.initState();
-    _repository = widget.repository ?? DogHeatCycleRepository();
+    _repository = widget.repository ??
+        DogHeatCycleRepository(createdByUserIdProvider: _firebaseUidOrNull);
     _reload();
+  }
+
+  String? _firebaseUidOrNull() {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid.trim();
+      if (uid == null || uid.isEmpty) return null;
+      return uid;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String? _localUserIdOrNull() {
+    if (!Hive.isBoxOpen(appSettingsBoxName)) return null;
+    final box = Hive.box<dynamic>(appSettingsBoxName);
+    final raw = box.get(currentUserIdKey);
+    if (raw is String && raw.trim().isNotEmpty) {
+      return raw.trim();
+    }
+    return null;
+  }
+
+  bool _canWriteHeatCycles(Dog dog) {
+    final hasCloudDogId = dog.cloudId?.trim().isNotEmpty == true;
+    final hasOwnerUserId = dog.ownerUserId?.trim().isNotEmpty == true;
+    if (!hasCloudDogId && !hasOwnerUserId) {
+      return true;
+    }
+
+    final firebaseUid = _firebaseUidOrNull();
+    if (firebaseUid != null) {
+      if (dog.cloudOwnerUid?.trim() == firebaseUid) return true;
+      if (dog.ownerUserId?.trim() == firebaseUid) return true;
+    }
+
+    final localUserId = _localUserIdOrNull();
+    if (localUserId != null && dog.ownerUserId?.trim() == localUserId) {
+      return true;
+    }
+
+    final userIds = <String>{
+      if (firebaseUid != null) firebaseUid,
+      if (localUserId != null) localUserId,
+    };
+    if (userIds.isEmpty || !Hive.isBoxOpen(dogMembershipsBoxName)) {
+      return false;
+    }
+
+    final membershipBox = Hive.box<DogMembership>(dogMembershipsBoxName);
+    Role? highestRole;
+    for (final membership in membershipBox.values) {
+      if (membership.dogKey != dog.dogKey ||
+          membership.status != Status.active ||
+          !userIds.contains(membership.userId)) {
+        continue;
+      }
+      if (highestRole == null ||
+          _rolePriority(membership.role) < _rolePriority(highestRole)) {
+        highestRole = membership.role;
+      }
+    }
+
+    if (highestRole == null) return false;
+    return highestRole == Role.owner ||
+        highestRole == Role.admin ||
+        highestRole == Role.editor;
+  }
+
+  int _rolePriority(Role role) {
+    switch (role) {
+      case Role.owner:
+        return 0;
+      case Role.admin:
+        return 1;
+      case Role.editor:
+        return 2;
+      case Role.viewer:
+        return 3;
+    }
   }
 
   void _reload() {
@@ -269,6 +354,7 @@ class _DogHeatCycleSectionState extends State<DogHeatCycleSection> {
       return const SizedBox.shrink();
     }
     final l10n = AppLocalizations.of(context)!;
+    final canWrite = _canWriteHeatCycles(widget.dog);
     return Card(
       key: const Key('dog_heat_cycle_section'),
       child: Padding(
@@ -294,7 +380,7 @@ class _DogHeatCycleSectionState extends State<DogHeatCycleSection> {
             const SizedBox(height: 12),
             FilledButton.icon(
               key: const Key('dog_heat_cycle_add'),
-              onPressed: _openEditor,
+              onPressed: canWrite ? _openEditor : null,
               icon: const Icon(Icons.add),
               label: Text(l10n.dog_heat_cycle_add_button),
             ),
@@ -337,7 +423,9 @@ class _DogHeatCycleSectionState extends State<DogHeatCycleSection> {
                                 children: [
                                   Expanded(
                                     child: OutlinedButton.icon(
-                                      onPressed: () => _openEditor(entry),
+                                      onPressed: canWrite
+                                          ? () => _openEditor(entry)
+                                          : null,
                                       icon: const Icon(Icons.edit),
                                       label: Text(
                                         l10n.dog_heat_cycle_edit_button,
@@ -347,7 +435,9 @@ class _DogHeatCycleSectionState extends State<DogHeatCycleSection> {
                                   const SizedBox(width: 10),
                                   Expanded(
                                     child: FilledButton.icon(
-                                      onPressed: () => _delete(entry),
+                                      onPressed: canWrite
+                                          ? () => _delete(entry)
+                                          : null,
                                       icon: const Icon(Icons.delete),
                                       label: Text(
                                         l10n.dog_heat_cycle_delete_button,

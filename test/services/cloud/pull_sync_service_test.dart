@@ -4,7 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:jakthund_app/data/local/sync_outbox_service.dart';
 import 'package:jakthund_app/data/local/sync_state_store.dart';
+import 'package:jakthund_app/domain/dogs/dog_heat_cycle_repository.dart';
 import 'package:jakthund_app/models/dog.dart';
+import 'package:jakthund_app/models/dog_heat_cycle_log.dart';
 import 'package:jakthund_app/models/dog_membership.dart';
 import 'package:jakthund_app/models/dog_sex.dart';
 import 'package:jakthund_app/models/hunt_session.dart';
@@ -478,6 +480,141 @@ void main() {
     expect(fakeSessionSync.deltaFetches, 1);
     expect(sessionBox.get('session-2')?.notes, 'delta session');
     expect(syncStateStore.getLastSuccessfulPullAt(), pullStartedAt);
+  });
+
+  test('pull inserts remote heat cycle and repeated pull does not duplicate',
+      () async {
+    final settingsBox = await Hive.openBox<dynamic>('pull_heat_settings_1');
+    final heatRepository = DogHeatCycleRepository(box: settingsBox);
+    final dog = _buildDog();
+    fakeDogSync = FakeFirestoreDogSyncService(dogsToReturn: <Dog>[dog]);
+
+    final service = PullSyncService(
+      dogSyncService: fakeDogSync,
+      sessionSyncService: fakeSessionSync,
+      networkAwarenessService: fakeNetwork,
+      syncStateStore: syncStateStore,
+      outboxService: outboxService,
+      dogBox: dogBox,
+      sessionBox: sessionBox,
+      heatCycleRepository: heatRepository,
+      heatCycleFetchHandler: ({
+        required String cloudDogId,
+        required String localDogId,
+        DateTime? updatedAfter,
+      }) async {
+        return <DogHeatCycleLog>[
+          DogHeatCycleLog(
+            id: 'heat-1',
+            dogId: localDogId,
+            startDate: DateTime(2026, 1, 10),
+            endDate: DateTime(2026, 1, 25),
+            note: 'Remote first',
+            createdByUserId: 'user-a',
+            createdAt: DateTime.utc(2026, 1, 10, 8),
+            updatedAt: DateTime.utc(2026, 1, 10, 8),
+          ),
+        ];
+      },
+    );
+
+    await service.pullAllVisibleData();
+    await service.pullAllVisibleData();
+
+    final entries =
+        await heatRepository.listForDog(dog.id, includeDeleted: true);
+    expect(entries, hasLength(1));
+    expect(entries.single.id, 'heat-1');
+
+    await settingsBox.close();
+  });
+
+  test(
+      'pull updates existing heat cycle and applies tombstone when cloud newer',
+      () async {
+    final settingsBox = await Hive.openBox<dynamic>('pull_heat_settings_2');
+    final heatRepository = DogHeatCycleRepository(box: settingsBox);
+    final dog = _buildDog();
+    fakeDogSync = FakeFirestoreDogSyncService(dogsToReturn: <Dog>[dog]);
+
+    final createdAt = DateTime.utc(2026, 2, 1, 8);
+    await heatRepository.saveForDog(
+      DogHeatCycleLog(
+        id: 'heat-2',
+        dogId: dog.id,
+        startDate: DateTime(2026, 2, 1),
+        note: 'Local old',
+        createdByUserId: 'user-a',
+        createdAt: createdAt,
+        updatedAt: DateTime.utc(2026, 2, 1, 8),
+      ),
+      enqueueSync: false,
+    );
+
+    final service = PullSyncService(
+      dogSyncService: fakeDogSync,
+      sessionSyncService: fakeSessionSync,
+      networkAwarenessService: fakeNetwork,
+      syncStateStore: syncStateStore,
+      outboxService: outboxService,
+      dogBox: dogBox,
+      sessionBox: sessionBox,
+      heatCycleRepository: heatRepository,
+      heatCycleFetchHandler: ({
+        required String cloudDogId,
+        required String localDogId,
+        DateTime? updatedAfter,
+      }) async {
+        return <DogHeatCycleLog>[
+          DogHeatCycleLog(
+            id: 'heat-2',
+            dogId: localDogId,
+            startDate: DateTime(2026, 2, 1),
+            note: 'Remote newer',
+            createdByUserId: 'user-a',
+            createdAt: createdAt,
+            updatedAt: DateTime.utc(2026, 2, 2, 9),
+          ),
+          DogHeatCycleLog(
+            id: 'heat-3',
+            dogId: localDogId,
+            startDate: DateTime(2026, 2, 5),
+            note: 'Deleted remote',
+            createdByUserId: 'user-a',
+            createdAt: DateTime.utc(2026, 2, 5, 8),
+            updatedAt: DateTime.utc(2026, 2, 7, 9),
+            deletedAt: DateTime.utc(2026, 2, 7, 9),
+          ),
+        ];
+      },
+    );
+
+    await heatRepository.saveForDog(
+      DogHeatCycleLog(
+        id: 'heat-3',
+        dogId: dog.id,
+        startDate: DateTime(2026, 2, 5),
+        note: 'Local visible',
+        createdByUserId: 'user-a',
+        createdAt: DateTime.utc(2026, 2, 5, 8),
+        updatedAt: DateTime.utc(2026, 2, 6, 9),
+      ),
+      enqueueSync: false,
+    );
+
+    await service.pullAllVisibleData();
+
+    final visible = await heatRepository.listForDog(dog.id);
+    final all = await heatRepository.listForDog(dog.id, includeDeleted: true);
+    expect(
+        all.firstWhere((entry) => entry.id == 'heat-2').note, 'Remote newer');
+    expect(
+      all.firstWhere((entry) => entry.id == 'heat-3').deletedAt,
+      DateTime.utc(2026, 2, 7, 9),
+    );
+    expect(visible.where((entry) => entry.id == 'heat-3'), isEmpty);
+
+    await settingsBox.close();
   });
 
   test('cursor is unchanged when pull fails', () async {

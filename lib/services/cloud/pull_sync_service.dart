@@ -2,15 +2,18 @@ import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 
 import '../../data/hive_boxes.dart';
+import '../../domain/dogs/dog_heat_cycle_repository.dart';
 import '../../data/local/sync_outbox_service.dart';
 import '../../data/local/sync_state_store.dart';
 import '../../models/dog.dart';
+import '../../models/dog_heat_cycle_log.dart';
 import '../../models/gps_track.dart';
 import '../../models/hunt_session.dart';
 import '../../models/health_record.dart';
 import '../../models/sync_task.dart';
 import '../hive_lifecycle_service.dart';
 import 'firestore_dog_sync_service.dart';
+import 'firestore_heat_cycle_sync_service.dart';
 import 'firestore_session_sync_service.dart';
 import 'firestore_health_record_sync_service.dart';
 import 'network_awareness_service.dart';
@@ -20,6 +23,12 @@ typedef HealthRecordFetchHandler = Future<List<HealthRecord>> Function({
   required String cloudDogId,
   required String localDogId,
   String? localDogKey,
+  DateTime? updatedAfter,
+});
+
+typedef HeatCycleFetchHandler = Future<List<DogHeatCycleLog>> Function({
+  required String cloudDogId,
+  required String localDogId,
   DateTime? updatedAfter,
 });
 
@@ -35,6 +44,9 @@ class PullSyncService {
     FirestoreHealthRecordSyncService? healthRecordSyncService,
     HealthRecordFetchHandler? healthRecordFetchHandler,
     Box<HealthRecord>? healthRecordBox,
+    FirestoreHeatCycleSyncService? heatCycleSyncService,
+    HeatCycleFetchHandler? heatCycleFetchHandler,
+    DogHeatCycleRepository? heatCycleRepository,
     DateTime Function()? now,
   })  : _dogSyncService = dogSyncService ?? FirestoreDogSyncService.instance,
         _sessionSyncService =
@@ -49,6 +61,9 @@ class PullSyncService {
         _healthRecordSyncService = healthRecordSyncService,
         _healthRecordFetchHandler = healthRecordFetchHandler,
         _healthRecordBox = healthRecordBox,
+        _heatCycleSyncService = heatCycleSyncService,
+        _heatCycleFetchHandler = heatCycleFetchHandler,
+        _heatCycleRepository = heatCycleRepository,
         _now = now ?? DateTime.now;
 
   final FirestoreDogSyncService _dogSyncService;
@@ -61,6 +76,9 @@ class PullSyncService {
   final FirestoreHealthRecordSyncService? _healthRecordSyncService;
   final HealthRecordFetchHandler? _healthRecordFetchHandler;
   final Box<HealthRecord>? _healthRecordBox;
+  final FirestoreHeatCycleSyncService? _heatCycleSyncService;
+  final HeatCycleFetchHandler? _heatCycleFetchHandler;
+  final DogHeatCycleRepository? _heatCycleRepository;
   final DateTime Function() _now;
 
   Future<void> pullAllVisibleData() async {
@@ -97,6 +115,10 @@ class PullSyncService {
           updatedAfter: lastSuccessfulPullAt,
         );
         await _pullHealthRecordsForDog(
+          dog,
+          updatedAfter: lastSuccessfulPullAt,
+        );
+        await _pullHeatCyclesForDog(
           dog,
           updatedAfter: lastSuccessfulPullAt,
         );
@@ -365,6 +387,35 @@ class PullSyncService {
         await box.put(cloudRecord.id, cloudRecord);
       }
     }
+  }
+
+  Future<void> _pullHeatCyclesForDog(
+    Dog dog, {
+    DateTime? updatedAfter,
+  }) async {
+    if (_heatCycleRepository == null && !Hive.isBoxOpen(appSettingsBoxName)) {
+      return;
+    }
+    final cloudDogId = dog.cloudId?.trim();
+    if (cloudDogId == null || cloudDogId.isEmpty) return;
+
+    final fetch = _heatCycleFetchHandler;
+    final entries = fetch != null
+        ? await fetch(
+            cloudDogId: cloudDogId,
+            localDogId: dog.id,
+            updatedAfter: updatedAfter,
+          )
+        : await (_heatCycleSyncService ??
+                FirestoreHeatCycleSyncService.instance)
+            .fetchHeatCyclesForDog(
+            cloudDogId: cloudDogId,
+            localDogId: dog.id,
+            updatedAfter: updatedAfter,
+          );
+
+    await (_heatCycleRepository ?? DogHeatCycleRepository())
+        .mergePulledForDog(dog.id, entries);
   }
 
   Future<void> _applyCloudTombstone({

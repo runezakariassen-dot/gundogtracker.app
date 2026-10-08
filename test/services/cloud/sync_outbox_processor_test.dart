@@ -3,8 +3,10 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:jakthund_app/data/local/sync_outbox_service.dart';
+import 'package:jakthund_app/domain/dogs/dog_heat_cycle_repository.dart';
 import 'package:jakthund_app/services/cloud/network_awareness_service.dart';
 import 'package:jakthund_app/models/dog.dart';
+import 'package:jakthund_app/models/dog_heat_cycle_log.dart';
 import 'package:jakthund_app/models/dog_sex.dart';
 import 'package:jakthund_app/models/health_record.dart';
 import 'package:jakthund_app/models/hunt_session.dart';
@@ -25,6 +27,24 @@ class FakeNetworkAwarenessService implements NetworkAwarenessService {
     Duration pollInterval = const Duration(seconds: 20),
   }) {
     return const Stream<bool>.empty();
+  }
+}
+
+class FakeHeatCycleRepository extends DogHeatCycleRepository {
+  FakeHeatCycleRepository(this._entries, Box<dynamic> box) : super(box: box);
+
+  final Map<String, DogHeatCycleLog> _entries;
+
+  @override
+  Future<DogHeatCycleLog?> getById({
+    required String dogId,
+    required String heatCycleId,
+    bool includeDeleted = true,
+  }) async {
+    final entry = _entries[heatCycleId];
+    if (entry == null || entry.dogId != dogId) return null;
+    if (!includeDeleted && entry.isDeleted) return null;
+    return entry;
   }
 }
 
@@ -459,6 +479,120 @@ void main() {
       box.values.firstWhere((task) => task.entityId == second.id).status,
       SyncStatus.sent,
     );
+  });
+
+  test('heat cycle task resolves local entry and cloud dog id', () async {
+    if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(DogAdapter());
+    if (!Hive.isAdapterRegistered(222)) {
+      Hive.registerAdapter(DogSexAdapter());
+    }
+    final dogBox = await Hive.openBox<Dog>('dogs_heat_cycles');
+    await dogBox.put(
+      'dog-heat',
+      Dog(
+        id: 'dog-heat',
+        name: 'Luna',
+        dogKey: 'DOG-HEAT',
+        regNrDisplay: 'NO1/26',
+        cloudId: 'cloud-dog-heat',
+      ),
+    );
+
+    final settingsBox = await Hive.openBox<dynamic>('heat_cycle_settings');
+    final entry = DogHeatCycleLog(
+      id: 'heat-1',
+      dogId: 'dog-heat',
+      startDate: DateTime(2026, 1, 10),
+      createdByUserId: 'user-a',
+      createdAt: DateTime.utc(2026, 1, 10, 8),
+      updatedAt: DateTime.utc(2026, 1, 10, 8),
+    );
+    final repository = FakeHeatCycleRepository(<String, DogHeatCycleLog>{
+      entry.id!: entry,
+    }, settingsBox);
+
+    final outbox = SyncOutboxService(box: box, enableAutoSync: false);
+    await outbox.enqueueUpsertHeatCycle(
+      heatCycleId: 'heat-1',
+      dogId: 'dog-heat',
+    );
+
+    final pushed = <String>[];
+    final processor = SyncOutboxProcessor(
+      outboxService: outbox,
+      networkAwarenessService: FakeNetworkAwarenessService(online: true),
+      dogBox: dogBox,
+      heatCycleRepository: repository,
+      heatCycleUpsertHandler: ({
+        required DogHeatCycleLog entry,
+        required String cloudDogId,
+      }) async {
+        pushed.add('$cloudDogId:${entry.id}:${entry.createdByUserId}');
+      },
+    );
+
+    await processor.runOnce();
+
+    expect(pushed, <String>['cloud-dog-heat:heat-1:user-a']);
+    expect(box.values.single.status, SyncStatus.sent);
+
+    await dogBox.close();
+    await settingsBox.close();
+  });
+
+  test('heat cycle task waits when dog cloud id is missing', () async {
+    if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(DogAdapter());
+    if (!Hive.isAdapterRegistered(222)) {
+      Hive.registerAdapter(DogSexAdapter());
+    }
+    final dogBox = await Hive.openBox<Dog>('dogs_heat_cycles_missing_cloud');
+    await dogBox.put(
+      'dog-heat-missing',
+      Dog(
+        id: 'dog-heat-missing',
+        name: 'Luna',
+        dogKey: 'DOG-HEAT-MISSING',
+        regNrDisplay: 'NO2/26',
+      ),
+    );
+
+    final settingsBox = await Hive.openBox<dynamic>('heat_cycle_settings_2');
+    final entry = DogHeatCycleLog(
+      id: 'heat-missing',
+      dogId: 'dog-heat-missing',
+      startDate: DateTime(2026, 2, 10),
+      createdByUserId: 'user-b',
+      createdAt: DateTime.utc(2026, 2, 10, 8),
+      updatedAt: DateTime.utc(2026, 2, 10, 8),
+    );
+    final repository = FakeHeatCycleRepository(<String, DogHeatCycleLog>{
+      entry.id!: entry,
+    }, settingsBox);
+
+    final outbox = SyncOutboxService(box: box, enableAutoSync: false);
+    await outbox.enqueueUpsertHeatCycle(
+      heatCycleId: 'heat-missing',
+      dogId: 'dog-heat-missing',
+    );
+
+    final processor = SyncOutboxProcessor(
+      outboxService: outbox,
+      networkAwarenessService: FakeNetworkAwarenessService(online: true),
+      dogBox: dogBox,
+      heatCycleRepository: repository,
+      heatCycleUpsertHandler: ({
+        required DogHeatCycleLog entry,
+        required String cloudDogId,
+      }) async {},
+    );
+
+    await processor.runOnce();
+
+    expect(box.values.single.status, SyncStatus.pending);
+    expect(box.values.single.retryCount, 0);
+
+    await dogBox.close();
+    await settingsBox.close();
   });
 }
 

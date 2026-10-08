@@ -171,6 +171,55 @@ class SyncOutboxService {
     throw SyncOutboxEnqueueException('health_record_upsert', record.id);
   }
 
+  Future<void> enqueueUpsertHeatCycle({
+    required String heatCycleId,
+    required String dogId,
+  }) async {
+    debugPrint(
+      '[SYNC][OUTBOX] enqueue type=heat_cycle_upsert entityId=$heatCycleId',
+    );
+    final saved = await _saveOrReplacePendingTask(
+      entityType: 'heat_cycle_upsert',
+      entityId: heatCycleId,
+      payload: <String, dynamic>{
+        'operation': 'upsert',
+        'id': heatCycleId,
+        'dogId': dogId,
+      },
+    );
+    if (saved) {
+      _triggerAutoSyncAfterEnqueue();
+      return;
+    }
+    throw SyncOutboxEnqueueException('heat_cycle_upsert', heatCycleId);
+  }
+
+  Future<void> enqueueDeleteHeatCycle({
+    required String heatCycleId,
+    required String dogId,
+    DateTime? deletedAt,
+  }) async {
+    final effectiveDeletedAt = deletedAt?.toUtc() ?? _now().toUtc();
+    debugPrint(
+      '[SYNC][OUTBOX] enqueue type=heat_cycle_delete entityId=$heatCycleId',
+    );
+    final saved = await _saveOrReplacePendingTask(
+      entityType: 'heat_cycle_delete',
+      entityId: heatCycleId,
+      payload: <String, dynamic>{
+        'operation': 'delete',
+        'id': heatCycleId,
+        'dogId': dogId,
+        'deletedAt': effectiveDeletedAt.toIso8601String(),
+      },
+    );
+    if (saved) {
+      _triggerAutoSyncAfterEnqueue();
+      return;
+    }
+    throw SyncOutboxEnqueueException('heat_cycle_delete', heatCycleId);
+  }
+
   Future<List<SyncTask>> fetchPendingTasks({int limit = 20}) async {
     final currentNow = _now();
     final pending = <SyncTask>[];
@@ -307,6 +356,8 @@ class SyncOutboxService {
       'dog_upsert',
       'dog_delete',
       'health_record_upsert',
+      'heat_cycle_upsert',
+      'heat_cycle_delete',
     },
   }) {
     return _resetFailedTasksForRetry(
@@ -324,6 +375,8 @@ class SyncOutboxService {
       'dog_upsert',
       'dog_delete',
       'health_record_upsert',
+      'heat_cycle_upsert',
+      'heat_cycle_delete',
     },
   }) {
     return _resetFailedTasksForRetry(
