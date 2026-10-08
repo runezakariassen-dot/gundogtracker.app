@@ -3,15 +3,47 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('diagnostic: share invites do not currently have an FCM push trigger',
+  test('diagnostic: shared dog session push architecture is wired',
       () async {
+    final pubspecSource = await File('pubspec.yaml').readAsString();
     final functionsSource = await File('functions/src/index.ts').readAsString();
-    final notificationSource =
-        await File('lib/services/notification_service.dart').readAsString();
+    final pushServiceSource =
+        await File('lib/services/push_notification_service.dart')
+            .readAsString();
+    final firestoreRules = await File('firestore.rules').readAsString();
+    final sharedNotificationFile =
+        File('functions/src/shared_dog_session_notifications.ts');
 
-    expect(functionsSource, isNot(contains('shareInvites')));
-    expect(functionsSource, isNot(contains('getMessaging')));
-    expect(functionsSource, isNot(contains('.send(')));
-    expect(notificationSource, isNot(contains('FirebaseMessaging')));
+    expect(pubspecSource, contains('firebase_messaging:'));
+
+    expect(pushServiceSource, contains('class PushNotificationService'));
+    expect(pushServiceSource, contains('onTokenRefresh'));
+    expect(
+      pushServiceSource,
+      contains("collection('users').doc(uid).collection('devices').doc(id)"),
+    );
+
+    expect(await sharedNotificationFile.exists(), isTrue);
+    expect(functionsSource, contains('onSharedDogSessionCreated'));
+    expect(
+      functionsSource,
+      contains('document("dogs/{dogId}/sessions/{sessionId}")'),
+    );
+    expect(
+      functionsSource,
+      contains('from "./shared_dog_session_notifications"'),
+    );
+    expect(functionsSource, contains('getMessaging'));
+    expect(functionsSource, contains('sendEachForMulticast'));
+
+    expect(firestoreRules, contains('match /notificationDeliveries/{deliveryId}'));
+    expect(firestoreRules, contains('allow read, write: if false;'));
+    expect(firestoreRules, contains('match /users/{userId}'));
+    expect(firestoreRules, contains('match /devices/{deviceId}'));
+    expect(
+      firestoreRules,
+      contains('allow read, create, update, delete: if isSignedIn()'),
+    );
+    expect(firestoreRules, contains('request.auth.uid == userId'));
   });
 }
