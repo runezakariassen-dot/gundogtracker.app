@@ -11,6 +11,7 @@ import 'package:jakthund_app/l10n/app_localizations.dart';
 import 'package:jakthund_app/models/dog.dart';
 import 'package:jakthund_app/models/dog_milestone_state.dart';
 import 'package:jakthund_app/models/dog_membership.dart';
+import 'package:jakthund_app/models/dog_sex.dart';
 import 'package:jakthund_app/models/gps_track.dart';
 import 'package:jakthund_app/models/hunt_session.dart';
 import 'package:jakthund_app/models/map_settings.dart';
@@ -221,6 +222,40 @@ void main() {
     expect(find.text('Tilgang og roller'), findsOneWidget);
     expect(find.text('Access section v2'), findsOneWidget);
     expect(find.text('Endre rolle'), findsNothing);
+
+    await disposeDogDetailPage(tester);
+  });
+
+  testWidgets('dog detail keeps health journal entry without heat cycle card',
+      (tester) async {
+    final dog = Dog(
+      id: 'dog-female',
+      name: 'Mira',
+      dogKey: 'DOG-FEMALE',
+      regNrDisplay: 'NO100/04',
+      ownerUserId: 'owner-user',
+      sex: DogSex.female,
+    );
+
+    await pumpDogDetailPage(
+      tester,
+      dog: dog,
+      currentUserId: 'owner-user',
+      memberships: const <DogMembership>[],
+    );
+
+    await tester.scrollUntilVisible(
+      find.text('Helsejournal'),
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Helsejournal'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Stamtavle'),
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Løpetid'), findsNothing);
 
     await disposeDogDetailPage(tester);
   });

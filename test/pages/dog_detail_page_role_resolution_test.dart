@@ -1,7 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:jakthund_app/models/dog.dart';
 import 'package:jakthund_app/models/dog_membership.dart';
-import 'package:jakthund_app/models/dog_sex.dart';
 import 'package:jakthund_app/pages/dog_detail_page.dart';
 
 void main() {
@@ -63,26 +61,6 @@ void main() {
     );
 
     expect(role, Role.viewer);
-  });
-
-  test('heat cycle section is shown for female dogs only', () {
-    final femaleDog = Dog(
-      id: 'dog-female',
-      name: 'Luna',
-      dogKey: 'DOG-F',
-      regNrDisplay: 'NO200/01',
-      sex: DogSex.female,
-    );
-    final maleDog = Dog(
-      id: 'dog-male',
-      name: 'Birk',
-      dogKey: 'DOG-M',
-      regNrDisplay: 'NO200/02',
-      sex: DogSex.male,
-    );
-
-    expect(shouldShowHeatCycleSection(femaleDog), isTrue);
-    expect(shouldShowHeatCycleSection(maleDog), isFalse);
   });
 
   test('owner sees all valid role options in dialog', () {

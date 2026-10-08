@@ -16,7 +16,6 @@ import '../data/dog_box_helpers.dart';
 import '../data/hive_boxes.dart';
 import '../domain/dog_milestone_backfill_bootstrap.dart';
 import '../domain/dogs/dog_visibility.dart';
-import '../domain/dogs/dog_heat_cycle_repository.dart';
 import '../domain/domain_errors.dart';
 import '../domain/milestones/milestone_catalog.dart';
 import '../domain/milestones/milestone_helpers.dart';
@@ -25,7 +24,6 @@ import '../domain/sessions/session_visibility.dart';
 import '../domain/services/dog_milestone_display_service.dart';
 import '../data/local/sync_outbox_service.dart';
 import '../models/dog.dart';
-import '../models/dog_heat_cycle_log.dart';
 import '../models/dog_membership.dart';
 import '../models/dog_sex.dart';
 import '../models/hunt_session.dart';
@@ -97,11 +95,6 @@ int _globalRolePriority(Role role) {
 }
 
 @visibleForTesting
-bool shouldShowHeatCycleSection(Dog dog) {
-  return dog.sex == DogSex.female;
-}
-
-@visibleForTesting
 List<Role> editableRolesForMembership({
   required Role actorRole,
   required Role targetRole,
@@ -157,9 +150,6 @@ class _DogDetailPageState extends State<DogDetailPage> {
 
   final Set<String> _legacyMigrations = <String>{};
   int _avatarRevision = 0;
-  int _heatCycleRefreshTick = 0;
-
-  final DogHeatCycleRepository _heatCycleRepository = DogHeatCycleRepository();
   final DogProfileImageResolver _profileImageResolver =
       DogProfileImageResolver();
   final DogProfileMediaDownloadGuard _profileMediaDownloadGuard =
@@ -610,352 +600,6 @@ class _DogDetailPageState extends State<DogDetailPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(l10n.dog_detail_snackbar_pedigree_invalid),
-      ),
-    );
-  }
-
-  String _formatHeatCyclePeriod(DogHeatCycleLog entry) {
-    final l10n = AppLocalizations.of(context)!;
-    final start = DateFormat('dd.MM.yyyy').format(entry.startDate);
-    final end = entry.endDate == null
-        ? l10n.dog_heat_cycle_end_not_set
-        : DateFormat('dd.MM.yyyy').format(entry.endDate!);
-    return l10n.dog_heat_cycle_period_value(start, end);
-  }
-
-  Future<void> _showHeatCycleInfoDialog() async {
-    final l10n = AppLocalizations.of(context)!;
-    await showDialog<void>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(l10n.dog_heat_cycle_info_title),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(l10n.dog_heat_cycle_info_line_1),
-                const SizedBox(height: 8),
-                Text(l10n.dog_heat_cycle_info_line_2),
-                const SizedBox(height: 8),
-                Text(l10n.dog_heat_cycle_info_line_3),
-                const SizedBox(height: 8),
-                Text(l10n.dog_heat_cycle_info_line_4),
-                const SizedBox(height: 8),
-                Text(l10n.dog_heat_cycle_info_line_5),
-                const SizedBox(height: 8),
-                Text(l10n.dog_heat_cycle_info_line_6),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(l10n.common_ok),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _openHeatCycleEditor({
-    required Dog dog,
-    DogHeatCycleLog? initial,
-  }) async {
-    final l10n = AppLocalizations.of(context)!;
-    var selectedStartDate = initial?.startDate ?? DateTime.now();
-    DateTime? selectedEndDate = initial?.endDate;
-    final noteController = TextEditingController(text: initial?.note ?? '');
-
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text(
-                initial == null
-                    ? l10n.dog_heat_cycle_add_title
-                    : l10n.dog_heat_cycle_edit_title,
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.dog_heat_cycle_start_date_label),
-                      subtitle: Text(
-                        DateFormat('dd.MM.yyyy').format(selectedStartDate),
-                      ),
-                      trailing: const Icon(Icons.calendar_today),
-                      onTap: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate: selectedStartDate,
-                          firstDate: DateTime(1950),
-                          lastDate: DateTime.now().add(
-                            const Duration(days: 3650),
-                          ),
-                        );
-                        if (picked == null) {
-                          return;
-                        }
-                        setDialogState(() {
-                          selectedStartDate = DateTime(
-                            picked.year,
-                            picked.month,
-                            picked.day,
-                          );
-                          if (selectedEndDate != null &&
-                              selectedEndDate!.isBefore(selectedStartDate)) {
-                            selectedEndDate = null;
-                          }
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.dog_heat_cycle_end_date_label),
-                      subtitle: Text(
-                        selectedEndDate == null
-                            ? l10n.dog_heat_cycle_end_not_set
-                            : DateFormat('dd.MM.yyyy').format(selectedEndDate!),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (selectedEndDate != null)
-                            IconButton(
-                              icon: const Icon(Icons.close),
-                              onPressed: () {
-                                setDialogState(() => selectedEndDate = null);
-                              },
-                            ),
-                          const Icon(Icons.calendar_today),
-                        ],
-                      ),
-                      onTap: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate: selectedEndDate ?? selectedStartDate,
-                          firstDate: selectedStartDate,
-                          lastDate: DateTime.now().add(
-                            const Duration(days: 3650),
-                          ),
-                        );
-                        if (picked == null) {
-                          return;
-                        }
-                        setDialogState(() {
-                          selectedEndDate = DateTime(
-                            picked.year,
-                            picked.month,
-                            picked.day,
-                          );
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: noteController,
-                      minLines: 2,
-                      maxLines: 4,
-                      decoration: InputDecoration(
-                        labelText: l10n.dog_heat_cycle_note_label,
-                        hintText: l10n.dog_heat_cycle_note_hint,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: Text(l10n.dog_detail_button_cancel),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: Text(l10n.common_save),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-
-    if (saved != true) {
-      noteController.dispose();
-      return;
-    }
-
-    final now = DateTime.now();
-    final trimmedNote = noteController.text.trim();
-    final entry = DogHeatCycleLog(
-      dogId: dog.id,
-      startDate: selectedStartDate,
-      endDate: selectedEndDate,
-      note: trimmedNote.isEmpty ? null : trimmedNote,
-      createdAt: initial?.createdAt ?? now,
-      updatedAt: now,
-    );
-
-    await _heatCycleRepository.saveForDog(entry);
-    noteController.dispose();
-    if (!mounted) return;
-    setState(() => _heatCycleRefreshTick++);
-  }
-
-  Future<void> _deleteHeatCycleEntry({
-    required Dog dog,
-    required DogHeatCycleLog entry,
-  }) async {
-    final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(l10n.dog_heat_cycle_delete_title),
-          content: Text(l10n.dog_heat_cycle_delete_body),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(l10n.dog_detail_button_cancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text(l10n.dog_editor_button_delete),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmed != true) {
-      return;
-    }
-
-    await _heatCycleRepository.deleteForDog(
-      dogId: dog.id,
-      createdAt: entry.createdAt,
-    );
-    if (!mounted) return;
-    setState(() => _heatCycleRefreshTick++);
-  }
-
-  Widget _buildHeatCycleSection(Dog dog) {
-    final l10n = AppLocalizations.of(context)!;
-    if (!shouldShowHeatCycleSection(dog)) {
-      return const SizedBox.shrink();
-    }
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    l10n.dog_heat_cycle_section_title,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
-                IconButton(
-                  tooltip: l10n.dog_heat_cycle_info_title,
-                  onPressed: _showHeatCycleInfoDialog,
-                  icon: const Icon(Icons.info_outline),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            FilledButton.icon(
-              onPressed: () => _openHeatCycleEditor(dog: dog),
-              icon: const Icon(Icons.add),
-              label: Text(l10n.dog_heat_cycle_add_button),
-            ),
-            const SizedBox(height: 12),
-            FutureBuilder<List<DogHeatCycleLog>>(
-              key: ValueKey('heat_cycles_${dog.id}_$_heatCycleRefreshTick'),
-              future: _heatCycleRepository.listForDog(dog.id),
-              builder: (context, snapshot) {
-                final entries = snapshot.data ?? const <DogHeatCycleLog>[];
-                if (entries.isEmpty) {
-                  return Text(
-                    l10n.dog_heat_cycle_empty,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  );
-                }
-
-                return Column(
-                  children: entries.map((entry) {
-                    final note = entry.note?.trim();
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Card(
-                        margin: EdgeInsets.zero,
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Text(
-                                _formatHeatCyclePeriod(entry),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleSmall
-                                    ?.copyWith(fontWeight: FontWeight.w600),
-                              ),
-                              if (note != null && note.isNotEmpty) ...[
-                                const SizedBox(height: 8),
-                                Text(note),
-                              ],
-                              const SizedBox(height: 10),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: OutlinedButton.icon(
-                                      onPressed: () => _openHeatCycleEditor(
-                                        dog: dog,
-                                        initial: entry,
-                                      ),
-                                      icon: const Icon(Icons.edit),
-                                      label:
-                                          Text(l10n.dog_heat_cycle_edit_button),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: FilledButton.icon(
-                                      onPressed: () => _deleteHeatCycleEntry(
-                                        dog: dog,
-                                        entry: entry,
-                                      ),
-                                      icon: const Icon(Icons.delete),
-                                      label: Text(
-                                        l10n.dog_heat_cycle_delete_button,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(growable: false),
-                );
-              },
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -2698,8 +2342,6 @@ class _DogDetailPageState extends State<DogDetailPage> {
             const SizedBox(height: 16),
             _buildInfoCard(dog),
             const SizedBox(height: 16),
-            _buildHeatCycleSection(dog),
-            if (shouldShowHeatCycleSection(dog)) const SizedBox(height: 16),
             _buildPedigreeCard(dog),
             const SizedBox(height: 16),
             _buildOwnershipSection(dog),

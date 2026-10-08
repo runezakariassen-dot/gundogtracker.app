@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../data/local/local_health_record_repository.dart';
+import '../domain/dogs/dog_heat_cycle_repository.dart';
 import '../domain/health/health_record_date_helpers.dart';
 import '../l10n/app_localizations.dart';
 import '../models/dog.dart';
 import '../models/health_record.dart';
+import '../widgets/dog_heat_cycle_section.dart';
 import 'health_record_ui_labels.dart';
 import 'health_record_form_page.dart';
 
@@ -13,10 +15,12 @@ class DogHealthJournalPage extends StatefulWidget {
     super.key,
     required this.dog,
     this.repository,
+    this.heatCycleRepository,
   });
 
   final Dog dog;
   final LocalHealthRecordRepository? repository;
+  final DogHeatCycleRepository? heatCycleRepository;
 
   @override
   State<DogHealthJournalPage> createState() => _DogHealthJournalPageState();
@@ -98,6 +102,32 @@ class _DogHealthJournalPageState extends State<DogHealthJournalPage> {
             );
           }
           final records = snapshot.data ?? const <HealthRecord>[];
+          if (shouldShowHeatCycleSection(widget.dog)) {
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                DogHeatCycleSection(
+                  dog: widget.dog,
+                  repository: widget.heatCycleRepository,
+                ),
+                const SizedBox(height: 16),
+                if (records.isEmpty)
+                  _HealthEmptyState(onAdd: _openForm)
+                else
+                  ...records.indexed.expand((indexedRecord) {
+                    final (index, record) = indexedRecord;
+                    return [
+                      if (index > 0) const SizedBox(height: 8),
+                      _HealthRecordCard(
+                        key: ValueKey(record.id),
+                        record: record,
+                        onTap: () => _openForm(record),
+                      ),
+                    ];
+                  }),
+              ],
+            );
+          }
           if (records.isEmpty) {
             return _HealthEmptyState(onAdd: _openForm);
           }
