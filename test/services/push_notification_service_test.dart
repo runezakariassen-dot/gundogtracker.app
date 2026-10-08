@@ -8,6 +8,8 @@ class _FakeMessaging implements PushMessagingClient {
   PushPermissionStatus permission = PushPermissionStatus.authorized;
   String? token = 'token-1';
   PushMessageData? initialMessage;
+  Object? initialMessageError;
+  int initialMessageCalls = 0;
   int tokenRefreshGetterCalls = 0;
   int messageGetterCalls = 0;
   int openedGetterCalls = 0;
@@ -19,7 +21,12 @@ class _FakeMessaging implements PushMessagingClient {
   Future<String?> getToken() async => token;
 
   @override
-  Future<PushMessageData?> getInitialMessage() async => initialMessage;
+  Future<PushMessageData?> getInitialMessage() async {
+    initialMessageCalls++;
+    final error = initialMessageError;
+    if (error != null) throw error;
+    return initialMessage;
+  }
 
   @override
   Stream<PushMessageData> get onMessage {
@@ -210,6 +217,44 @@ void main() {
     expect(call.registration.platform, 'ios');
     expect(call.registration.appVersion, '1.0.14+1');
     expect(call.registration.includeCreatedAt, isTrue);
+  });
+
+  test('successful initial message setup installs all listeners', () async {
+    messaging.initialMessage = const PushMessageData(
+      data: {
+        'type': 'sharedDogSessionCreated',
+        'dogId': 'dog-1',
+        'sessionId': 'session-1',
+      },
+    );
+
+    await service.start();
+
+    expect(messaging.initialMessageCalls, 1);
+    expect(auth.streamGetterCalls, 1);
+    expect(messaging.tokenRefreshGetterCalls, 1);
+    expect(messaging.messageGetterCalls, 1);
+    expect(messaging.openedGetterCalls, 1);
+    expect(service.lastOpenedNotificationData?['sessionId'], 'session-1');
+  });
+
+  test('initial message failure does not block listeners or registration',
+      () async {
+    messaging.initialMessageError = StateError('initial message failed');
+
+    await service.start();
+
+    expect(messaging.initialMessageCalls, 1);
+    expect(auth.streamGetterCalls, 1);
+    expect(messaging.tokenRefreshGetterCalls, 1);
+    expect(messaging.messageGetterCalls, 1);
+    expect(messaging.openedGetterCalls, 1);
+    expect(store.registrations, hasLength(1));
+
+    await service.start();
+    expect(messaging.initialMessageCalls, 1);
+    expect(auth.streamGetterCalls, 1);
+    expect(messaging.tokenRefreshGetterCalls, 1);
   });
 
   test('token refresh updates the same device id', () async {

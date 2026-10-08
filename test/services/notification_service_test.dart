@@ -67,7 +67,7 @@ void main() {
     );
 
     expect(client.initializeCalls, 1);
-    expect(client.requestPermissionCalls, 0);
+    expect(client.requestPermissionCalls, 1);
     expect(client.canceledIds,
         contains(NotificationService.birthdayNotificationId));
     expect(client.schedules, hasLength(1));
@@ -75,6 +75,17 @@ void main() {
         client.schedules.single.id, NotificationService.birthdayNotificationId);
     expect(client.schedules.single.scheduledDate.hour, 9);
     expect(client.schedules.single.scheduledDate.minute, 0);
+  });
+
+  test('repeated init initializes and requests permission only once', () async {
+    final client = _FakeLocalNotificationsClient();
+    final service = NotificationService(client: client);
+
+    await service.init();
+    await service.init();
+
+    expect(client.initializeCalls, 1);
+    expect(client.requestPermissionCalls, 1);
   });
 
   test(

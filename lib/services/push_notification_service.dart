@@ -301,19 +301,43 @@ class PushNotificationService {
 
   Future<void> start() async {
     if (_started) return;
-    _started = true;
-    _tokenSubscription = _messaging.onTokenRefresh.listen(
-      (token) => unawaited(_registerToken(token)),
-    );
-    _messageSubscription = _messaging.onMessage.listen(_showForegroundMessage);
-    _openedSubscription =
-        _messaging.onMessageOpenedApp.listen(_retainOpenedMessage);
-    final initial = await _messaging.getInitialMessage();
-    if (initial != null) _retainOpenedMessage(initial);
-    _authSubscription = _auth.authStateChanges.listen(
-      (user) => unawaited(_handleAuthUser(user)),
-    );
+    try {
+      _tokenSubscription = _messaging.onTokenRefresh.listen(
+        (token) => unawaited(_registerToken(token)),
+      );
+      _messageSubscription =
+          _messaging.onMessage.listen(_showForegroundMessage);
+      _openedSubscription =
+          _messaging.onMessageOpenedApp.listen(_retainOpenedMessage);
+      _authSubscription = _auth.authStateChanges.listen(
+        (user) => unawaited(_handleAuthUser(user)),
+      );
+      _started = true;
+    } catch (error) {
+      await _cancelStartupSubscriptions();
+      rethrow;
+    }
+
+    try {
+      final initial = await _messaging.getInitialMessage();
+      if (initial != null) _retainOpenedMessage(initial);
+    } catch (error, stackTrace) {
+      debugPrint('[PUSH] failed to read initial message: $error');
+      debugPrint(stackTrace.toString());
+    }
     await _handleAuthUser(_auth.currentUser);
+  }
+
+  Future<void> _cancelStartupSubscriptions() async {
+    await _authSubscription?.cancel();
+    await _tokenSubscription?.cancel();
+    await _messageSubscription?.cancel();
+    await _openedSubscription?.cancel();
+    _authSubscription = null;
+    _tokenSubscription = null;
+    _messageSubscription = null;
+    _openedSubscription = null;
+    _started = false;
   }
 
   Future<void> _handleAuthUser(PushAuthUser? user) async {

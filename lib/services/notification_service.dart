@@ -163,6 +163,7 @@ class NotificationService implements AppNotificationService {
         _isTimezoneInitialized = true;
       }
       await _client.initialize(settings);
+      await _client.requestPermissions();
       _isInitialized = true;
     } catch (error, stackTrace) {
       debugPrint('[NOTIFICATION] init failed: $error');
