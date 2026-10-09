@@ -19,9 +19,11 @@ const String _entitlementSourceKey = 'subscriptionEntitlementSource';
 class _FakeSubscriptionStoreClient implements SubscriptionStoreClient {
   _FakeSubscriptionStoreClient({
     List<StoreProduct>? products,
+    this.isStoreAvailable = true,
   }) : _products = products ?? const [];
 
   final List<StoreProduct> _products;
+  final bool isStoreAvailable;
   final StreamController<List<StorePurchaseUpdate>> _controller =
       StreamController<List<StorePurchaseUpdate>>.broadcast();
   Completer<List<StoreProduct>>? queryProductsCompleter;
@@ -41,7 +43,7 @@ class _FakeSubscriptionStoreClient implements SubscriptionStoreClient {
   Future<void> completePurchase(StorePurchaseUpdate purchase) async {}
 
   @override
-  Future<bool> isAvailable() async => true;
+  Future<bool> isAvailable() async => isStoreAvailable;
 
   @override
   Future<List<StoreProduct>> queryProducts(Set<String> productIds) async {
@@ -113,9 +115,7 @@ void main() {
         locale: const Locale('nb'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: SubscriptionSection(service: service),
-        ),
+        home: Scaffold(body: SubscriptionSection(service: service)),
       ),
     );
 
@@ -135,16 +135,15 @@ void main() {
     expect(upgradeButton.onPressed, isNotNull);
   });
 
-  testWidgets('shows inactive status when entitlement is false',
-      (tester) async {
+  testWidgets('shows inactive status when entitlement is false', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('nb'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: SubscriptionSection(service: service),
-        ),
+        home: Scaffold(body: SubscriptionSection(service: service)),
       ),
     );
 
@@ -160,8 +159,8 @@ void main() {
 
   testWidgets('shows active status when entitlement is true', (tester) async {
     final transactionDate = DateTime.now().toUtc().subtract(
-          const Duration(days: 1),
-        );
+      const Duration(days: 1),
+    );
     final expiresAt = transactionDate.add(const Duration(days: 32));
 
     await tester.runAsync(() async {
@@ -186,9 +185,7 @@ void main() {
         locale: const Locale('nb'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: SubscriptionSection(service: service),
-        ),
+        home: Scaffold(body: SubscriptionSection(service: service)),
       ),
     );
 
@@ -207,9 +204,7 @@ void main() {
         locale: const Locale('nb'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: SubscriptionSection(service: service),
-        ),
+        home: Scaffold(body: SubscriptionSection(service: service)),
       ),
     );
 
@@ -219,8 +214,8 @@ void main() {
 
     await tester.runAsync(() async {
       final transactionDate = DateTime.now().toUtc().subtract(
-            const Duration(days: 1),
-          );
+        const Duration(days: 1),
+      );
       final expiresAt = transactionDate.add(const Duration(days: 32));
 
       await settingsBox.put(_entitlementProductIdKey, monthlyProductId);
@@ -248,47 +243,46 @@ void main() {
   });
 
   testWidgets(
-      'shows Pro active from stored entitlement before product lookup completes',
-      (tester) async {
-    final transactionDate = DateTime.now().toUtc().subtract(
-          const Duration(days: 1),
+    'shows Pro active from stored entitlement before product lookup completes',
+    (tester) async {
+      final transactionDate = DateTime.now().toUtc().subtract(
+        const Duration(days: 1),
+      );
+      final expiresAt = transactionDate.add(const Duration(days: 32));
+      storeClient.queryProductsCompleter = Completer<List<StoreProduct>>();
+
+      await tester.runAsync(() async {
+        await settingsBox.put(_entitlementProductIdKey, monthlyProductId);
+        await settingsBox.put(
+          _entitlementTransactionDateKey,
+          transactionDate.millisecondsSinceEpoch,
         );
-    final expiresAt = transactionDate.add(const Duration(days: 32));
-    storeClient.queryProductsCompleter = Completer<List<StoreProduct>>();
+        await settingsBox.put(
+          _entitlementExpiresAtKey,
+          expiresAt.millisecondsSinceEpoch,
+        );
+        await settingsBox.put(
+          _entitlementVerifiedAtKey,
+          DateTime.now().toUtc().millisecondsSinceEpoch,
+        );
+        await settingsBox.put(_entitlementSourceKey, 'test');
+      });
 
-    await tester.runAsync(() async {
-      await settingsBox.put(_entitlementProductIdKey, monthlyProductId);
-      await settingsBox.put(
-        _entitlementTransactionDateKey,
-        transactionDate.millisecondsSinceEpoch,
-      );
-      await settingsBox.put(
-        _entitlementExpiresAtKey,
-        expiresAt.millisecondsSinceEpoch,
-      );
-      await settingsBox.put(
-        _entitlementVerifiedAtKey,
-        DateTime.now().toUtc().millisecondsSinceEpoch,
-      );
-      await settingsBox.put(_entitlementSourceKey, 'test');
-    });
-
-    await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('nb'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: SubscriptionSection(service: service),
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('nb'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(body: SubscriptionSection(service: service)),
         ),
-      ),
-    );
+      );
 
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.textContaining('Status: Pro aktiv'), findsOneWidget);
-  });
+      expect(find.textContaining('Status: Pro aktiv'), findsOneWidget);
+    },
+  );
 
   testWidgets('shows unavailable state cleanly and blocks purchase', (
     tester,
@@ -307,9 +301,7 @@ void main() {
         locale: const Locale('nb'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: SubscriptionSection(service: service),
-        ),
+        home: Scaffold(body: SubscriptionSection(service: service)),
       ),
     );
 
@@ -337,5 +329,48 @@ void main() {
       findsWidgets,
     );
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('restore shows localized error when store is unavailable', (
+    tester,
+  ) async {
+    storeClient = _FakeSubscriptionStoreClient(
+      products: const [
+        StoreProduct(
+          id: monthlyProductId,
+          title: 'Fuglehund Pro',
+          price: '49,00 kr',
+          rawDetails: null,
+        ),
+      ],
+      isStoreAvailable: false,
+    );
+    service = SubscriptionService(
+      storeClient: storeClient,
+      settingsBox: settingsBox,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('nb'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(body: SubscriptionSection(service: service)),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(find.text('Gjenopprett kjøp'), findsOneWidget);
+    await tester.tap(find.text('Gjenopprett kjøp').first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(
+      find.text('Kunne ikke gjenopprette kjøp akkurat nå.'),
+      findsOneWidget,
+    );
+    expect(storeClient.restoreCalls, 0);
   });
 }

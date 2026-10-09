@@ -9,26 +9,11 @@ import '../../config/subscription_products.dart';
 import '../../data/hive_boxes.dart';
 import '../../services/hive_lifecycle_service.dart';
 
-enum SubscriptionStatus {
-  active,
-  inactive,
-  unknown,
-}
+enum SubscriptionStatus { active, inactive, unknown }
 
-enum SubscriptionPurchaseResult {
-  started,
-  success,
-  cancelled,
-  error,
-}
+enum SubscriptionPurchaseResult { started, success, cancelled, error }
 
-enum StorePurchaseStatus {
-  pending,
-  purchased,
-  restored,
-  cancelled,
-  error,
-}
+enum StorePurchaseStatus { pending, purchased, restored, cancelled, error }
 
 class SubscriptionViewData {
   const SubscriptionViewData({
@@ -41,12 +26,12 @@ class SubscriptionViewData {
   });
 
   const SubscriptionViewData.initial()
-      : status = SubscriptionStatus.unknown,
-        isPro = false,
-        storeAvailable = false,
-        hasMonthlyProduct = false,
-        productTitle = null,
-        monthlyPrice = null;
+    : status = SubscriptionStatus.unknown,
+      isPro = false,
+      storeAvailable = false,
+      hasMonthlyProduct = false,
+      productTitle = null,
+      monthlyPrice = null;
 
   final SubscriptionStatus status;
   final bool isPro;
@@ -104,7 +89,7 @@ abstract class SubscriptionStoreClient {
 
 class _InAppPurchaseStoreClient implements SubscriptionStoreClient {
   _InAppPurchaseStoreClient({InAppPurchase? inAppPurchase})
-      : _inAppPurchase = inAppPurchase ?? InAppPurchase.instance;
+    : _inAppPurchase = inAppPurchase ?? InAppPurchase.instance;
 
   final InAppPurchase _inAppPurchase;
 
@@ -185,9 +170,9 @@ class SubscriptionService {
     SubscriptionStoreClient? storeClient,
     Box<dynamic>? settingsBox,
     DateTime Function()? clock,
-  })  : _storeClient = storeClient ?? _InAppPurchaseStoreClient(),
-        _settingsBox = settingsBox,
-        _clock = clock;
+  }) : _storeClient = storeClient ?? _InAppPurchaseStoreClient(),
+       _settingsBox = settingsBox,
+       _clock = clock;
 
   static final SubscriptionService instance = SubscriptionService();
 
@@ -206,8 +191,9 @@ class SubscriptionService {
   final SubscriptionStoreClient _storeClient;
   final Box<dynamic>? _settingsBox;
   final DateTime Function()? _clock;
-  final ValueNotifier<SubscriptionViewData> state =
-      ValueNotifier(const SubscriptionViewData.initial());
+  final ValueNotifier<SubscriptionViewData> state = ValueNotifier(
+    const SubscriptionViewData.initial(),
+  );
 
   StreamSubscription<List<StorePurchaseUpdate>>? _purchaseSub;
   StoreProduct? _monthlyProduct;
@@ -227,34 +213,18 @@ class SubscriptionService {
   }
 
   Future<void> init() async {
-    if (_initialized) {
-      await _expireStoredEntitlementIfNeeded();
-      _emitState();
-      return;
+    if (!_initialized) {
+      _initialized = true;
+      _purchaseSub ??= _storeClient.purchaseStream.listen(_handlePurchases);
     }
 
-    _initialized = true;
-    _purchaseSub ??= _storeClient.purchaseStream.listen(_handlePurchases);
+    await _clearLegacyPermanentProFlag();
+    await _expireStoredEntitlementIfNeeded();
+    // Reflect any already-persisted entitlement immediately instead of
+    // waiting for store product loading to finish.
+    _emitState();
 
-    try {
-      await _clearLegacyPermanentProFlag();
-      await _expireStoredEntitlementIfNeeded();
-      // Reflect any already-persisted entitlement immediately instead of
-      // waiting for store product loading to finish.
-      _emitState();
-      _storeAvailable = await _storeClient.isAvailable();
-      _emitState();
-      if (_storeAvailable) {
-        await _loadProducts();
-      } else {
-        _monthlyProduct = null;
-        debugPrint('[SUBSCRIPTION] store unavailable during init');
-      }
-    } catch (_) {
-      _storeAvailable = false;
-      _monthlyProduct = null;
-      debugPrint('[SUBSCRIPTION] failed to initialize store availability');
-    }
+    await _refreshStoreProducts(reason: 'init');
 
     _emitState();
   }
@@ -272,15 +242,7 @@ class SubscriptionService {
     // Keep the UI aligned with persisted entitlement even if store refresh
     // stalls or product loading fails.
     _emitState();
-    if (_storeAvailable) {
-      try {
-        await _loadProducts();
-      } catch (_) {
-        _storeAvailable = false;
-        _monthlyProduct = null;
-        debugPrint('[SUBSCRIPTION] failed to refresh store products');
-      }
-    }
+    await _refreshStoreProducts(reason: 'refresh');
     _emitState();
     return state.value;
   }
@@ -319,26 +281,16 @@ class SubscriptionService {
 
     _purchaseStartInProgress = true;
 
-    late final Future<bool> startFuture;
     try {
-      startFuture = _storeClient.buy(product);
-    } catch (_) {
-      _purchaseStartInProgress = false;
-      return SubscriptionPurchaseResult.error;
-    }
-
-    unawaited(_observePurchaseStart(startFuture));
-    return SubscriptionPurchaseResult.started;
-  }
-
-  Future<void> _observePurchaseStart(Future<bool> startFuture) async {
-    try {
-      final started = await startFuture;
+      final started = await _storeClient.buy(product);
       if (!started) {
         debugPrint('[SUBSCRIPTION] store rejected purchase start');
+        return SubscriptionPurchaseResult.error;
       }
+      return SubscriptionPurchaseResult.started;
     } catch (_) {
       debugPrint('[SUBSCRIPTION] store purchase start failed');
+      return SubscriptionPurchaseResult.error;
     } finally {
       _purchaseStartInProgress = false;
     }
@@ -347,17 +299,33 @@ class SubscriptionService {
   Future<void> restorePurchases() async {
     await init();
     if (!_storeAvailable) {
-      return;
+      throw StateError('store unavailable');
     }
     await _storeClient.restorePurchases();
+  }
+
+  Future<void> _refreshStoreProducts({required String reason}) async {
+    try {
+      _storeAvailable = await _storeClient.isAvailable();
+      if (!_storeAvailable) {
+        _monthlyProduct = null;
+        debugPrint('[SUBSCRIPTION] store unavailable during $reason');
+        return;
+      }
+      await _loadProducts();
+    } catch (_) {
+      _storeAvailable = false;
+      _monthlyProduct = null;
+      debugPrint('[SUBSCRIPTION] failed to refresh store during $reason');
+    }
   }
 
   Future<void> _loadProducts() async {
     final products = await _storeClient.queryProducts(subscriptionProductIds);
     _monthlyProduct = products.cast<StoreProduct?>().firstWhere(
-          (product) => product?.id == monthlyProductId,
-          orElse: () => null,
-        );
+      (product) => product?.id == monthlyProductId,
+      orElse: () => null,
+    );
     if (_monthlyProduct == null) {
       debugPrint(
         '[SUBSCRIPTION] monthly product unavailable: id=$monthlyProductId',
@@ -534,10 +502,7 @@ class SubscriptionService {
     }
   }
 
-  DateTime? _findExpiryDateInJson(
-    dynamic value, {
-    String? parentKey,
-  }) {
+  DateTime? _findExpiryDateInJson(dynamic value, {String? parentKey}) {
     if (value is Map) {
       for (final entry in value.entries) {
         final key = entry.key.toString();
@@ -603,8 +568,9 @@ class SubscriptionService {
         return parsed.toUtc();
       }
 
-      final normalized =
-          trimmed.contains('T') ? trimmed : trimmed.replaceFirst(' ', 'T');
+      final normalized = trimmed.contains('T')
+          ? trimmed
+          : trimmed.replaceFirst(' ', 'T');
       final normalizedParsed = DateTime.tryParse('${normalized}Z');
       if (normalizedParsed != null) {
         return normalizedParsed.toUtc();
@@ -709,8 +675,8 @@ class SubscriptionService {
     final status = pro
         ? SubscriptionStatus.active
         : (_storeAvailable
-            ? SubscriptionStatus.inactive
-            : SubscriptionStatus.unknown);
+              ? SubscriptionStatus.inactive
+              : SubscriptionStatus.unknown);
     state.value = SubscriptionViewData(
       status: status,
       isPro: pro,

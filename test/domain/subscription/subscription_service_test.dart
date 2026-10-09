@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
@@ -13,18 +14,34 @@ class _FakeSubscriptionStoreClient implements SubscriptionStoreClient {
   _FakeSubscriptionStoreClient({
     List<StoreProduct>? products,
     this.throwOnQueryProducts = false,
-  }) : _products = products ?? const [];
+    this.defaultAvailability = true,
+    List<bool>? availabilitySequence,
+    List<List<StoreProduct>>? queryProductsSequence,
+  }) : _products = products ?? const [],
+       _availabilitySequence = ListQueue<bool>.from(
+         availabilitySequence ?? const <bool>[],
+       ),
+       _queryProductsSequence = ListQueue<List<StoreProduct>>.from(
+         queryProductsSequence ?? const <List<StoreProduct>>[],
+       );
 
   final List<StoreProduct> _products;
   final bool throwOnQueryProducts;
+  final bool defaultAvailability;
+  final ListQueue<bool> _availabilitySequence;
+  final ListQueue<List<StoreProduct>> _queryProductsSequence;
   final StreamController<List<StorePurchaseUpdate>> _controller =
       StreamController<List<StorePurchaseUpdate>>.broadcast();
 
   int restoreCalls = 0;
   int completeCalls = 0;
   int buyCalls = 0;
+  int isAvailableCalls = 0;
+  int queryProductsCalls = 0;
   int purchaseStreamCalls = 0;
   Completer<bool>? buyCompleter;
+  bool buyResult = true;
+  Object? buyError;
 
   @override
   Stream<List<StorePurchaseUpdate>> get purchaseStream {
@@ -35,11 +52,15 @@ class _FakeSubscriptionStoreClient implements SubscriptionStoreClient {
   @override
   Future<bool> buy(StoreProduct product) {
     buyCalls += 1;
+    final throwable = buyError;
+    if (throwable != null) {
+      return Future<bool>.error(throwable);
+    }
     final completer = buyCompleter;
     if (completer != null) {
       return completer.future;
     }
-    return Future.value(true);
+    return Future.value(buyResult);
   }
 
   @override
@@ -52,14 +73,24 @@ class _FakeSubscriptionStoreClient implements SubscriptionStoreClient {
   }
 
   @override
-  Future<bool> isAvailable() async => true;
+  Future<bool> isAvailable() async {
+    isAvailableCalls += 1;
+    if (_availabilitySequence.isNotEmpty) {
+      return _availabilitySequence.removeFirst();
+    }
+    return defaultAvailability;
+  }
 
   @override
   Future<List<StoreProduct>> queryProducts(Set<String> productIds) async {
+    queryProductsCalls += 1;
     if (throwOnQueryProducts) {
       throw Exception('query failed');
     }
-    return _products
+    final sourceProducts = _queryProductsSequence.isNotEmpty
+        ? _queryProductsSequence.removeFirst()
+        : _products;
+    return sourceProducts
         .where((product) => productIds.contains(product.id))
         .toList(growable: false);
   }
@@ -177,10 +208,7 @@ void main() {
   });
 
   test('purchase success stores timed pro entitlement and price', () async {
-    expect(
-      await service.purchaseMonthly(),
-      SubscriptionPurchaseResult.started,
-    );
+    expect(await service.purchaseMonthly(), SubscriptionPurchaseResult.started);
 
     final activeState = waitForSubscriptionState(
       (data) => data.status == SubscriptionStatus.active,
@@ -196,10 +224,7 @@ void main() {
   });
 
   test('cancelled purchase keeps free status', () async {
-    expect(
-      await service.purchaseMonthly(),
-      SubscriptionPurchaseResult.started,
-    );
+    expect(await service.purchaseMonthly(), SubscriptionPurchaseResult.started);
 
     storeClient.emit(monthlyUpdate(StorePurchaseStatus.cancelled));
 
@@ -209,29 +234,28 @@ void main() {
     expect(service.state.value.status, SubscriptionStatus.inactive);
   });
 
-  test('restore purchases can reactivate pro from current store update',
-      () async {
-    await service.restorePurchases();
-    expect(storeClient.restoreCalls, 1);
+  test(
+    'restore purchases can reactivate pro from current store update',
+    () async {
+      await service.restorePurchases();
+      expect(storeClient.restoreCalls, 1);
 
-    storeClient.emit(monthlyUpdate(StorePurchaseStatus.restored));
+      storeClient.emit(monthlyUpdate(StorePurchaseStatus.restored));
 
-    await waitForSubscriptionState(
-      (data) => data.status == SubscriptionStatus.active,
-    );
+      await waitForSubscriptionState(
+        (data) => data.status == SubscriptionStatus.active,
+      );
 
-    expect(service.isPro, isTrue);
-    expect(service.state.value.status, SubscriptionStatus.active);
-  });
+      expect(service.isPro, isTrue);
+      expect(service.state.value.status, SubscriptionStatus.active);
+    },
+  );
 
   test('wrong product id is ignored', () async {
     await service.restorePurchases();
 
     storeClient.emit(
-      monthlyUpdate(
-        StorePurchaseStatus.restored,
-        productId: 'other.product',
-      ),
+      monthlyUpdate(StorePurchaseStatus.restored, productId: 'other.product'),
     );
 
     await Future<void>.delayed(const Duration(milliseconds: 10));
@@ -240,71 +264,72 @@ void main() {
     expect(service.state.value.status, SubscriptionStatus.inactive);
   });
 
-  test('restore uses explicit store expiry even when transaction date is old',
-      () async {
-    await service.restorePurchases();
+  test(
+    'restore uses explicit store expiry even when transaction date is old',
+    () async {
+      await service.restorePurchases();
 
-    storeClient.emit(
-      monthlyUpdate(
-        StorePurchaseStatus.restored,
-        transactionDate: now.subtract(const Duration(days: 120)),
-        rawDetails: purchaseDetailsWithExpiry(
-          now.add(const Duration(days: 12)),
+      storeClient.emit(
+        monthlyUpdate(
+          StorePurchaseStatus.restored,
+          transactionDate: now.subtract(const Duration(days: 120)),
+          rawDetails: purchaseDetailsWithExpiry(
+            now.add(const Duration(days: 12)),
+          ),
         ),
-      ),
-    );
+      );
 
-    await waitForSubscriptionState(
-      (data) => data.status == SubscriptionStatus.active,
-    );
-
-    expect(service.isPro, isTrue);
-    expect(service.state.value.status, SubscriptionStatus.active);
-  });
-
-  test('state updates when entitlement is written by another service instance',
-      () async {
-    final writerStoreClient = _FakeSubscriptionStoreClient(
-      products: const [
-        StoreProduct(
-          id: monthlyProductId,
-          title: 'Fuglehund Pro',
-          price: '49,00 kr',
-          rawDetails: null,
-        ),
-      ],
-    );
-    final writerService = SubscriptionService(
-      storeClient: writerStoreClient,
-      settingsBox: settingsBox,
-      clock: () => now,
-    );
-    await writerService.init();
-
-    try {
-      expect(service.state.value.status, SubscriptionStatus.inactive);
-
-      writerStoreClient.emit(monthlyUpdate(StorePurchaseStatus.purchased));
-
-      await _waitForObserverState(
-        writerService,
+      await waitForSubscriptionState(
         (data) => data.status == SubscriptionStatus.active,
       );
 
-      await service.refresh();
-      expect(service.state.value.status, SubscriptionStatus.active);
       expect(service.isPro, isTrue);
-    } finally {
-      await writerService.dispose();
-      await writerStoreClient.dispose();
-    }
-  });
+      expect(service.state.value.status, SubscriptionStatus.active);
+    },
+  );
+
+  test(
+    'state updates when entitlement is written by another service instance',
+    () async {
+      final writerStoreClient = _FakeSubscriptionStoreClient(
+        products: const [
+          StoreProduct(
+            id: monthlyProductId,
+            title: 'Fuglehund Pro',
+            price: '49,00 kr',
+            rawDetails: null,
+          ),
+        ],
+      );
+      final writerService = SubscriptionService(
+        storeClient: writerStoreClient,
+        settingsBox: settingsBox,
+        clock: () => now,
+      );
+      await writerService.init();
+
+      try {
+        expect(service.state.value.status, SubscriptionStatus.inactive);
+
+        writerStoreClient.emit(monthlyUpdate(StorePurchaseStatus.purchased));
+
+        await _waitForObserverState(
+          writerService,
+          (data) => data.status == SubscriptionStatus.active,
+        );
+
+        await service.refresh();
+        expect(service.state.value.status, SubscriptionStatus.active);
+        expect(service.isPro, isTrue);
+      } finally {
+        await writerService.dispose();
+        await writerStoreClient.dispose();
+      }
+    },
+  );
 
   test('persisted entitlement is still active after service reload', () async {
-    expect(
-      await service.purchaseMonthly(),
-      SubscriptionPurchaseResult.started,
-    );
+    expect(await service.purchaseMonthly(), SubscriptionPurchaseResult.started);
 
     final activeState = waitForSubscriptionState(
       (data) => data.status == SubscriptionStatus.active,
@@ -343,31 +368,33 @@ void main() {
     }
   });
 
-  test('stale restore update does not clear an active local entitlement',
-      () async {
-    final activeState = waitForSubscriptionState(
-      (data) => data.status == SubscriptionStatus.active,
-    );
-    storeClient.emit(
-      monthlyUpdate(
-        StorePurchaseStatus.purchased,
-        expiresAt: now.add(const Duration(days: 20)),
-      ),
-    );
-    await activeState;
+  test(
+    'stale restore update does not clear an active local entitlement',
+    () async {
+      final activeState = waitForSubscriptionState(
+        (data) => data.status == SubscriptionStatus.active,
+      );
+      storeClient.emit(
+        monthlyUpdate(
+          StorePurchaseStatus.purchased,
+          expiresAt: now.add(const Duration(days: 20)),
+        ),
+      );
+      await activeState;
 
-    storeClient.emit(
-      monthlyUpdate(
-        StorePurchaseStatus.restored,
-        transactionDate: now.subtract(const Duration(days: 120)),
-      ),
-    );
+      storeClient.emit(
+        monthlyUpdate(
+          StorePurchaseStatus.restored,
+          transactionDate: now.subtract(const Duration(days: 120)),
+        ),
+      );
 
-    await Future<void>.delayed(const Duration(milliseconds: 10));
+      await Future<void>.delayed(const Duration(milliseconds: 10));
 
-    expect(service.isPro, isTrue);
-    expect(service.state.value.status, SubscriptionStatus.active);
-  });
+      expect(service.isPro, isTrue);
+      expect(service.state.value.status, SubscriptionStatus.active);
+    },
+  );
 
   test('old local permanent bool does not unlock pro', () async {
     await settingsBox.put(subscriptionIsProKey, true);
@@ -376,10 +403,7 @@ void main() {
     expect(settingsBox.get(subscriptionIsProKey), isNull);
     expect(service.isPro, isFalse);
     expect(service.state.value.status, SubscriptionStatus.inactive);
-    expect(
-      service.canCreateDog(currentDogCount: freeDogLimit),
-      isFalse,
-    );
+    expect(service.canCreateDog(currentDogCount: freeDogLimit), isFalse);
     expect(
       service.canCreateSession(currentSessionCount: freeSessionLimit),
       isFalse,
@@ -443,107 +467,101 @@ void main() {
     }
   });
 
-  test('free limits are lifted only while timed entitlement is active',
-      () async {
-    expect(
-      service.canCreateDog(currentDogCount: freeDogLimit - 1),
-      isTrue,
-    );
-    expect(
-      service.canCreateDog(currentDogCount: freeDogLimit),
-      isFalse,
-    );
-    expect(
-      service.canCreateSession(currentSessionCount: freeSessionLimit - 1),
-      isTrue,
-    );
-    expect(
-      service.canCreateSession(currentSessionCount: freeSessionLimit),
-      isFalse,
-    );
+  test(
+    'free limits are lifted only while timed entitlement is active',
+    () async {
+      expect(service.canCreateDog(currentDogCount: freeDogLimit - 1), isTrue);
+      expect(service.canCreateDog(currentDogCount: freeDogLimit), isFalse);
+      expect(
+        service.canCreateSession(currentSessionCount: freeSessionLimit - 1),
+        isTrue,
+      );
+      expect(
+        service.canCreateSession(currentSessionCount: freeSessionLimit),
+        isFalse,
+      );
 
-    expect(
-      await service.purchaseMonthly(),
-      SubscriptionPurchaseResult.started,
-    );
-    final activeState = waitForSubscriptionState(
-      (data) => data.status == SubscriptionStatus.active,
-    );
-    storeClient.emit(monthlyUpdate(StorePurchaseStatus.purchased));
-    await activeState;
+      expect(
+        await service.purchaseMonthly(),
+        SubscriptionPurchaseResult.started,
+      );
+      final activeState = waitForSubscriptionState(
+        (data) => data.status == SubscriptionStatus.active,
+      );
+      storeClient.emit(monthlyUpdate(StorePurchaseStatus.purchased));
+      await activeState;
 
-    expect(
-      service.canCreateDog(currentDogCount: freeDogLimit),
-      isTrue,
-    );
-    expect(
-      service.canCreateSession(currentSessionCount: freeSessionLimit),
-      isTrue,
-    );
+      expect(service.canCreateDog(currentDogCount: freeDogLimit), isTrue);
+      expect(
+        service.canCreateSession(currentSessionCount: freeSessionLimit),
+        isTrue,
+      );
 
-    now = now.add(const Duration(days: 33));
-    await service.refresh();
+      now = now.add(const Duration(days: 33));
+      await service.refresh();
 
-    expect(
-      service.canCreateDog(currentDogCount: freeDogLimit),
-      isFalse,
-    );
-    expect(
-      service.canCreateSession(currentSessionCount: freeSessionLimit),
-      isFalse,
-    );
-  });
+      expect(service.canCreateDog(currentDogCount: freeDogLimit), isFalse);
+      expect(
+        service.canCreateSession(currentSessionCount: freeSessionLimit),
+        isFalse,
+      );
+    },
+  );
 
-  test('unknown state refreshes and allows a persisted active Pro session',
-      () async {
-    await service.dispose();
-    await settingsBox.put(
-      'subscriptionEntitlementProductId',
-      monthlyProductId,
-    );
-    await settingsBox.put(
-      'subscriptionEntitlementTransactionDate',
-      now.subtract(const Duration(days: 1)).millisecondsSinceEpoch,
-    );
-    await settingsBox.put(
-      'subscriptionEntitlementExpiresAt',
-      now.add(const Duration(days: 10)).millisecondsSinceEpoch,
-    );
+  test(
+    'unknown state refreshes and allows a persisted active Pro session',
+    () async {
+      await service.dispose();
+      await settingsBox.put(
+        'subscriptionEntitlementProductId',
+        monthlyProductId,
+      );
+      await settingsBox.put(
+        'subscriptionEntitlementTransactionDate',
+        now.subtract(const Duration(days: 1)).millisecondsSinceEpoch,
+      );
+      await settingsBox.put(
+        'subscriptionEntitlementExpiresAt',
+        now.add(const Duration(days: 10)).millisecondsSinceEpoch,
+      );
 
-    service = SubscriptionService(
-      storeClient: storeClient,
-      settingsBox: settingsBox,
-      clock: () => now,
-    );
+      service = SubscriptionService(
+        storeClient: storeClient,
+        settingsBox: settingsBox,
+        clock: () => now,
+      );
 
-    expect(service.state.value.status, SubscriptionStatus.unknown);
-    expect(
-      await service.canCreateSessionAfterRefreshIfUnknown(
-        currentSessionCount: freeSessionLimit,
-      ),
-      isTrue,
-    );
-    expect(service.state.value.status, SubscriptionStatus.active);
-  });
+      expect(service.state.value.status, SubscriptionStatus.unknown);
+      expect(
+        await service.canCreateSessionAfterRefreshIfUnknown(
+          currentSessionCount: freeSessionLimit,
+        ),
+        isTrue,
+      );
+      expect(service.state.value.status, SubscriptionStatus.active);
+    },
+  );
 
-  test('unknown state refreshes and blocks confirmed free session at limit',
-      () async {
-    await service.dispose();
-    service = SubscriptionService(
-      storeClient: storeClient,
-      settingsBox: settingsBox,
-      clock: () => now,
-    );
+  test(
+    'unknown state refreshes and blocks confirmed free session at limit',
+    () async {
+      await service.dispose();
+      service = SubscriptionService(
+        storeClient: storeClient,
+        settingsBox: settingsBox,
+        clock: () => now,
+      );
 
-    expect(service.state.value.status, SubscriptionStatus.unknown);
-    expect(
-      await service.canCreateSessionAfterRefreshIfUnknown(
-        currentSessionCount: freeSessionLimit,
-      ),
-      isFalse,
-    );
-    expect(service.state.value.status, SubscriptionStatus.inactive);
-  });
+      expect(service.state.value.status, SubscriptionStatus.unknown);
+      expect(
+        await service.canCreateSessionAfterRefreshIfUnknown(
+          currentSessionCount: freeSessionLimit,
+        ),
+        isFalse,
+      );
+      expect(service.state.value.status, SubscriptionStatus.inactive);
+    },
+  );
 
   test('known Pro session check does not require another refresh', () async {
     final activeState = waitForSubscriptionState(
@@ -560,38 +578,164 @@ void main() {
     );
   });
 
-  test('known free user remains allowed below the free session limit',
-      () async {
-    expect(service.state.value.status, SubscriptionStatus.inactive);
-    expect(
-      await service.canCreateSessionAfterRefreshIfUnknown(
-        currentSessionCount: freeSessionLimit - 1,
-      ),
-      isTrue,
+  test(
+    'known free user remains allowed below the free session limit',
+    () async {
+      expect(service.state.value.status, SubscriptionStatus.inactive);
+      expect(
+        await service.canCreateSessionAfterRefreshIfUnknown(
+          currentSessionCount: freeSessionLimit - 1,
+        ),
+        isTrue,
+      );
+    },
+  );
+
+  test(
+    'repeated refreshes keep a single purchase stream subscription',
+    () async {
+      await service.init();
+      await service.refresh();
+      await service.refresh();
+
+      expect(storeClient.purchaseStreamCalls, 1);
+    },
+  );
+
+  test(
+    'recovers on refresh when initial store availability is false',
+    () async {
+      await service.dispose();
+      await storeClient.dispose();
+
+      storeClient = _FakeSubscriptionStoreClient(
+        products: const [
+          StoreProduct(
+            id: monthlyProductId,
+            title: 'Fuglehund Pro',
+            price: '49,00 kr',
+            rawDetails: null,
+          ),
+        ],
+        availabilitySequence: const [false, true],
+        defaultAvailability: true,
+      );
+      service = SubscriptionService(
+        storeClient: storeClient,
+        settingsBox: settingsBox,
+        clock: () => now,
+      );
+
+      await service.init();
+
+      expect(service.state.value.storeAvailable, isFalse);
+      expect(service.state.value.hasMonthlyProduct, isFalse);
+
+      await service.refresh();
+
+      expect(service.state.value.storeAvailable, isTrue);
+      expect(service.state.value.hasMonthlyProduct, isTrue);
+      expect(service.state.value.monthlyPrice, '49,00 kr');
+    },
+  );
+
+  test(
+    'refresh retries missing monthly product and can recover later',
+    () async {
+      await service.dispose();
+      await storeClient.dispose();
+
+      storeClient = _FakeSubscriptionStoreClient(
+        products: const [
+          StoreProduct(
+            id: monthlyProductId,
+            title: 'Fuglehund Pro',
+            price: '49,00 kr',
+            rawDetails: null,
+          ),
+        ],
+        queryProductsSequence: const [
+          <StoreProduct>[],
+          <StoreProduct>[
+            StoreProduct(
+              id: monthlyProductId,
+              title: 'Fuglehund Pro',
+              price: '49,00 kr',
+              rawDetails: null,
+            ),
+          ],
+        ],
+      );
+      service = SubscriptionService(
+        storeClient: storeClient,
+        settingsBox: settingsBox,
+        clock: () => now,
+      );
+
+      await service.init();
+
+      expect(service.state.value.storeAvailable, isTrue);
+      expect(service.state.value.hasMonthlyProduct, isFalse);
+
+      await service.refresh();
+
+      expect(service.state.value.storeAvailable, isTrue);
+      expect(service.state.value.hasMonthlyProduct, isTrue);
+    },
+  );
+
+  test('purchase returns error when store buy returns false', () async {
+    storeClient.buyResult = false;
+
+    expect(await service.purchaseMonthly(), SubscriptionPurchaseResult.error);
+    expect(storeClient.buyCalls, 1);
+  });
+
+  test('purchase returns error when store buy throws', () async {
+    storeClient.buyError = Exception('buy failed');
+
+    expect(await service.purchaseMonthly(), SubscriptionPurchaseResult.error);
+    expect(storeClient.buyCalls, 1);
+  });
+
+  test('restore throws when store is unavailable', () async {
+    await service.dispose();
+    await storeClient.dispose();
+
+    storeClient = _FakeSubscriptionStoreClient(
+      products: const [
+        StoreProduct(
+          id: monthlyProductId,
+          title: 'Fuglehund Pro',
+          price: '49,00 kr',
+          rawDetails: null,
+        ),
+      ],
+      defaultAvailability: false,
     );
-  });
+    service = SubscriptionService(
+      storeClient: storeClient,
+      settingsBox: settingsBox,
+      clock: () => now,
+    );
 
-  test('repeated refreshes keep a single purchase stream subscription',
-      () async {
     await service.init();
-    await service.refresh();
-    await service.refresh();
 
-    expect(storeClient.purchaseStreamCalls, 1);
+    await expectLater(service.restorePurchases(), throwsA(isA<StateError>()));
+    expect(storeClient.restoreCalls, 0);
   });
 
-  test('purchase start returns while store dialog remains pending', () async {
+  test('pending purchase start does not trigger a second store buy', () async {
     storeClient.buyCompleter = Completer<bool>();
 
-    expect(
-      await service.purchaseMonthly(),
-      SubscriptionPurchaseResult.started,
-    );
+    final firstPurchase = service.purchaseMonthly();
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+
+    expect(await service.purchaseMonthly(), SubscriptionPurchaseResult.started);
     expect(storeClient.buyCalls, 1);
-    expect(service.isPro, isFalse);
 
     storeClient.buyCompleter!.complete(true);
-    await Future<void>.delayed(const Duration(milliseconds: 10));
+    expect(await firstPurchase, SubscriptionPurchaseResult.started);
 
     expect(service.isPro, isFalse);
   });
@@ -632,13 +776,11 @@ String _formatStoreDate(DateTime value) {
 }
 
 String _encodeFakeJwsPayload(Map<String, Object?> payload) {
-  final header = base64Url.encode(utf8.encode('{"alg":"none"}')).replaceAll(
-        '=',
-        '',
-      );
-  final body = base64Url.encode(utf8.encode(jsonEncode(payload))).replaceAll(
-        '=',
-        '',
-      );
+  final header = base64Url
+      .encode(utf8.encode('{"alg":"none"}'))
+      .replaceAll('=', '');
+  final body = base64Url
+      .encode(utf8.encode(jsonEncode(payload)))
+      .replaceAll('=', '');
   return '$header.$body.signature';
 }
