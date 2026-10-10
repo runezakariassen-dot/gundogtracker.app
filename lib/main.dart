@@ -7,6 +7,7 @@ import 'package:flutter_phoenix/flutter_phoenix.dart';
 
 import 'firebase_options.dart';
 import 'services/app_startup_service.dart';
+import 'services/ios_storekit_startup.dart';
 import 'ui/boot/app_bootstrapper.dart';
 import 'ui/boot/app_restart_controller.dart';
 import 'ui/locale/locale_controller.dart';
@@ -31,23 +32,27 @@ Future<void> main() async {
     () async {
       WidgetsFlutterBinding.ensureInitialized();
 
-      // Firebase must be initialized before any Firebase services are used.
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+      await runAfterIosStoreKitConfiguration(() async {
+        // Firebase must be initialized before any Firebase services are used.
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+        FirebaseMessaging.onBackgroundMessage(
+          firebaseMessagingBackgroundHandler,
+        );
 
-      final localeController = await AppStartupService.ensureInitialized();
+        final localeController = await AppStartupService.ensureInitialized();
 
-      debugPrint('[BOOT] about to call runApp');
+        debugPrint('[BOOT] about to call runApp');
 
-      runApp(
-        Phoenix(
-          child: _RestartableRoot(localeController: localeController),
-        ),
-      );
+        runApp(
+          Phoenix(
+            child: _RestartableRoot(localeController: localeController),
+          ),
+        );
 
-      debugPrint('[BOOT] runApp called');
+        debugPrint('[BOOT] runApp called');
+      });
     },
     (error, stackTrace) {
       debugPrint('Uncaught zone error: $error');
