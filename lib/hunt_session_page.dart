@@ -232,7 +232,10 @@ class HuntSessionPage extends StatefulWidget {
   final bool showSessionList;
   final bool homeCompact;
   final bool autoStartNow;
-  final int? editSessionKey;
+
+  /// Hive sessions historically used integer keys, while synced sessions use
+  /// their stable string ID as the key.
+  final dynamic editSessionKey;
   final String? pageTitle;
   final ActiveSessionDraft? initialDraft;
   final bool detailMode;
@@ -295,7 +298,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
   final MediaPermissionService _mediaPermissionService =
       MediaPermissionService();
   HuntSession? _editingSession;
-  int? _editingSessionKey;
+  dynamic _editingSessionKey;
   bool get _isEditMode => _editingSession != null && _editingSessionKey != null;
   String? _sessionDogFilterId;
 
@@ -1062,7 +1065,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
   }
 
   // ---------- Media ----------
-  Future<void> _showAddMediaSheet({int? sessionKey}) async {
+  Future<void> _showAddMediaSheet({dynamic sessionKey}) async {
     if (_anyBusy) return;
     final l10n = AppLocalizations.of(context)!;
     final dogKey = _selectedDog?.dogKey;
@@ -1127,7 +1130,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     );
   }
 
-  Future<void> _pickImage(ImageSource source, {int? sessionKey}) async {
+  Future<void> _pickImage(ImageSource source, {dynamic sessionKey}) async {
     if (_anyBusy) return;
     final l10n = AppLocalizations.of(context)!;
     try {
@@ -1152,7 +1155,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     }
   }
 
-  Future<void> _pickImagesFromGallery({int? sessionKey}) async {
+  Future<void> _pickImagesFromGallery({dynamic sessionKey}) async {
     if (_anyBusy) return;
     final l10n = AppLocalizations.of(context)!;
     try {
@@ -1179,7 +1182,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     }
   }
 
-  Future<void> _pickVideosFromGallery({int? sessionKey}) async {
+  Future<void> _pickVideosFromGallery({dynamic sessionKey}) async {
     if (_anyBusy) return;
     final l10n = AppLocalizations.of(context)!;
     try {
@@ -1206,7 +1209,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     }
   }
 
-  Future<void> _storePickedFile(XFile file, {int? sessionKey}) async {
+  Future<void> _storePickedFile(XFile file, {dynamic sessionKey}) async {
     final l10n = AppLocalizations.of(context)!;
     if (_selectedDog == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1453,7 +1456,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
   }
 
   Future<void> _importGpxForExistingSession(
-      int sessionKey, HuntSession session) async {
+      dynamic sessionKey, HuntSession session) async {
     if (_isPickingGpx) return;
 
     if (session.trackId != null) {
@@ -2127,7 +2130,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     );
   }
 
-  void _openMapForSession(int sessionKey, HuntSession session) {
+  void _openMapForSession(dynamic sessionKey, HuntSession session) {
     final l10n = AppLocalizations.of(context)!;
     if (session.trackId == null) return;
     final sessionId = sessionKey.toString();
@@ -2301,7 +2304,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
               actions: [
                 TextButton(
                   onPressed: () async {
-                    final sessionKey = _sessionsBox.keyAt(index) as int;
+                    final sessionKey = _sessionsBox.keyAt(index);
                     await _deleteSessionWithSync(sessionKey, session);
                     if (mounted) setState(() {});
                     Navigator.pop(ctx);
@@ -2423,7 +2426,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
   }
 
   // ---------- Bottom sheet menu ----------
-  void _showSessionMenu(int sessionKey, HuntSession session) {
+  void _showSessionMenu(dynamic sessionKey, HuntSession session) {
     showModalBottomSheet(
       context: context,
       builder: (ctx) {
@@ -2497,7 +2500,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
   }
 
   Future<void> _deleteSessionWithSync(
-    int sessionKey,
+    dynamic sessionKey,
     HuntSession session,
   ) async {
     final deletedAt = DateTime.now().toUtc();
@@ -2547,7 +2550,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
           body: const Center(child: Text('Fant ikke økt')),
         );
       }
-      final int editKey = widget.editSessionKey!;
+      final editKey = widget.editSessionKey!;
       final session = _sessionsBox.get(editKey);
       if (!isSessionVisibleInUi(
         session: session,
@@ -2597,16 +2600,13 @@ class _HuntSessionPageState extends State<HuntSessionPage>
         .where((entry) =>
             !entry.value.isDeleted && activeDogIds.contains(entry.value.dogId))
         .map(
-          (entry) => MapEntry(
-            entry.key as int,
-            entry.value,
-          ),
+          (entry) => MapEntry(entry.key, entry.value),
         )
         .toList())
       ..sort((a, b) => b.value.dateTime.compareTo(a.value.dateTime));
     final latestSessionEntry = sessionEntries.isEmpty
         ? null
-        : (List<MapEntry<int, HuntSession>>.from(sessionEntries)
+        : (List<MapEntry<dynamic, HuntSession>>.from(sessionEntries)
               ..sort((a, b) => b.value.dateTime.compareTo(a.value.dateTime)))
             .first;
     final latestSession = latestSessionEntry?.value;
@@ -4101,7 +4101,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     return _summaryFromPoints(stored.points);
   }
 
-  List<Widget> _buildDetailView(HuntSession session, int sessionKey) {
+  List<Widget> _buildDetailView(HuntSession session, dynamic sessionKey) {
     final l10n = AppLocalizations.of(context)!;
     return [
       Text(
@@ -4299,7 +4299,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     await MediaStorage.deletePersistedMedia(path);
   }
 
-  Widget _buildDetailsExpansion(HuntSession session, int sessionKey) {
+  Widget _buildDetailsExpansion(HuntSession session, dynamic sessionKey) {
     final l10n = AppLocalizations.of(context)!;
     final dateText = DateFormat('dd.MM.yyyy HH:mm').format(session.dateTime);
     final durationText =
@@ -4402,7 +4402,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     );
   }
 
-  void _navigateToEditSession(int sessionKey) {
+  void _navigateToEditSession(dynamic sessionKey) {
     final l10n = AppLocalizations.of(context)!;
     Navigator.push(
       context,

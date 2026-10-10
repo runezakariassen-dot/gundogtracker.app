@@ -2,13 +2,18 @@
 
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
+import 'package:jakthund_app/data/hive_boxes.dart';
 import 'package:jakthund_app/data/hive_path_service.dart';
+import 'package:jakthund_app/domain/domain_constants.dart';
 import 'package:jakthund_app/domain/domain_bootstrap.dart';
 import 'package:jakthund_app/hunt_session_page.dart';
+import 'package:jakthund_app/l10n/app_localizations.dart';
 import 'package:jakthund_app/models/dog.dart';
 import 'package:jakthund_app/models/dog_membership.dart';
+import 'package:jakthund_app/models/hunt_session.dart';
 import 'package:jakthund_app/services/hive_lifecycle_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -141,6 +146,61 @@ void main() {
       );
 
       expect(visibleDogs, isEmpty);
+    });
+
+    testWidgets(
+        'session page renders legacy numeric and stable string Hive keys',
+        (tester) async {
+      const userId = 'legacy-user';
+      const dogId = 'legacy-dog';
+      final settingsBox = Hive.box<dynamic>(appSettingsBoxName);
+      final dogsBox = Hive.box<Dog>(dogsBoxName);
+      final sessionsBox = Hive.box<HuntSession>(sessionsBoxName);
+
+      HuntSession legacySession(String location) => HuntSession(
+            dogId: dogId,
+            dateTime: DateTime(2025, 1, 2, 10),
+            location: location,
+            durationMinutes: 30,
+            birdsSeen: 1,
+            points: 1,
+            flushes: 0,
+            notes: '',
+            // A 1.0.14 record has neither sessionId nor createdByUserId.
+          );
+
+      await tester.runAsync(() async {
+        await settingsBox.put(currentUserIdKey, userId);
+        await dogsBox.put(
+          dogId,
+          Dog(
+            id: dogId,
+            name: 'Legacyhund',
+            dogKey: 'LEGACY-DOG',
+            regNrDisplay: 'NO100/01',
+            ownerUserId: userId,
+          ),
+        );
+        await sessionsBox.put(0, legacySession('Numerisk nøkkel'));
+        await sessionsBox.put(
+          '550e8400-e29b-41d4-a716-446655440000',
+          legacySession('Stabil strengnøkkel'),
+        );
+      });
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          locale: Locale('nb'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: HuntSessionPage(),
+        ),
+      );
+      await tester.pump();
+
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('Numerisk nøkkel'), findsOneWidget);
+      expect(find.textContaining('Stabil strengnøkkel'), findsOneWidget);
     });
 
     // TODO: Move to hunt_session_page_datetime_test.dart after verification
