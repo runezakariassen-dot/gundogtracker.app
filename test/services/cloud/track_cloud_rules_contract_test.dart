@@ -22,7 +22,8 @@ void main() {
     );
 
     expect(block, contains('allow read: if activeMembership(dogId);'));
-    expect(block, contains('allow create: if activeMembership(dogId)'));
+    expect(block, contains('allow create: if resource == null'));
+    expect(block, contains('&& activeMembership(dogId)'));
     expect(
       block,
       contains("activeRole(dogId) in ['owner', 'editor', 'admin']"),

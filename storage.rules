@@ -55,7 +55,8 @@ service firebase.storage {
 
     match /dogs/{dogId}/tracks/{trackId}/track.json {
       allow read: if activeMembership(dogId);
-      allow create: if activeMembership(dogId)
+      allow create: if resource == null
+        && activeMembership(dogId)
         && activeRole(dogId) in ['owner', 'editor', 'admin']
         && request.resource.contentType.matches('application/json.*');
     }
