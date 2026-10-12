@@ -12,6 +12,7 @@ import '../models/dog_media_asset.dart';
 import '../models/dog_milestone_state.dart';
 import '../models/dog_membership.dart';
 import '../models/dog_sex.dart';
+import '../models/gps_point.dart';
 import '../models/hunt_session.dart';
 import '../models/health_record.dart';
 import '../models/outbox_entry.dart';
@@ -45,6 +46,7 @@ void registerDomainAdapters() {
   _registerAdapterIfNeeded(DogMilestoneStateAdapter());
   _registerAdapterIfNeeded(DogMembershipAdapter());
   _registerAdapterIfNeeded(DogSexAdapter());
+  _registerAdapterIfNeeded(GpsPointAdapter());
   _registerAdapterIfNeeded(ActiveSessionDraftAdapter());
   _registerAdapterIfNeeded(HuntSessionAdapter());
   _registerAdapterIfNeeded(SessionTypeAdapter());
