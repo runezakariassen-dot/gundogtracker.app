@@ -16,6 +16,7 @@ import 'firestore_dog_sync_service.dart';
 import 'firestore_heat_cycle_sync_service.dart';
 import 'firestore_session_sync_service.dart';
 import 'firestore_health_record_sync_service.dart';
+import 'firestore_track_sync_service.dart';
 import 'network_awareness_service.dart';
 import 'sync_merge_policy.dart';
 
@@ -32,6 +33,21 @@ typedef HeatCycleFetchHandler = Future<List<DogHeatCycleLog>> Function({
   DateTime? updatedAfter,
 });
 
+typedef TrackDownloadDependency = Future<void> Function({
+  required String trackId,
+  required String cloudDogId,
+});
+
+Future<void> _defaultTrackDownloadDependency({
+  required String trackId,
+  required String cloudDogId,
+}) {
+  return FirestoreTrackSyncService.instance.ensureTrackDownloaded(
+    trackId: trackId,
+    cloudDogId: cloudDogId,
+  );
+}
+
 class PullSyncService {
   PullSyncService({
     FirestoreDogSyncService? dogSyncService,
@@ -47,6 +63,7 @@ class PullSyncService {
     FirestoreHeatCycleSyncService? heatCycleSyncService,
     HeatCycleFetchHandler? heatCycleFetchHandler,
     DogHeatCycleRepository? heatCycleRepository,
+    TrackDownloadDependency? trackDownloadDependency,
     DateTime Function()? now,
   })  : _dogSyncService = dogSyncService ?? FirestoreDogSyncService.instance,
         _sessionSyncService =
@@ -64,6 +81,8 @@ class PullSyncService {
         _heatCycleSyncService = heatCycleSyncService,
         _heatCycleFetchHandler = heatCycleFetchHandler,
         _heatCycleRepository = heatCycleRepository,
+        _trackDownloadDependency =
+            trackDownloadDependency ?? _defaultTrackDownloadDependency,
         _now = now ?? DateTime.now;
 
   final FirestoreDogSyncService _dogSyncService;
@@ -79,6 +98,7 @@ class PullSyncService {
   final FirestoreHeatCycleSyncService? _heatCycleSyncService;
   final HeatCycleFetchHandler? _heatCycleFetchHandler;
   final DogHeatCycleRepository? _heatCycleRepository;
+  final TrackDownloadDependency _trackDownloadDependency;
   final DateTime Function() _now;
 
   Future<void> pullAllVisibleData() async {
@@ -274,6 +294,30 @@ class PullSyncService {
       final cloudSession = entry.value;
       await _pullSessionIfNeeded(cloudSession, dog, sessionId);
     }
+
+    // Delta queries may not return an unchanged session whose Track failed to
+    // download during an earlier app version. Repair every local reference;
+    // the Track dependency exits locally when the Track is already present.
+    final processedTrackIds = cloudSessionEntries
+        .map((entry) => entry.value.trackId?.trim())
+        .whereType<String>()
+        .where((trackId) => trackId.isNotEmpty)
+        .toSet();
+    final localSessions = (_sessionBox ?? sessionsBox()).values.where(
+          (session) => session.dogId == dog.id && session.deletedAt == null,
+        );
+    for (final session in localSessions) {
+      final trackId = session.trackId?.trim();
+      if (trackId == null ||
+          trackId.isEmpty ||
+          processedTrackIds.contains(trackId)) {
+        continue;
+      }
+      await _trackDownloadDependency(
+        trackId: trackId,
+        cloudDogId: cloudId,
+      );
+    }
   }
 
   Future<void> _pullSessionIfNeeded(
@@ -325,10 +369,12 @@ class PullSyncService {
 
     switch (decision) {
       case MergeDecision.insert:
+        await _downloadSessionTrackIfNeeded(cloudSession, dog);
         await _insertLocalSession(localizedCloudSession, sessionId);
         debugPrint('[SYNC][PULL] inserted local session: $sessionId');
         break;
       case MergeDecision.cloudNewer:
+        await _downloadSessionTrackIfNeeded(cloudSession, dog);
         await _updateLocalSession(localizedCloudSession, sessionId);
         debugPrint('[SYNC][PULL] updated local session: $sessionId');
         break;
@@ -336,9 +382,22 @@ class PullSyncService {
         debugPrint('[SYNC][PULL] skipped local newer: $sessionId');
         break;
       case MergeDecision.equal:
+        await _downloadSessionTrackIfNeeded(cloudSession, dog);
         debugPrint('[SYNC][PULL] equal/noop session: $sessionId');
         break;
     }
+  }
+
+  Future<void> _downloadSessionTrackIfNeeded(
+    HuntSession cloudSession,
+    Dog dog,
+  ) async {
+    final trackId = cloudSession.trackId?.trim();
+    if (trackId == null || trackId.isEmpty) return;
+    await _trackDownloadDependency(
+      trackId: trackId,
+      cloudDogId: dog.cloudId!,
+    );
   }
 
   Future<void> _pullHealthRecordsForDog(

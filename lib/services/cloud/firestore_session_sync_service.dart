@@ -8,15 +8,56 @@ import '../../models/dog.dart';
 import '../../models/hunt_session.dart';
 import '../../models/session_type.dart';
 import 'sync_merge_policy.dart';
+import 'firestore_track_sync_service.dart';
+
+typedef TrackUploadDependency = Future<void> Function({
+  required String trackId,
+  required String sessionId,
+  required String cloudDogId,
+});
+typedef SessionTrackDownloadDependency = Future<void> Function({
+  required String trackId,
+  required String cloudDogId,
+});
+
+Future<void> _defaultTrackUploadDependency({
+  required String trackId,
+  required String sessionId,
+  required String cloudDogId,
+}) {
+  return FirestoreTrackSyncService.instance.ensureTrackUploaded(
+    trackId: trackId,
+    sessionId: sessionId,
+    cloudDogId: cloudDogId,
+  );
+}
+
+Future<void> _defaultTrackDownloadDependency({
+  required String trackId,
+  required String cloudDogId,
+}) {
+  return FirestoreTrackSyncService.instance.ensureTrackDownloaded(
+    trackId: trackId,
+    cloudDogId: cloudDogId,
+  );
+}
 
 class FirestoreSessionSyncService {
-  FirestoreSessionSyncService._();
+  FirestoreSessionSyncService({
+    TrackUploadDependency? trackUploadDependency,
+    SessionTrackDownloadDependency? trackDownloadDependency,
+  })  : _trackDownloadDependency =
+            trackDownloadDependency ?? _defaultTrackDownloadDependency,
+        _trackUploadDependency =
+            trackUploadDependency ?? _defaultTrackUploadDependency;
 
   static final FirestoreSessionSyncService instance =
-      FirestoreSessionSyncService._();
+      FirestoreSessionSyncService();
 
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static final FirebaseAuth _auth = FirebaseAuth.instance;
+  final TrackUploadDependency _trackUploadDependency;
+  final SessionTrackDownloadDependency _trackDownloadDependency;
 
   static void _printLog(String message) {
     // ignore: avoid_print
@@ -98,6 +139,15 @@ class FirestoreSessionSyncService {
         'sessionId=$effectiveSessionId dogId=${session.dogId}',
       );
       return;
+    }
+
+    final trackId = session.trackId?.trim();
+    if (trackId != null && trackId.isNotEmpty) {
+      await _trackUploadDependency(
+        trackId: trackId,
+        sessionId: effectiveSessionId,
+        cloudDogId: cloudDogId,
+      );
     }
 
     final currentUid = _auth.currentUser?.uid;
@@ -377,6 +427,14 @@ class FirestoreSessionSyncService {
           updatedAt: entry.value.updatedAt,
         );
         _printLog('[CLOUD][SESSION] restore candidate: $sessionId');
+
+        final trackId = cloudSession.trackId?.trim();
+        if (trackId != null && trackId.isNotEmpty) {
+          await _trackDownloadDependency(
+            trackId: trackId,
+            cloudDogId: normalizedDogCloudId,
+          );
+        }
 
         final localSession = box.get(hiveKey);
         if (localSession == null) {

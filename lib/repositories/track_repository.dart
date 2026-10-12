@@ -5,7 +5,11 @@ import '../data/hive_boxes.dart';
 import '../models/track.dart';
 
 class TrackRepository {
-  Box<Track> _box() => tracksBox();
+  TrackRepository({Box<Track>? box}) : _providedBox = box;
+
+  final Box<Track>? _providedBox;
+
+  Box<Track> _box() => _providedBox ?? tracksBox();
 
   Future<Track?> getTrack(String trackId) async {
     return _box().get(trackId);

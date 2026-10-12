@@ -163,6 +163,45 @@ void main() {
     expect(box.values.every((task) => task.status == SyncStatus.sent), isTrue);
   });
 
+  test('session upload failure stays retryable in the outbox', () async {
+    final outboxService = SyncOutboxService(
+      box: box,
+      enableAutoSync: false,
+    );
+    final processor = SyncOutboxProcessor(
+      outboxService: outboxService,
+      networkAwarenessService: FakeNetworkAwarenessService(online: true),
+      sessionUpsertHandler: ({
+        required String sessionId,
+        required HuntSession session,
+      }) async {
+        throw StateError('temporary Track upload failure');
+      },
+    );
+    await outboxService.enqueueUpsertSession(
+      'session-track-retry',
+      HuntSession(
+        dogId: 'dog-1',
+        dateTime: DateTime(2024, 1, 1, 9),
+        location: 'Skog',
+        durationMinutes: 45,
+        birdsSeen: 2,
+        points: 3,
+        flushes: 1,
+        notes: 'Track retry',
+        trackId: 'track-1',
+        sessionType: SessionType.training,
+      ),
+    );
+
+    await processor.runOnce();
+
+    final task = box.values.single;
+    expect(task.status, SyncStatus.failed);
+    expect(task.retryCount, 1);
+    expect(task.lastError, contains('temporary Track upload failure'));
+  });
+
   test('dog_delete pushes tombstone to cloud and marks task sent', () async {
     final outboxService = SyncOutboxService(
       box: box,

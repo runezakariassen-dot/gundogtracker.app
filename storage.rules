@@ -52,5 +52,12 @@ service firebase.storage {
       allow read: if activeMembership(dogId);
       allow create, update, delete: if canWriteSessionMedia(dogId);
     }
+
+    match /dogs/{dogId}/tracks/{trackId}/track.json {
+      allow read: if activeMembership(dogId);
+      allow create: if activeMembership(dogId)
+        && activeRole(dogId) in ['owner', 'editor', 'admin']
+        && request.resource.contentType.matches('application/json.*');
+    }
   }
 }

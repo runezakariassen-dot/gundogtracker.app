@@ -976,6 +976,184 @@ void main() {
     expect(fakeSessionSync.fallbackFullFetches, 1);
     expect(sessionBox.get('session-5')?.notes, 'fallback session');
   });
+
+  test('equal session with missing Track still triggers Track download',
+      () async {
+    final updatedAt = DateTime.utc(2026, 3, 9, 12);
+    final dog = _buildDog();
+    final session = _buildSession(
+      dogId: dog.id,
+      updatedAt: updatedAt,
+      notes: 'equal session',
+      trackId: 'track-1',
+    );
+    await sessionBox.put('session-1', session);
+    fakeDogSync = FakeFirestoreDogSyncService(dogsToReturn: <Dog>[dog]);
+    fakeSessionSync = FakeFirestoreSessionSyncService(
+      fullEntries: <String, List<MapEntry<String, HuntSession>>>{
+        dog.cloudId!: <MapEntry<String, HuntSession>>[
+          MapEntry<String, HuntSession>('session-1', session),
+        ],
+      },
+    );
+    final downloads = <String>[];
+    final service = PullSyncService(
+      dogSyncService: fakeDogSync,
+      sessionSyncService: fakeSessionSync,
+      networkAwarenessService: fakeNetwork,
+      syncStateStore: syncStateStore,
+      outboxService: outboxService,
+      dogBox: dogBox,
+      sessionBox: sessionBox,
+      trackDownloadDependency: ({
+        required String trackId,
+        required String cloudDogId,
+      }) async {
+        downloads.add('$cloudDogId/$trackId');
+      },
+      now: () => DateTime.utc(2026, 3, 10),
+    );
+
+    await service.pullAllVisibleData();
+
+    expect(downloads, <String>['cloud-dog-1/track-1']);
+    expect(sessionBox.get('session-1')?.notes, 'equal session');
+  });
+
+  test('local-newer session does not download an older cloud Track', () async {
+    final dog = _buildDog();
+    final localSession = _buildSession(
+      dogId: dog.id,
+      updatedAt: DateTime.utc(2026, 3, 10),
+      notes: 'newer local session',
+      trackId: 'local-track',
+    );
+    final cloudSession = _buildSession(
+      dogId: dog.id,
+      updatedAt: DateTime.utc(2026, 3, 9),
+      notes: 'older cloud session',
+      trackId: 'cloud-track',
+    );
+    await sessionBox.put('session-1', localSession);
+    fakeDogSync = FakeFirestoreDogSyncService(dogsToReturn: <Dog>[dog]);
+    fakeSessionSync = FakeFirestoreSessionSyncService(
+      fullEntries: <String, List<MapEntry<String, HuntSession>>>{
+        dog.cloudId!: <MapEntry<String, HuntSession>>[
+          MapEntry<String, HuntSession>('session-1', cloudSession),
+        ],
+      },
+    );
+    final downloads = <String>[];
+    final service = PullSyncService(
+      dogSyncService: fakeDogSync,
+      sessionSyncService: fakeSessionSync,
+      networkAwarenessService: fakeNetwork,
+      syncStateStore: syncStateStore,
+      outboxService: outboxService,
+      dogBox: dogBox,
+      sessionBox: sessionBox,
+      trackDownloadDependency: ({
+        required String trackId,
+        required String cloudDogId,
+      }) async {
+        downloads.add('$cloudDogId/$trackId');
+      },
+      now: () => DateTime.utc(2026, 3, 11),
+    );
+
+    await service.pullAllVisibleData();
+
+    expect(downloads, isNot(contains('cloud-dog-1/cloud-track')));
+    expect(sessionBox.get('session-1')?.notes, 'newer local session');
+    expect(sessionBox.get('session-1')?.trackId, 'local-track');
+  });
+
+  test('Track download failure preserves pull cursor so next pull retries',
+      () async {
+    final dog = _buildDog();
+    final session = _buildSession(
+      dogId: dog.id,
+      updatedAt: DateTime.utc(2026, 3, 9, 12),
+      notes: 'download retry',
+      trackId: 'track-1',
+    );
+    fakeDogSync = FakeFirestoreDogSyncService(dogsToReturn: <Dog>[dog]);
+    fakeSessionSync = FakeFirestoreSessionSyncService(
+      fullEntries: <String, List<MapEntry<String, HuntSession>>>{
+        dog.cloudId!: <MapEntry<String, HuntSession>>[
+          MapEntry<String, HuntSession>('session-1', session),
+        ],
+      },
+    );
+    var attempts = 0;
+    final service = PullSyncService(
+      dogSyncService: fakeDogSync,
+      sessionSyncService: fakeSessionSync,
+      networkAwarenessService: fakeNetwork,
+      syncStateStore: syncStateStore,
+      outboxService: outboxService,
+      dogBox: dogBox,
+      sessionBox: sessionBox,
+      trackDownloadDependency: ({
+        required String trackId,
+        required String cloudDogId,
+      }) async {
+        attempts++;
+        if (attempts == 1) throw StateError('temporary download failure');
+      },
+      now: () => DateTime.utc(2026, 3, 10),
+    );
+
+    await expectLater(service.pullAllVisibleData(), throwsStateError);
+    expect(syncStateStore.getLastSuccessfulPullAt(), isNull);
+    expect(sessionBox.get('session-1'), isNull);
+
+    await service.pullAllVisibleData();
+    expect(attempts, 2);
+    expect(sessionBox.get('session-1')?.trackId, 'track-1');
+  });
+
+  test('delta pull repairs Track for unchanged local session', () async {
+    final cursor = DateTime.utc(2026, 3, 10);
+    final dog = _buildDog();
+    await sessionBox.put(
+      'session-old',
+      _buildSession(
+        dogId: dog.id,
+        updatedAt: DateTime.utc(2026, 3, 9),
+        notes: 'already synced session',
+        trackId: 'track-old',
+      ),
+    );
+    await syncStateStore.setLastSuccessfulPullAt(cursor);
+    fakeDogSync = FakeFirestoreDogSyncService(dogsToReturn: <Dog>[dog]);
+    fakeSessionSync = FakeFirestoreSessionSyncService(
+      deltaEntries: <String, List<MapEntry<String, HuntSession>>>{
+        dog.cloudId!: const <MapEntry<String, HuntSession>>[],
+      },
+    );
+    final downloads = <String>[];
+    final service = PullSyncService(
+      dogSyncService: fakeDogSync,
+      sessionSyncService: fakeSessionSync,
+      networkAwarenessService: fakeNetwork,
+      syncStateStore: syncStateStore,
+      outboxService: outboxService,
+      dogBox: dogBox,
+      sessionBox: sessionBox,
+      trackDownloadDependency: ({
+        required String trackId,
+        required String cloudDogId,
+      }) async {
+        downloads.add('$cloudDogId/$trackId');
+      },
+      now: () => DateTime.utc(2026, 3, 11),
+    );
+
+    await service.pullAllVisibleData();
+
+    expect(downloads, <String>['cloud-dog-1/track-old']);
+  });
 }
 
 Dog _buildDog({
@@ -1000,6 +1178,7 @@ HuntSession _buildSession({
   required DateTime updatedAt,
   required String notes,
   DateTime? deletedAt,
+  String? trackId,
 }) {
   return HuntSession(
     dogId: dogId,
@@ -1011,6 +1190,7 @@ HuntSession _buildSession({
     points: 8,
     flushes: 1,
     notes: notes,
+    trackId: trackId,
     sessionType: SessionType.training,
     updatedAt: updatedAt,
     deletedAt: deletedAt,

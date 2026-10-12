@@ -235,7 +235,16 @@ service cloud.firestore {
       }
 
       match /tracks/{trackId} {
-        allow read, create, update: if isDogMember(dogId);
+        allow read: if isDogMember(dogId);
+        allow create: if canManageDogMedia(dogId)
+          && request.resource.data.trackId == trackId
+          && request.resource.data.cloudDogId == dogId
+          && request.resource.data.dogId == dogId
+          && request.resource.data.schemaVersion == 1
+          && request.resource.data.pointCount is int
+          && request.resource.data.pointCount >= 0
+          && request.resource.data.storagePath
+            == 'dogs/' + dogId + '/tracks/' + trackId + '/track.json';
       }
 
       match /media/{mediaId} {
