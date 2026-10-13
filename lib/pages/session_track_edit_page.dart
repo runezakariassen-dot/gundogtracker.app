@@ -133,7 +133,7 @@ class _SessionTrackEditPageState extends State<SessionTrackEditPage> {
     final time = MaterialLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Rediger økt')),
+      appBar: AppBar(title: const Text('Rediger GPS-spor')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),

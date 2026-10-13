@@ -1478,9 +1478,8 @@ class _SessionDetailPageState extends State<SessionDetailPage>
     int sessionKey,
     HuntSession session,
   ) async {
-    final trackId = session.trackId;
-    final rawTrack = trackId == null ? null : _tracksStore.get(trackId);
-    if (rawTrack == null || rawTrack.points.isEmpty) {
+    final rawTrack = _editableTrackForSession(session);
+    if (rawTrack == null) {
       _showSnackL10n((l10n) => l10n.session_track_missing_or_empty);
       return;
     }
@@ -1501,6 +1500,13 @@ class _SessionDetailPageState extends State<SessionDetailPage>
       ),
     );
     if (changed == true && mounted) setState(() {});
+  }
+
+  Track? _editableTrackForSession(HuntSession session) {
+    final trackId = session.trackId?.trim();
+    if (trackId == null || trackId.isEmpty) return null;
+    final track = _tracksStore.get(trackId);
+    return track == null || track.points.isEmpty ? null : track;
   }
 
   Future<void> _exportGpxForSession(
@@ -1581,16 +1587,18 @@ class _SessionDetailPageState extends State<SessionDetailPage>
                         _exportGpxForSession(sessionKey, session);
                       },
               ),
-              if (session.trackId != null)
+              if (_editableTrackForSession(session) != null)
                 ListTile(
+                  key: ValueKey('edit-gps-track-$sessionKey'),
                   leading: const Icon(Icons.content_cut),
-                  title: const Text('Rediger økt'),
+                  title: const Text('Rediger GPS-spor'),
                   onTap: () {
                     Navigator.pop(ctx);
                     _openTrackEditor(sessionKey, session);
                   },
                 ),
               ListTile(
+                key: ValueKey('edit-session-$sessionKey'),
                 leading: const Icon(Icons.edit),
                 title: Text(l10n.session_detail_session_menu_edit),
                 onTap: () {
@@ -2004,13 +2012,27 @@ class _SessionDetailPageState extends State<SessionDetailPage>
         ),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: FilledButton(
-              onPressed:
-                  _anyBusy ? null : () => _navigateToEditSession(sessionKey),
-              child: Text(l10n.session_detail_edit_title),
-            ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              if (_editableTrackForSession(session) != null) ...[
+                OutlinedButton.icon(
+                  key: ValueKey('edit-gps-track-$sessionKey'),
+                  onPressed: _anyBusy
+                      ? null
+                      : () => _openTrackEditor(sessionKey, session),
+                  icon: const Icon(Icons.content_cut),
+                  label: const Text('Rediger GPS-spor'),
+                ),
+                const SizedBox(width: 8),
+              ],
+              FilledButton(
+                key: ValueKey('edit-session-$sessionKey'),
+                onPressed:
+                    _anyBusy ? null : () => _navigateToEditSession(sessionKey),
+                child: Text(l10n.session_detail_edit_title),
+              ),
+            ],
           ),
         ),
       ],
@@ -2900,21 +2922,28 @@ class _SessionDetailPageState extends State<SessionDetailPage>
                             ),
                           ),
                           const SizedBox(height: 8),
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton.icon(
-                              icon: const Icon(Icons.content_cut),
-                              label: const Text('Rediger økt'),
-                              onPressed: _anyBusy ||
-                                      filteredEntries[i].value.trackId == null
-                                  ? null
-                                  : () => _openTrackEditor(
-                                        filteredEntries[i].key,
-                                        filteredEntries[i].value,
-                                      ),
+                          if (_editableTrackForSession(
+                                filteredEntries[i].value,
+                              ) !=
+                              null) ...[
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton.icon(
+                                key: ValueKey(
+                                  'edit-gps-track-${filteredEntries[i].key}',
+                                ),
+                                icon: const Icon(Icons.content_cut),
+                                label: const Text('Rediger GPS-spor'),
+                                onPressed: _anyBusy
+                                    ? null
+                                    : () => _openTrackEditor(
+                                          filteredEntries[i].key,
+                                          filteredEntries[i].value,
+                                        ),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
+                            const SizedBox(height: 8),
+                          ],
                           SizedBox(
                             width: double.infinity,
                             child: FilledButton.icon(

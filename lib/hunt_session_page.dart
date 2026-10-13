@@ -35,6 +35,7 @@ import 'package:jakthund_app/models/session_type.dart';
 import 'package:jakthund_app/models/track.dart';
 import 'package:jakthund_app/pages/dog_editor_page.dart';
 import 'package:jakthund_app/pages/session_map_page.dart';
+import 'package:jakthund_app/pages/session_track_edit_page.dart';
 import 'package:jakthund_app/pages/session_media_image_helper.dart';
 import 'package:jakthund_app/pages/session_media_video_helper.dart';
 import 'package:jakthund_app/repositories/session_repository.dart';
@@ -46,6 +47,7 @@ import 'package:jakthund_app/services/gpx_importer.dart';
 import 'package:jakthund_app/services/hive_lifecycle_service.dart';
 import 'package:jakthund_app/services/media_permission_service.dart';
 import 'package:jakthund_app/services/media_storage.dart';
+import 'package:jakthund_app/services/session_track_edit_permission_service.dart';
 import 'package:jakthund_app/services/user_identity_service.dart';
 import 'package:jakthund_app/ui/components/meta_chip.dart';
 import 'package:jakthund_app/ui/milestones/milestone_celebration_presenter.dart';
@@ -2160,6 +2162,37 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     );
   }
 
+  Track? _editableTrackForSession(HuntSession session) {
+    final trackId = session.trackId?.trim();
+    if (trackId == null || trackId.isEmpty) return null;
+    final track = _tracksStore.get(trackId);
+    return track == null || track.points.isEmpty ? null : track;
+  }
+
+  Future<void> _openTrackEditor(
+    dynamic sessionKey,
+    HuntSession session,
+  ) async {
+    final rawTrack = _editableTrackForSession(session);
+    if (rawTrack == null) return;
+
+    final changed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SessionTrackEditPage(
+          sessionKey: sessionKey,
+          session: session,
+          rawTrack: rawTrack,
+          canEdit: SessionTrackEditPermissionService().canEdit(
+            dogId: session.dogId,
+            dogKey: session.dogKey,
+          ),
+        ),
+      ),
+    );
+    if (changed == true && mounted) setState(() {});
+  }
+
   // ---------- Edit/delete ----------
   // ignore: unused_element
   Future<void> _editSession(int index, HuntSession session) async {
@@ -2447,7 +2480,18 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                         _exportGpxForSession(session);
                       },
               ),
+              if (_editableTrackForSession(session) != null)
+                ListTile(
+                  key: ValueKey('edit-gps-track-$sessionKey'),
+                  leading: const Icon(Icons.content_cut),
+                  title: const Text('Rediger GPS-spor'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _openTrackEditor(sessionKey, session);
+                  },
+                ),
               ListTile(
+                key: ValueKey('edit-session-$sessionKey'),
                 leading: const Icon(Icons.edit),
                 title: Text(l10n.session_menu_edit),
                 onTap: () {
@@ -4024,6 +4068,28 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                   ),
                                 ),
                                 const SizedBox(height: 8),
+                                if (_editableTrackForSession(
+                                      filteredEntries[i].value,
+                                    ) !=
+                                    null) ...[
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: OutlinedButton.icon(
+                                      key: ValueKey(
+                                        'edit-gps-track-${filteredEntries[i].key}',
+                                      ),
+                                      icon: const Icon(Icons.content_cut),
+                                      label: const Text('Rediger GPS-spor'),
+                                      onPressed: _anyBusy
+                                          ? null
+                                          : () => _openTrackEditor(
+                                                filteredEntries[i].key,
+                                                filteredEntries[i].value,
+                                              ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                ],
                                 SizedBox(
                                   width: double.infinity,
                                   child: FilledButton.icon(
@@ -4364,13 +4430,27 @@ class _HuntSessionPageState extends State<HuntSessionPage>
         ),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: FilledButton(
-              onPressed:
-                  _anyBusy ? null : () => _navigateToEditSession(sessionKey),
-              child: Text(l10n.hunt_session_title_edit),
-            ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              if (_editableTrackForSession(session) != null) ...[
+                OutlinedButton.icon(
+                  key: ValueKey('edit-gps-track-$sessionKey'),
+                  onPressed: _anyBusy
+                      ? null
+                      : () => _openTrackEditor(sessionKey, session),
+                  icon: const Icon(Icons.content_cut),
+                  label: const Text('Rediger GPS-spor'),
+                ),
+                const SizedBox(width: 8),
+              ],
+              FilledButton(
+                key: ValueKey('edit-session-$sessionKey'),
+                onPressed:
+                    _anyBusy ? null : () => _navigateToEditSession(sessionKey),
+                child: Text(l10n.hunt_session_title_edit),
+              ),
+            ],
           ),
         ),
       ],
