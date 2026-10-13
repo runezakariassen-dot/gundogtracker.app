@@ -31,13 +31,18 @@ import 'package:jakthund_app/models/dog_membership.dart';
 import 'package:jakthund_app/models/gps_point.dart';
 import 'package:jakthund_app/models/gps_track.dart';
 import 'package:jakthund_app/models/hunt_session.dart';
+import 'package:jakthund_app/models/session_track_edit.dart';
 import 'package:jakthund_app/models/track.dart';
 import 'package:jakthund_app/hunt_session_page.dart';
 import 'package:jakthund_app/pages/session_map_page.dart';
+import 'package:jakthund_app/pages/session_track_edit_page.dart';
+import 'package:jakthund_app/repositories/session_track_edit_repository.dart';
 import 'package:jakthund_app/repositories/session_repository.dart';
 import 'package:jakthund_app/repositories/track_repository.dart';
 import 'package:jakthund_app/services/gpx_file_loader.dart';
 import 'package:jakthund_app/services/gpx_importer.dart';
+import 'package:jakthund_app/services/effective_track_resolver.dart';
+import 'package:jakthund_app/services/session_track_edit_permission_service.dart';
 import 'package:jakthund_app/pages/session_media_image_helper.dart';
 import 'package:jakthund_app/pages/session_media_video_helper.dart';
 import 'package:jakthund_app/services/media_storage.dart';
@@ -89,6 +94,7 @@ class _SessionDetailPageState extends State<SessionDetailPage>
     with WidgetsBindingObserver {
   final TrackRepository _trackRepository = TrackRepository();
   final SessionRepository _sessionRepository = SessionRepository();
+  late final SessionTrackEditRepository _sessionTrackEditRepository;
   final SyncOutboxService _syncOutboxService = SyncOutboxService();
   final SyncStatusService _syncStatusService = SyncStatusService();
   late final LocalHuntSessionRepository _huntSessionRepository;
@@ -118,6 +124,7 @@ class _SessionDetailPageState extends State<SessionDetailPage>
   late final Box<DogMembership> _membershipBox;
   late final Box<GpsTrack> _tracksBox;
   late final Box<Track> _tracksStore;
+  late final Box<SessionTrackEdit> _sessionTrackEditsBox;
   late final Box<String> _birdSpeciesBox;
 
   // Selection
@@ -175,6 +182,11 @@ class _SessionDetailPageState extends State<SessionDetailPage>
         HiveLifecycleService.getBox<DogMembership>(dogMembershipsBoxName);
     _tracksBox = HiveLifecycleService.getBox<GpsTrack>(gpsTracksBoxName);
     _tracksStore = HiveLifecycleService.getBox<Track>(tracksBoxName);
+    _sessionTrackEditsBox =
+        HiveLifecycleService.getBox<SessionTrackEdit>(sessionTrackEditsBoxName);
+    _sessionTrackEditRepository = SessionTrackEditRepository(
+      box: _sessionTrackEditsBox,
+    );
     _birdSpeciesBox = HiveLifecycleService.getBox<String>(birdSpeciesBoxName);
 
     _dogMilestoneStateRepository = DogMilestoneStateRepository();
@@ -965,13 +977,15 @@ class _SessionDetailPageState extends State<SessionDetailPage>
         );
       }
 
-      final sessionId = sessionKey.toString();
+      final localSessionKey = sessionKey.toString();
+      final sessionId = _stableSessionId(sessionKey, session);
 
       await _sessionRepository.replaceTrackForSession(
-        sessionId,
+        localSessionKey,
         points,
         source: 'gpx_import',
       );
+      await _sessionTrackEditRepository.delete(sessionId);
 
       final updatedSession = _sessionsBox.get(sessionKey);
       if (updatedSession != null) {
@@ -1428,8 +1442,7 @@ class _SessionDetailPageState extends State<SessionDetailPage>
     if (session.trackId == null) return;
 
     final l10n = AppLocalizations.of(context)!;
-    final sessionId = sessionKey.toString();
-    final preview = _sessionTrackPreview[sessionId];
+    final sessionId = _stableSessionId(sessionKey, session);
     final titleStyle = Theme.of(context).textTheme.titleLarge;
 
     final titleSpan = TextSpan(
@@ -1449,7 +1462,6 @@ class _SessionDetailPageState extends State<SessionDetailPage>
         builder: (_) => SessionMapPage(
           sessionId: sessionId,
           trackId: session.trackId,
-          previewPoints: preview,
           title: l10n.session_detail_map_title,
           titleSpan: titleSpan,
         ),
@@ -1457,19 +1469,65 @@ class _SessionDetailPageState extends State<SessionDetailPage>
     );
   }
 
-  Future<void> _exportGpxForSession(HuntSession session) async {
+  String _stableSessionId(Object sessionKey, HuntSession session) {
+    final id = session.sessionId?.trim();
+    return id != null && id.isNotEmpty ? id : sessionKey.toString();
+  }
+
+  Future<void> _openTrackEditor(
+    int sessionKey,
+    HuntSession session,
+  ) async {
+    final trackId = session.trackId;
+    final rawTrack = trackId == null ? null : _tracksStore.get(trackId);
+    if (rawTrack == null || rawTrack.points.isEmpty) {
+      _showSnackL10n((l10n) => l10n.session_track_missing_or_empty);
+      return;
+    }
+    final changed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SessionTrackEditPage(
+          sessionKey: sessionKey,
+          session: session,
+          rawTrack: rawTrack,
+          canEdit: SessionTrackEditPermissionService().canEdit(
+            dogId: session.dogId,
+            dogKey: session.dogKey,
+          ),
+          editRepository: _sessionTrackEditRepository,
+          outboxService: _syncOutboxService,
+        ),
+      ),
+    );
+    if (changed == true && mounted) setState(() {});
+  }
+
+  Future<void> _exportGpxForSession(
+    int sessionKey,
+    HuntSession session,
+  ) async {
     if (_isExportingGpx) return;
     setState(() => _isExportingGpx = true);
 
     try {
-      final key = session.trackKey;
-      if (key == null) {
-        _showSnackL10n((l10n) => l10n.session_export_no_track);
-        return;
+      List<GpsPoint>? points;
+      final modernTrackId = session.trackId;
+      if (modernTrackId != null) {
+        final rawTrack = _tracksStore.get(modernTrackId);
+        if (rawTrack != null) {
+          final edit = _sessionTrackEditRepository.get(
+            _stableSessionId(sessionKey, session),
+          );
+          points =
+              const EffectiveTrackResolver().resolve(rawTrack, edit).points;
+        }
       }
-
-      final track = _tracksBox.get(key);
-      if (track == null || track.points.isEmpty) {
+      if (points == null) {
+        final legacyKey = session.trackKey;
+        points = legacyKey == null ? null : _tracksBox.get(legacyKey)?.points;
+      }
+      if (points == null || points.isEmpty) {
         _showSnackL10n((l10n) => l10n.session_track_missing_or_empty);
         return;
       }
@@ -1477,7 +1535,7 @@ class _SessionDetailPageState extends State<SessionDetailPage>
       final dogLabel = _dogLabelForId(session.dogId);
       final gpx = GPXExporter.exportToGpx(
         trackName: '${dogLabel}_${session.dateTime.toIso8601String()}',
-        points: track.points,
+        points: points,
       );
 
       final home = Platform.environment['HOME'] ?? '';
@@ -1520,9 +1578,18 @@ class _SessionDetailPageState extends State<SessionDetailPage>
                     ? null
                     : () {
                         Navigator.pop(ctx);
-                        _exportGpxForSession(session);
+                        _exportGpxForSession(sessionKey, session);
                       },
               ),
+              if (session.trackId != null)
+                ListTile(
+                  leading: const Icon(Icons.content_cut),
+                  title: const Text('Rediger økt'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _openTrackEditor(sessionKey, session);
+                  },
+                ),
               ListTile(
                 leading: const Icon(Icons.edit),
                 title: Text(l10n.session_detail_session_menu_edit),
@@ -2726,10 +2793,14 @@ class _SessionDetailPageState extends State<SessionDetailPage>
                               final sessionKey = filteredEntries[i].key;
                               final sessionId = sessionKey.toString();
                               final summary = _getSummaryForSession(
-                                sessionId,
+                                _stableSessionId(
+                                  sessionKey,
+                                  filteredEntries[i].value,
+                                ),
                                 filteredEntries[i].value,
                                 _tracksStore,
                                 _sessionTrackPreview,
+                                _sessionTrackEditRepository,
                               );
                               return Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -2831,6 +2902,21 @@ class _SessionDetailPageState extends State<SessionDetailPage>
                           const SizedBox(height: 8),
                           SizedBox(
                             width: double.infinity,
+                            child: OutlinedButton.icon(
+                              icon: const Icon(Icons.content_cut),
+                              label: const Text('Rediger økt'),
+                              onPressed: _anyBusy ||
+                                      filteredEntries[i].value.trackId == null
+                                  ? null
+                                  : () => _openTrackEditor(
+                                        filteredEntries[i].key,
+                                        filteredEntries[i].value,
+                                      ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
                             child: FilledButton.icon(
                               icon: const Icon(Icons.map),
                               label: Text(l10n.session_map_label),
@@ -2857,6 +2943,7 @@ class _SessionDetailPageState extends State<SessionDetailPage>
                               onPressed: (_anyBusy || _isExportingGpx)
                                   ? null
                                   : () => _exportGpxForSession(
+                                        filteredEntries[i].key,
                                         filteredEntries[i].value,
                                       ),
                             ),
@@ -2893,19 +2980,23 @@ _TrackSummary? _getSummaryForSession(
   HuntSession session,
   Box<Track> tracksStore,
   Map<String, List<GpsPoint>> previewMap,
+  SessionTrackEditRepository editRepository,
 ) {
-  final preview = previewMap[sessionId];
-  if (preview != null && preview.isNotEmpty) {
-    return _summaryFromPoints(preview);
+  final trackId = session.trackId;
+  if (trackId != null) {
+    final stored = tracksStore.get(trackId);
+    if (stored != null && stored.points.isNotEmpty) {
+      final points = const EffectiveTrackResolver()
+          .resolve(stored, editRepository.get(sessionId))
+          .points;
+      return _summaryFromPoints(points);
+    }
   }
 
-  final trackId = session.trackId;
-  if (trackId == null) return null;
-
-  final stored = tracksStore.get(trackId);
-  if (stored == null || stored.points.isEmpty) return null;
-
-  return _summaryFromPoints(stored.points);
+  final preview = previewMap[sessionId];
+  return preview == null || preview.isEmpty
+      ? null
+      : _summaryFromPoints(preview);
 }
 
 String _formatDuration(
@@ -2956,15 +3047,15 @@ class _TrackSummaryWidget extends StatelessWidget {
         ),
         if (summary.start != null)
           Text(
-            l10n.session_detail_track_summary_start(
+            'GPS-${l10n.session_detail_track_summary_start(
               timeFormat.format(summary.start!),
-            ),
+            )}',
           ),
         if (summary.end != null)
           Text(
-            l10n.session_detail_track_summary_end(
+            'GPS-${l10n.session_detail_track_summary_end(
               timeFormat.format(summary.end!),
-            ),
+            )}',
           ),
         if (distance != null)
           Text(
@@ -2978,9 +3069,9 @@ class _TrackSummaryWidget extends StatelessWidget {
           ),
         if (duration != null)
           Text(
-            l10n.session_detail_track_summary_duration(
+            'GPS-${l10n.session_detail_track_summary_duration(
               _formatDuration(duration, l10n),
-            ),
+            )}',
           ),
       ],
     );

@@ -25,6 +25,7 @@ const projectId = "demo-jakthund-track-rules";
 const dogId = "dog-track-rules";
 const otherDogId = "dog-other";
 const existingTrackId = "track-existing";
+const sessionId = "session-with-track-edit";
 const activeRoles = ["owner", "admin", "editor", "viewer"];
 const writers = new Set(["owner", "admin", "editor"]);
 const inactiveMembers = ["pending", "revoked"];
@@ -81,6 +82,35 @@ function rawTrack(trackId) {
   }));
 }
 
+function trackEdit() {
+  return {
+    schemaVersion: 1,
+    sourceTrackId: existingTrackId,
+    startIndexInclusive: 1,
+    endIndexExclusive: 3,
+    startTimeAnchor: new Date("2026-01-01T10:01:00.000Z"),
+    endTimeAnchor: new Date("2026-01-01T10:03:00.000Z"),
+    sourcePointCount: 4,
+    sourceFingerprint: "deadbeef",
+    createdAt: new Date("2026-01-01T11:00:00.000Z"),
+    updatedAt: new Date("2026-01-01T11:00:00.000Z"),
+    updatedByUserId: "owner",
+  };
+}
+
+function sessionDocument(createdByUserId = "owner") {
+  return {
+    id: sessionId,
+    sessionId,
+    dogId,
+    cloudDogId: dogId,
+    createdByUserId,
+    dateTime: new Date("2026-01-01T10:00:00.000Z"),
+    updatedAt: new Date("2026-01-01T11:00:00.000Z"),
+    trackEdit: trackEdit(),
+  };
+}
+
 async function seedFixture() {
   await testEnv.withSecurityRulesDisabled(async (context) => {
     const db = context.firestore();
@@ -108,6 +138,10 @@ async function seedFixture() {
       trackDocument(db, dogId, existingTrackId),
       metadata(dogId, existingTrackId),
     );
+    await setDoc(
+      doc(db, "dogs", dogId, "sessions", sessionId),
+      sessionDocument(),
+    );
     await uploadBytes(
       trackObject(storage, dogId, existingTrackId),
       rawTrack(existingTrackId),
@@ -132,6 +166,80 @@ before(async () => {
       ),
     },
   });
+});
+
+test("Session trackEdit read follows active membership", async (t) => {
+  for (const role of activeRoles) {
+    await t.test(`${role} can read trackEdit`, async () => {
+      await assertSucceeds(getDoc(
+        doc(firestoreFor(role), "dogs", dogId, "sessions", sessionId),
+      ));
+    });
+  }
+  for (const uid of ["non-member", ...inactiveMembers, null]) {
+    await t.test(`${uid ?? "unauthenticated"} cannot read trackEdit`, async () => {
+      await assertFails(getDoc(
+        doc(firestoreFor(uid), "dogs", dogId, "sessions", sessionId),
+      ));
+    });
+  }
+});
+
+test("Only owner, admin, and editor can create or update trackEdit", async (t) => {
+  for (const role of activeRoles) {
+    const shouldWrite = writers.has(role);
+    await t.test(`${role} create=${shouldWrite}`, async () => {
+      const createdId = `session-create-${role}`;
+      const value = sessionDocument(role);
+      value.id = createdId;
+      value.sessionId = createdId;
+      const operation = setDoc(
+        doc(firestoreFor(role), "dogs", dogId, "sessions", createdId),
+        value,
+      );
+      await (shouldWrite ? assertSucceeds(operation) : assertFails(operation));
+    });
+    await t.test(`${role} update=${shouldWrite}`, async () => {
+      const changed = trackEdit();
+      changed.startIndexInclusive = 0;
+      changed.updatedByUserId = role;
+      const operation = updateDoc(
+        doc(firestoreFor(role), "dogs", dogId, "sessions", sessionId),
+        { trackEdit: changed, updatedAt: new Date("2026-01-02T11:00:00.000Z") },
+      );
+      await (shouldWrite ? assertSucceeds(operation) : assertFails(operation));
+    });
+  }
+
+  for (const uid of ["non-member", ...inactiveMembers, null]) {
+    await t.test(`${uid ?? "unauthenticated"} cannot update`, async () => {
+      await assertFails(updateDoc(
+        doc(firestoreFor(uid), "dogs", dogId, "sessions", sessionId),
+        { trackEdit: trackEdit() },
+      ));
+    });
+  }
+});
+
+test("viewer cannot reset edit while managers can", async (t) => {
+  const tombstone = {
+    schemaVersion: 1,
+    deletedAt: new Date("2026-01-03T11:00:00.000Z"),
+    updatedAt: new Date("2026-01-03T11:00:00.000Z"),
+  };
+  await assertFails(updateDoc(
+    doc(firestoreFor("viewer"), "dogs", dogId, "sessions", sessionId),
+    { trackEdit: tombstone },
+  ));
+  for (const role of writers) {
+    await t.test(`${role} can reset`, async () => {
+      await assertSucceeds(updateDoc(
+        doc(firestoreFor(role), "dogs", dogId, "sessions", sessionId),
+        { trackEdit: tombstone },
+      ));
+      await seedFixture();
+    });
+  }
 });
 
 beforeEach(async () => {

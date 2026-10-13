@@ -43,6 +43,35 @@ service cloud.firestore {
       return value == null || value is string;
     }
 
+    function isValidSessionTrackEdit(data) {
+      return data is map
+        && data.schemaVersion == 1
+        && (
+          (
+            data.deletedAt is timestamp
+            && data.updatedAt is timestamp
+          )
+          || (
+            data.sourceTrackId is string
+            && data.sourceTrackId.size() > 0
+            && data.startIndexInclusive is int
+            && data.startIndexInclusive >= 0
+            && data.endIndexExclusive is int
+            && data.endIndexExclusive > data.startIndexInclusive
+            && data.startTimeAnchor is timestamp
+            && data.endTimeAnchor is timestamp
+            && data.sourcePointCount is int
+            && data.endIndexExclusive <= data.sourcePointCount
+            && data.sourceFingerprint is string
+            && data.sourceFingerprint.size() > 0
+            && data.createdAt is timestamp
+            && data.updatedAt is timestamp
+            && (!('updatedByUserId' in data)
+              || data.updatedByUserId is string)
+          )
+        );
+    }
+
     function isCalendarDateString(value) {
       return value is string
         && value.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
@@ -210,6 +239,13 @@ service cloud.firestore {
 
         allow create: if isDogMember(dogId)
           && (
+            !('trackEdit' in request.resource.data)
+            || (
+              canManageDogMedia(dogId)
+              && isValidSessionTrackEdit(request.resource.data.trackEdit)
+            )
+          )
+          && (
             ('deletedAt' in request.resource.data)
             || (
               'createdByUserId' in request.resource.data
@@ -218,6 +254,17 @@ service cloud.firestore {
           );
 
         allow update: if isDogMember(dogId)
+          && (
+            !request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny(['trackEdit'])
+            || (
+              canManageDogMedia(dogId)
+              && (
+                !('trackEdit' in request.resource.data)
+                || isValidSessionTrackEdit(request.resource.data.trackEdit)
+              )
+            )
+          )
           && (
             (
               'createdByUserId' in resource.data

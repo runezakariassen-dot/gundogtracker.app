@@ -7,6 +7,8 @@ import '../../data/hive_boxes.dart';
 import '../../models/dog.dart';
 import '../../models/hunt_session.dart';
 import '../../models/session_type.dart';
+import '../../models/session_track_edit.dart';
+import '../../repositories/session_track_edit_repository.dart';
 import 'sync_merge_policy.dart';
 import 'firestore_track_sync_service.dart';
 
@@ -46,10 +48,13 @@ class FirestoreSessionSyncService {
   FirestoreSessionSyncService({
     TrackUploadDependency? trackUploadDependency,
     SessionTrackDownloadDependency? trackDownloadDependency,
+    SessionTrackEditRepository? trackEditRepository,
   })  : _trackDownloadDependency =
             trackDownloadDependency ?? _defaultTrackDownloadDependency,
         _trackUploadDependency =
-            trackUploadDependency ?? _defaultTrackUploadDependency;
+            trackUploadDependency ?? _defaultTrackUploadDependency,
+        _trackEditRepository =
+            trackEditRepository ?? SessionTrackEditRepository();
 
   static final FirestoreSessionSyncService instance =
       FirestoreSessionSyncService();
@@ -58,6 +63,7 @@ class FirestoreSessionSyncService {
   static final FirebaseAuth _auth = FirebaseAuth.instance;
   final TrackUploadDependency _trackUploadDependency;
   final SessionTrackDownloadDependency _trackDownloadDependency;
+  final SessionTrackEditRepository _trackEditRepository;
 
   static void _printLog(String message) {
     // ignore: avoid_print
@@ -112,6 +118,26 @@ class FirestoreSessionSyncService {
     return payload;
   }
 
+  Map<String, dynamic> mapSessionToFirestoreWithTrackEdit({
+    required String sessionId,
+    required HuntSession session,
+    required String cloudDogId,
+    required SessionTrackEdit? trackEdit,
+  }) {
+    final payload = mapSessionToFirestore(
+      sessionId: sessionId,
+      session: session,
+      cloudDogId: cloudDogId,
+    );
+    payload['trackEdit'] = trackEdit?.toCloudMap() ??
+        <String, dynamic>{
+          'schemaVersion': SessionTrackEdit.currentSchemaVersion,
+          'deletedAt': Timestamp.fromDate(session.updatedAt.toUtc()),
+          'updatedAt': Timestamp.fromDate(session.updatedAt.toUtc()),
+        };
+    return payload;
+  }
+
   Future<void> upsertSession({
     required String sessionId,
     required HuntSession session,
@@ -155,13 +181,15 @@ class FirestoreSessionSyncService {
       session: session,
       fallbackUserId: currentUid,
     );
-    final payload = mapSessionToFirestore(
+    final trackEdit = _trackEditRepository.get(effectiveSessionId);
+    final payload = mapSessionToFirestoreWithTrackEdit(
       sessionId: effectiveSessionId,
       session: session.copyWith(
         createdByUserId: creator,
         updatedAt: session.updatedAt,
       ),
       cloudDogId: cloudDogId,
+      trackEdit: trackEdit,
     );
 
     final sessionRef = _firestore
@@ -564,6 +592,7 @@ class FirestoreSessionSyncService {
     final entries = <MapEntry<String, HuntSession>>[];
     for (final doc in snapshot.docs) {
       _printLog('[CLOUD][SESSION] mapping session: ${doc.id}');
+      await _mergeCloudTrackEdit(doc.id, doc.data());
       entries.add(
         MapEntry(
           doc.id,
@@ -580,6 +609,36 @@ class FirestoreSessionSyncService {
       'for dog: $dogCloudId',
     );
     return entries;
+  }
+
+  Future<void> _mergeCloudTrackEdit(
+    String sessionId,
+    Map<String, dynamic> sessionData,
+  ) async {
+    final local = _trackEditRepository.get(sessionId);
+    if (sessionData.containsKey('trackEdit')) {
+      final value = sessionData['trackEdit'];
+      if (value is Map && value.containsKey('deletedAt')) {
+        final deletedAt = _readDateTime(value['deletedAt']);
+        if (local != null &&
+            deletedAt != null &&
+            !deletedAt.isBefore(local.updatedAt)) {
+          await _trackEditRepository.delete(sessionId);
+        }
+        return;
+      }
+      final cloud = SessionTrackEdit.fromCloudMap(
+        sessionId: sessionId,
+        value: value,
+      );
+      if (cloud != null &&
+          (local == null || !cloud.updatedAt.isBefore(local.updatedAt))) {
+        await _trackEditRepository.save(cloud);
+      }
+      return;
+    }
+
+    // Missing trackEdit is a valid legacy document, not an implicit reset.
   }
 
   int _nonNegative(int value) => value < 0 ? 0 : value;

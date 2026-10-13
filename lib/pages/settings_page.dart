@@ -1117,6 +1117,7 @@ class _SettingsPageState extends State<SettingsPage> {
       final dogsBox = _dogsBox;
       final milestoneStateBox = dogMilestoneStateBox();
       final tracksStore = _tracksBox;
+      final trackEdits = sessionTrackEditsBox();
       final gpsTracks = _gpsTracksBox;
       final birdSpecies = _birdSpeciesBox;
 
@@ -1125,6 +1126,7 @@ class _SettingsPageState extends State<SettingsPage> {
         dogsBox,
         milestoneStateBox,
         tracksStore,
+        trackEdits,
         gpsTracks,
         birdSpecies,
       ];
@@ -1232,6 +1234,7 @@ class _SettingsPageState extends State<SettingsPage> {
         dogsBoxName,
         dogMilestoneStateLegacyBoxName,
         tracksBoxName,
+        sessionTrackEditsBoxName,
         gpsTracksBoxName,
         birdSpeciesBoxName,
       ];

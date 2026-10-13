@@ -21,6 +21,7 @@ import '../models/share_invitation.dart';
 import '../models/sync_task.dart';
 import '../models/sync_state.dart';
 import '../models/track_adapter_v2.dart';
+import '../models/session_track_edit.dart';
 import '../models/session_type_adapter.dart';
 import '../services/hive_lifecycle_service.dart';
 import '../services/user_identity_service.dart';
@@ -58,6 +59,7 @@ void registerDomainAdapters() {
   _registerAdapterIfNeeded(StatusAdapter());
   _registerAdapterIfNeeded(SyncStatusAdapter());
   _registerAdapterIfNeeded(SyncStateAdapter());
+  _registerAdapterIfNeeded(SessionTrackEditAdapter());
 
   // ✅ Test forventer typeId=16, og du har den i track_adapter_v2.dart
   _registerAdapterIfNeeded(TrackAdapterV2());

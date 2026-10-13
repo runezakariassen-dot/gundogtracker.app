@@ -53,6 +53,7 @@ void main() {
     expect(Hive.isAdapterRegistered(12), isTrue);
     expect(Hive.isAdapterRegistered(13), isTrue);
     expect(Hive.isAdapterRegistered(16), isTrue);
+    expect(Hive.isAdapterRegistered(51), isTrue);
     expect(Hive.isAdapterRegistered(220), isTrue);
     expect(Hive.isAdapterRegistered(221), isTrue);
   });

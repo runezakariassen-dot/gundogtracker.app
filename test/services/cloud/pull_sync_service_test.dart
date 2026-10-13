@@ -10,6 +10,7 @@ import 'package:jakthund_app/models/dog_heat_cycle_log.dart';
 import 'package:jakthund_app/models/dog_membership.dart';
 import 'package:jakthund_app/models/dog_sex.dart';
 import 'package:jakthund_app/models/hunt_session.dart';
+import 'package:jakthund_app/models/session_track_edit.dart';
 import 'package:jakthund_app/models/health_record.dart';
 import 'package:jakthund_app/models/session_type.dart';
 import 'package:jakthund_app/models/session_type_adapter.dart';
@@ -177,6 +178,16 @@ class FakeFirestoreSessionSyncService implements FirestoreSessionSyncService {
     required String sessionId,
     required HuntSession session,
     required String cloudDogId,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Map<String, dynamic> mapSessionToFirestoreWithTrackEdit({
+    required String sessionId,
+    required HuntSession session,
+    required String cloudDogId,
+    required SessionTrackEdit? trackEdit,
   }) {
     throw UnimplementedError();
   }

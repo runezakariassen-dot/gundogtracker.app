@@ -13,6 +13,7 @@ import 'package:jakthund_app/models/gps_track.dart';
 import 'package:jakthund_app/models/hunt_session.dart';
 import 'package:jakthund_app/models/session_type_adapter.dart';
 import 'package:jakthund_app/models/track.dart';
+import 'package:jakthund_app/models/session_track_edit.dart';
 
 Future<Directory> initHiveForTests({required String prefix}) async {
   final tempDir = await Directory.systemTemp.createTemp(prefix);
@@ -27,6 +28,7 @@ Future<Directory> initHiveForTests({required String prefix}) async {
   _registerAdapter(GpsPointAdapter());
   _registerAdapter(GpsTrackAdapter());
   _registerAdapter(TrackAdapter());
+  _registerAdapter(SessionTrackEditAdapter());
   _registerAdapter(ActiveSessionDraftAdapter());
 
   await Future.wait([
@@ -34,6 +36,7 @@ Future<Directory> initHiveForTests({required String prefix}) async {
     Hive.openBox<HuntSession>(sessionsBoxName),
     Hive.openBox<GpsTrack>(gpsTracksBoxName),
     Hive.openBox<Track>(tracksBoxName),
+    Hive.openBox<SessionTrackEdit>(sessionTrackEditsBoxName),
     Hive.openBox<String>(birdSpeciesBoxName),
     Hive.openBox<dynamic>(appSettingsBoxName),
     Hive.openBox<DateTime>(milestoneSeenBoxName),

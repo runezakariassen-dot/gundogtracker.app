@@ -12,6 +12,7 @@ import '../models/sync_task.dart';
 import '../models/outbox_entry.dart';
 import '../models/sync_state.dart';
 import '../models/track.dart';
+import '../models/session_track_edit.dart';
 import '../domain/models/active_session_draft.dart';
 
 import '../services/hive_lifecycle_service.dart';
@@ -19,6 +20,7 @@ import '../services/hive_lifecycle_service.dart';
 const String dogsBoxName = 'dogsBox_v2';
 const String sessionsBoxName = 'sessionsBox_v2';
 const String tracksBoxName = 'tracks';
+const String sessionTrackEditsBoxName = 'session_track_edits_v1';
 const String dogMembershipsBoxName = 'dogMembershipsBox_v1';
 const String shareInvitesBoxName = 'shareInvitesBox_v1';
 const String ownershipTransfersBoxName = 'ownershipTransfersBox_v1';
@@ -64,6 +66,9 @@ Box<HuntSession> sessionsBox() =>
     HiveLifecycleService.getBox<HuntSession>(sessionsBoxName);
 
 Box<Track> tracksBox() => HiveLifecycleService.getBox<Track>(tracksBoxName);
+
+Box<SessionTrackEdit> sessionTrackEditsBox() =>
+    HiveLifecycleService.getBox<SessionTrackEdit>(sessionTrackEditsBoxName);
 
 Box<DogMembership> dogMembershipsBox() =>
     HiveLifecycleService.getBox<DogMembership>(dogMembershipsBoxName);

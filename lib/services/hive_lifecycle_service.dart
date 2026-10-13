@@ -22,6 +22,7 @@ import '../models/share_invitation.dart';
 import '../models/sync_state.dart';
 import '../models/sync_task.dart';
 import '../models/track.dart';
+import '../models/session_track_edit.dart';
 
 class HiveLifecycleService {
   HiveLifecycleService._();
@@ -49,6 +50,11 @@ class HiveLifecycleService {
     _BoxDescriptor<Track>(
       name: tracksBoxName,
       open: (attempts) => _openBoxOnce<Track>(tracksBoxName, attempts),
+    ),
+    _BoxDescriptor<SessionTrackEdit>(
+      name: sessionTrackEditsBoxName,
+      open: (attempts) =>
+          _openBoxOnce<SessionTrackEdit>(sessionTrackEditsBoxName, attempts),
     ),
     _BoxDescriptor<GpsTrack>(
       name: gpsTracksBoxName,

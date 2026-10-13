@@ -4,7 +4,9 @@ import 'package:hive/hive.dart';
 import '../features/map/map_page.dart';
 import '../models/gps_point.dart';
 import '../models/hunt_session.dart';
+import '../models/session_track_edit.dart';
 import '../models/track.dart';
+import '../services/effective_track_resolver.dart';
 import '../services/hive_lifecycle_service.dart';
 import '../data/hive_boxes.dart';
 import '../l10n/app_localizations.dart';
@@ -35,12 +37,15 @@ class _SessionMapPageState extends State<SessionMapPage> {
   String? _error;
   late final Box<HuntSession> _sessionsBox;
   late final Box<Track> _tracksBox;
+  late final Box<SessionTrackEdit> _trackEditsBox;
 
   @override
   void initState() {
     super.initState();
     _sessionsBox = HiveLifecycleService.getBox<HuntSession>(sessionsBoxName);
     _tracksBox = HiveLifecycleService.getBox<Track>(tracksBoxName);
+    _trackEditsBox =
+        HiveLifecycleService.getBox<SessionTrackEdit>(sessionTrackEditsBoxName);
     _loadTrack();
   }
 
@@ -49,6 +54,7 @@ class _SessionMapPageState extends State<SessionMapPage> {
     try {
       List<GpsPoint>? points = widget.previewPoints;
       String? trackId = widget.trackId;
+      String? stableSessionId = widget.sessionId;
 
       if ((points == null || points.isEmpty) && widget.sessionId != null) {
         final sessions = _sessionsBox;
@@ -57,12 +63,21 @@ class _SessionMapPageState extends State<SessionMapPage> {
         if (parsed != null) key = parsed;
         final session = sessions.get(key);
         trackId = trackId ?? session?.trackId;
+        final modelSessionId = session?.sessionId?.trim();
+        if (modelSessionId != null && modelSessionId.isNotEmpty) {
+          stableSessionId = modelSessionId;
+        }
       }
 
       if ((points == null || points.isEmpty) && trackId != null) {
         final tracksBox = _tracksBox;
         final track = tracksBox.get(trackId);
-        points = track?.points;
+        if (track != null) {
+          final edit = stableSessionId == null
+              ? null
+              : _trackEditsBox.get(stableSessionId);
+          points = const EffectiveTrackResolver().resolve(track, edit).points;
+        }
       }
 
       if (points == null || points.isEmpty) {
