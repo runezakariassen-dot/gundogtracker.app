@@ -21,32 +21,27 @@ import 'network_awareness_service.dart';
 
 typedef DogUpsertHandler = Future<Dog> Function(Dog dog);
 typedef DogDeleteHandler = Future<void> Function(Dog dog);
-typedef SessionUpsertHandler =
-    Future<void> Function({
-      required String sessionId,
-      required HuntSession session,
-    });
-typedef SessionDeleteHandler =
-    Future<void> Function({
-      required String sessionId,
-      required HuntSession session,
-    });
+typedef SessionUpsertHandler = Future<void> Function({
+  required String sessionId,
+  required HuntSession session,
+});
+typedef SessionDeleteHandler = Future<void> Function({
+  required String sessionId,
+  required HuntSession session,
+});
 typedef SyncedDogPersistence = Future<void> Function(Dog dog);
-typedef HealthRecordUpsertHandler =
-    Future<void> Function({
-      required HealthRecord record,
-      required String cloudDogId,
-    });
-typedef HeatCycleUpsertHandler =
-    Future<void> Function({
-      required DogHeatCycleLog entry,
-      required String cloudDogId,
-    });
-typedef HuntEventUpsertHandler =
-    Future<void> Function({
-      required HuntEvent event,
-      required String cloudDogId,
-    });
+typedef HealthRecordUpsertHandler = Future<void> Function({
+  required HealthRecord record,
+  required String cloudDogId,
+});
+typedef HeatCycleUpsertHandler = Future<void> Function({
+  required DogHeatCycleLog entry,
+  required String cloudDogId,
+});
+typedef HuntEventUpsertHandler = Future<void> Function({
+  required HuntEvent event,
+  required String cloudDogId,
+});
 
 class MissingHealthRecordDogCloudIdException implements Exception {
   const MissingHealthRecordDogCloudIdException(this.recordId);
@@ -96,27 +91,27 @@ class SyncOutboxProcessor {
     HuntEventUpsertHandler? huntEventUpsertHandler,
     Box<HuntEvent>? huntEventBox,
     Box<Dog>? dogBox,
-  }) : _outboxService = outboxService ?? SyncOutboxService(),
-       _dogSyncService = dogSyncService ?? FirestoreDogSyncService.instance,
-       _sessionSyncService =
-           sessionSyncService ?? FirestoreSessionSyncService.instance,
-       _networkAwarenessService =
-           networkAwarenessService ?? NetworkAwarenessServiceImpl(),
-       _dogUpsertHandler = dogUpsertHandler,
-       _dogDeleteHandler = dogDeleteHandler,
-       _sessionUpsertHandler = sessionUpsertHandler,
-       _sessionDeleteHandler = sessionDeleteHandler,
-       _persistSyncedDog = persistSyncedDog,
-       _healthRecordSyncService = healthRecordSyncService,
-       _healthRecordUpsertHandler = healthRecordUpsertHandler,
-       _healthRecordBox = healthRecordBox,
-       _heatCycleSyncService = heatCycleSyncService,
-       _heatCycleUpsertHandler = heatCycleUpsertHandler,
-       _heatCycleRepository = heatCycleRepository,
-       _huntEventSyncService = huntEventSyncService,
-       _huntEventUpsertHandler = huntEventUpsertHandler,
-       _huntEventBox = huntEventBox,
-       _dogBox = dogBox;
+  })  : _outboxService = outboxService ?? SyncOutboxService(),
+        _dogSyncService = dogSyncService ?? FirestoreDogSyncService.instance,
+        _sessionSyncService =
+            sessionSyncService ?? FirestoreSessionSyncService.instance,
+        _networkAwarenessService =
+            networkAwarenessService ?? NetworkAwarenessServiceImpl(),
+        _dogUpsertHandler = dogUpsertHandler,
+        _dogDeleteHandler = dogDeleteHandler,
+        _sessionUpsertHandler = sessionUpsertHandler,
+        _sessionDeleteHandler = sessionDeleteHandler,
+        _persistSyncedDog = persistSyncedDog,
+        _healthRecordSyncService = healthRecordSyncService,
+        _healthRecordUpsertHandler = healthRecordUpsertHandler,
+        _healthRecordBox = healthRecordBox,
+        _heatCycleSyncService = heatCycleSyncService,
+        _heatCycleUpsertHandler = heatCycleUpsertHandler,
+        _heatCycleRepository = heatCycleRepository,
+        _huntEventSyncService = huntEventSyncService,
+        _huntEventUpsertHandler = huntEventUpsertHandler,
+        _huntEventBox = huntEventBox,
+        _dogBox = dogBox;
 
   final SyncOutboxService _outboxService;
   final FirestoreDogSyncService _dogSyncService;
@@ -239,7 +234,9 @@ class SyncOutboxProcessor {
         if (latestSessionTask != null &&
             _normalize(latestSessionTask.entityType) == 'session_delete' &&
             latestSessionTask.taskId != task.taskId) {
-          debugPrint('[SYNC][DELETE] skipped stale session upsert: $sessionId');
+          debugPrint(
+            '[SYNC][DELETE] skipped stale session upsert: $sessionId',
+          );
           return;
         }
         final session = _mapSessionPayloadToModel(payload: payload);
@@ -406,23 +403,35 @@ class SyncOutboxProcessor {
     return null;
   }
 
-  Future<void> _upsertHealthRecord(HealthRecord record, String cloudDogId) {
+  Future<void> _upsertHealthRecord(
+    HealthRecord record,
+    String cloudDogId,
+  ) {
     final handler = _healthRecordUpsertHandler;
     if (handler != null) {
       return handler(record: record, cloudDogId: cloudDogId);
     }
     return (_healthRecordSyncService ??
             FirestoreHealthRecordSyncService.instance)
-        .upsertHealthRecord(record: record, cloudDogId: cloudDogId);
+        .upsertHealthRecord(
+      record: record,
+      cloudDogId: cloudDogId,
+    );
   }
 
-  Future<void> _upsertHeatCycle(DogHeatCycleLog entry, String cloudDogId) {
+  Future<void> _upsertHeatCycle(
+    DogHeatCycleLog entry,
+    String cloudDogId,
+  ) {
     final handler = _heatCycleUpsertHandler;
     if (handler != null) {
       return handler(entry: entry, cloudDogId: cloudDogId);
     }
     return (_heatCycleSyncService ?? FirestoreHeatCycleSyncService.instance)
-        .upsertHeatCycle(entry: entry, cloudDogId: cloudDogId);
+        .upsertHeatCycle(
+      entry: entry,
+      cloudDogId: cloudDogId,
+    );
   }
 
   Future<void> _upsertHuntEvent(HuntEvent event, String cloudDogId) {
@@ -467,13 +476,11 @@ class SyncOutboxProcessor {
       birdSpecies: _readStringList(payload, 'birdSpecies'),
       mediaPaths: _readStringList(payload, 'mediaPaths'),
       createdByUserId: _optionalString(payload, 'createdByUserId'),
-      sessionType: sessionTypeFromString(
-        _optionalString(payload, 'sessionType'),
-      ),
+      sessionType:
+          sessionTypeFromString(_optionalString(payload, 'sessionType')),
       birdsShotCount: _nonNegative(_readInt(payload, 'birdsShotCount') ?? 0),
       birdsShotSpecies: _optionalString(payload, 'birdsShotSpecies'),
-      updatedAt:
-          _readDateTime(
+      updatedAt: _readDateTime(
             payload,
             'updatedAt',
             fallbackKeys: const ['updated_at'],

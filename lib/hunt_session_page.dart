@@ -82,8 +82,7 @@ double _haversine(GpsPoint a, GpsPoint b) {
   final lat1 = _toRadians(a.lat);
   final lat2 = _toRadians(b.lat);
 
-  final hav =
-      math.pow(math.sin(dLat / 2), 2) +
+  final hav = math.pow(math.sin(dLat / 2), 2) +
       math.pow(math.sin(dLon / 2), 2) * math.cos(lat1) * math.cos(lat2);
   final c = 2 * math.atan2(math.sqrt(hav), math.sqrt(1 - hav));
   return earthRadius * c;
@@ -132,12 +131,10 @@ List<Dog> visibleDogsForSessionPage({
   final currentMemberships = normalizedUserIds.isEmpty
       ? <DogMembership>[]
       : memberships
-            .where(
-              (membership) =>
-                  normalizedUserIds.contains(membership.userId.trim()) &&
-                  membership.status == Status.active,
-            )
-            .toList(growable: false);
+          .where((membership) =>
+              normalizedUserIds.contains(membership.userId.trim()) &&
+              membership.status == Status.active)
+          .toList(growable: false);
 
   return filterVisibleDogs(
     dogs: dogs,
@@ -175,7 +172,10 @@ class _TrackSummary {
 
 class _TrackSummaryWidget extends StatelessWidget {
   // ignore: unused_element_parameter
-  const _TrackSummaryWidget({required this.summary, required this.timeFormat});
+  const _TrackSummaryWidget({
+    required this.summary,
+    required this.timeFormat,
+  });
 
   final _TrackSummary summary;
   final DateFormat timeFormat;
@@ -356,9 +356,8 @@ class _HuntSessionPageState extends State<HuntSessionPage>
 
     _sessionsBox = HiveLifecycleService.getBox<HuntSession>(sessionsBoxName);
     _dogsBox = HiveLifecycleService.getBox<Dog>(dogsBoxName);
-    _membershipBox = HiveLifecycleService.getBox<DogMembership>(
-      dogMembershipsBoxName,
-    );
+    _membershipBox =
+        HiveLifecycleService.getBox<DogMembership>(dogMembershipsBoxName);
     _tracksBox = HiveLifecycleService.getBox<GpsTrack>(gpsTracksBoxName);
     _tracksStore = HiveLifecycleService.getBox<Track>(tracksBoxName);
     _birdSpeciesBox = HiveLifecycleService.getBox<String>(birdSpeciesBoxName);
@@ -603,12 +602,13 @@ class _HuntSessionPageState extends State<HuntSessionPage>
               final dog = dogs[index];
               return ListTile(
                 leading: () {
-                  final avatarFile = DogPhotoStorage.imageFileFromPath(
-                    dog.imagePath,
-                  );
+                  final avatarFile =
+                      DogPhotoStorage.imageFileFromPath(dog.imagePath);
                   return avatarFile == null
                       ? const CircleAvatar(child: Icon(Icons.pets))
-                      : CircleAvatar(backgroundImage: FileImage(avatarFile));
+                      : CircleAvatar(
+                          backgroundImage: FileImage(avatarFile),
+                        );
                 }(),
                 title: Text.rich(
                   dogLabelResolver.spanForDog(
@@ -650,8 +650,10 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     );
   }
 
-  List<HuntSession> _visibleSessions() =>
-      filterVisibleSessions(sessions: _sessionsBox.values, dogs: _activeDogs());
+  List<HuntSession> _visibleSessions() => filterVisibleSessions(
+        sessions: _sessionsBox.values,
+        dogs: _activeDogs(),
+      );
 
   String? _currentUserIdOrNull() {
     try {
@@ -806,11 +808,10 @@ class _HuntSessionPageState extends State<HuntSessionPage>
 
   List<String> _locationSuggestions(String query, {int max = 10}) {
     final normalizedQuery = query.trim().toLowerCase();
-    final sortedSessions =
-        _sessionsBox.values
-            .where((session) => !session.isDeleted)
-            .toList(growable: false)
-          ..sort((a, b) => b.dateTime.compareTo(a.dateTime));
+    final sortedSessions = _sessionsBox.values
+        .where((session) => !session.isDeleted)
+        .toList(growable: false)
+      ..sort((a, b) => b.dateTime.compareTo(a.dateTime));
 
     final byNormalized = <String, String>{};
     for (final session in sortedSessions) {
@@ -820,12 +821,10 @@ class _HuntSessionPageState extends State<HuntSessionPage>
       byNormalized.putIfAbsent(key, () => trimmed);
     }
 
-    final suggestions = byNormalized.values
-        .where((location) {
-          if (normalizedQuery.isEmpty) return true;
-          return location.toLowerCase().contains(normalizedQuery);
-        })
-        .take(max);
+    final suggestions = byNormalized.values.where((location) {
+      if (normalizedQuery.isEmpty) return true;
+      return location.toLowerCase().contains(normalizedQuery);
+    }).take(max);
 
     return suggestions.toList(growable: false);
   }
@@ -948,8 +947,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                     Expanded(
                       child: existing.isEmpty
                           ? Center(
-                              child: Text(l10n.session_species_picker_empty),
-                            )
+                              child: Text(l10n.session_species_picker_empty))
                           : ListView.separated(
                               itemCount: existing.length,
                               separatorBuilder: (_, __) =>
@@ -963,10 +961,8 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                     style: const TextStyle(fontSize: 18),
                                   ),
                                   trailing: isSelected
-                                      ? const Icon(
-                                          Icons.check_circle,
-                                          color: Colors.green,
-                                        )
+                                      ? const Icon(Icons.check_circle,
+                                          color: Colors.green)
                                       : const Icon(Icons.circle_outlined),
                                   onTap: () {
                                     setSheetState(() {
@@ -988,9 +984,8 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                           Expanded(
                             child: OutlinedButton.icon(
                               onPressed: () async {
-                                final created = await _promptNewBirdSpecies(
-                                  ctx,
-                                );
+                                final created =
+                                    await _promptNewBirdSpecies(ctx);
                                 if (created == null) return;
                                 if (!existing.contains(created)) {
                                   existing.add(created);
@@ -1064,9 +1059,8 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     );
 
     if (result == null || result.isEmpty) return null;
-    final exists = _birdSpeciesBox.values.any(
-      (entry) => entry.trim().toLowerCase() == result.toLowerCase(),
-    );
+    final exists = _birdSpeciesBox.values
+        .any((entry) => entry.trim().toLowerCase() == result.toLowerCase());
     if (!exists) {
       await _birdSpeciesBox.add(result);
     }
@@ -1134,19 +1128,17 @@ class _HuntSessionPageState extends State<HuntSessionPage>
   }
 
   void _showPermissionDeniedSnackBar(AppLocalizations l10n) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(l10n.common_no_permission)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.common_no_permission)),
+    );
   }
 
   Future<void> _pickImage(ImageSource source, {dynamic sessionKey}) async {
     if (_anyBusy) return;
     final l10n = AppLocalizations.of(context)!;
     try {
-      final file = await _imagePicker.pickImage(
-        source: source,
-        imageQuality: 90,
-      );
+      final file =
+          await _imagePicker.pickImage(source: source, imageQuality: 90);
       if (file == null) return;
       FocusManager.instance.primaryFocus?.unfocus();
       setState(() => _isImportingMedia = true);
@@ -1160,9 +1152,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
         }
       }
     } catch (_) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.session_error_photo_add)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.session_error_photo_add)),
+      );
     }
   }
 
@@ -1187,9 +1179,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
         }
       }
     } catch (_) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.session_error_photo_add)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.session_error_photo_add)),
+      );
     }
   }
 
@@ -1214,9 +1206,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
         }
       }
     } catch (_) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.session_error_video_add)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.session_error_video_add)),
+      );
     }
   }
 
@@ -1261,9 +1253,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
           '[MEDIA] failed to store media=${file.path} error=$error stackTrace=$stackTrace',
         );
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.session_error_media_save)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.session_error_media_save)),
+      );
     }
   }
 
@@ -1331,8 +1323,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     if (_isPickingGpx) return;
 
     if (_importedTrackId != null) {
-      final confirm =
-          await showDialog<bool>(
+      final confirm = await showDialog<bool>(
             context: context,
             builder: (ctx) {
               final l10n = AppLocalizations.of(ctx)!;
@@ -1419,16 +1410,15 @@ class _HuntSessionPageState extends State<HuntSessionPage>
       final message = wasDownsampled
           ? 'GPX importert: ${processedPoints.length} punkter (redusert fra ${rawPoints.length})'
           : 'GPX importert: ${processedPoints.length} punkter';
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
 
       if (kDebugMode) {
         final stored = await _trackRepository.getTrack(track.id);
         if (stored == null) {
           debugPrint(
-            'New session import ERROR: trackId=${track.id} not stored',
-          );
+              'New session import ERROR: trackId=${track.id} not stored');
         } else {
           debugPrint(
             'Imported GPX points: ${processedPoints.length}, trackId: ${track.id}, points=${stored.points.length}',
@@ -1444,9 +1434,11 @@ class _HuntSessionPageState extends State<HuntSessionPage>
         parsedPoints,
       );
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+          ),
+        );
       }
     } catch (e, stackTrace) {
       _logGpxImportError(
@@ -1459,24 +1451,19 @@ class _HuntSessionPageState extends State<HuntSessionPage>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.gpx_import_failed_see_log,
-            ),
-          ),
+              content: Text(
+                  AppLocalizations.of(context)!.gpx_import_failed_see_log)),
         );
       }
     }
   }
 
   Future<void> _importGpxForExistingSession(
-    dynamic sessionKey,
-    HuntSession session,
-  ) async {
+      dynamic sessionKey, HuntSession session) async {
     if (_isPickingGpx) return;
 
     if (session.trackId != null) {
-      final confirm =
-          await showDialog<bool>(
+      final confirm = await showDialog<bool>(
             context: context,
             builder: (ctx) {
               final l10n = AppLocalizations.of(ctx)!;
@@ -1581,9 +1568,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
       final message = wasDownsampled
           ? 'Spor erstattet: ${processedPoints.length} punkter (redusert fra ${rawPoints.length})'
           : 'Spor erstattet: ${processedPoints.length} punkter';
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
     } on FormatException catch (e, stackTrace) {
       _logGpxImportError(
         'existing-session-parse',
@@ -1593,9 +1580,11 @@ class _HuntSessionPageState extends State<HuntSessionPage>
         parsedPoints,
       );
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+          ),
+        );
       }
     } catch (e, stackTrace) {
       _logGpxImportError(
@@ -1608,10 +1597,8 @@ class _HuntSessionPageState extends State<HuntSessionPage>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.gpx_import_failed_see_log,
-            ),
-          ),
+              content: Text(
+                  AppLocalizations.of(context)!.gpx_import_failed_see_log)),
         );
       }
     }
@@ -1678,9 +1665,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     try {
       final enabled = await Geolocator.isLocationServiceEnabled();
       if (!enabled) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.gps_services_disabled)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.gps_services_disabled)),
+        );
         return;
       }
 
@@ -1690,32 +1677,31 @@ class _HuntSessionPageState extends State<HuntSessionPage>
       }
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.gps_no_permission)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.gps_no_permission)),
+        );
         return;
       }
 
       _currentTrack.clear();
 
-      _positionSub =
-          Geolocator.getPositionStream(
-            locationSettings: const LocationSettings(
-              accuracy: LocationAccuracy.best,
-              distanceFilter: 5,
-            ),
-          ).listen((pos) {
-            final now = DateTime.now();
-            if (_selectedDateTime == null) {
-              _selectedDateTime = now;
-              _activeSessionController.setStartedAt(_selectedDateTime);
-            }
+      _positionSub = Geolocator.getPositionStream(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.best,
+          distanceFilter: 5,
+        ),
+      ).listen((pos) {
+        final now = DateTime.now();
+        if (_selectedDateTime == null) {
+          _selectedDateTime = now;
+          _activeSessionController.setStartedAt(_selectedDateTime);
+        }
 
-            _currentTrack.add(
-              GpsPoint(lat: pos.latitude, lon: pos.longitude, time: now),
-            );
-            if (mounted) setState(() {});
-          });
+        _currentTrack.add(
+          GpsPoint(lat: pos.latitude, lon: pos.longitude, time: now),
+        );
+        if (mounted) setState(() {});
+      });
 
       // Mark success only after we have a subscription and tracking is on.
       _isTracking = true;
@@ -1723,9 +1709,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
       await _hapticSuccess();
     } catch (e) {
       debugPrint('GPS ERROR: $e');
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Feil fra GPS: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Feil fra GPS: $e')),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -1752,9 +1738,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
       await _hapticSuccess();
     } catch (e) {
       debugPrint('GPS stop ERROR: $e');
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Klarte ikke stoppe GPS')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Klarte ikke stoppe GPS')),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -1778,18 +1764,17 @@ class _HuntSessionPageState extends State<HuntSessionPage>
       final l10n = AppLocalizations.of(context)!;
 
       if (_selectedDog == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Velg en hund først')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Velg en hund først')),
+        );
         return;
       }
 
       final selectedDog = _selectedDog!;
       final isHunting = _sessionType == SessionType.hunting;
       final shotCount = isHunting ? _birdsShotCount : 0;
-      final shotSpecies = (isHunting && shotCount > 0)
-          ? _birdsShotSpecies
-          : null;
+      final shotSpecies =
+          (isHunting && shotCount > 0) ? _birdsShotSpecies : null;
 
       if (_isTracking) {
         await _stopTracking();
@@ -1839,13 +1824,12 @@ class _HuntSessionPageState extends State<HuntSessionPage>
         return;
       }
 
-      final activeSessionCount = _sessionsBox.values
-          .where((session) => !session.isDeleted)
-          .length;
+      final activeSessionCount =
+          _sessionsBox.values.where((session) => !session.isDeleted).length;
       final canCreateSession = await SubscriptionService.instance
           .canCreateSessionAfterRefreshIfUnknown(
-            currentSessionCount: activeSessionCount,
-          );
+        currentSessionCount: activeSessionCount,
+      );
       if (!canCreateSession) {
         if (!mounted) return;
         if (SubscriptionService.instance.state.value.status ==
@@ -1915,10 +1899,10 @@ class _HuntSessionPageState extends State<HuntSessionPage>
       final savedMessage = trackId != null
           ? 'Økt lagret med importert GPX ($_importedTrackPoints punkter)'
           : trackKey == null
-          ? 'Økt lagret'
-          : l10n.hunt_session_snackbar_saved_with_gps_track(
-              _currentTrack.length,
-            );
+              ? 'Økt lagret'
+              : l10n.hunt_session_snackbar_saved_with_gps_track(
+                  _currentTrack.length,
+                );
 
       if (kDebugMode) {
         final storedTrack = session.trackId != null
@@ -1926,8 +1910,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
             : null;
         if (session.trackId == null || storedTrack == null) {
           debugPrint(
-            'Saved sessionId: $sessionKey, trackId missing or track not found',
-          );
+              'Saved sessionId: $sessionKey, trackId missing or track not found');
         } else {
           debugPrint(
             'Saved sessionId: $sessionKey, trackId: ${session.trackId}, points=${storedTrack.points.length}',
@@ -2026,9 +2009,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
       }
     }
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(fallbackMessage)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(fallbackMessage)),
+    );
     return false;
   }
 
@@ -2159,9 +2142,11 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     final titleSpan = TextSpan(
       children: [
         TextSpan(text: '${l10n.session_map_label} – ', style: titleStyle),
-        DogLabelResolver(
-          _dogsBox.values.toList(),
-        ).spanForId(context, session.dogId, style: titleStyle),
+        DogLabelResolver(_dogsBox.values.toList()).spanForId(
+          context,
+          session.dogId,
+          style: titleStyle,
+        ),
       ],
     );
     Navigator.push(
@@ -2185,7 +2170,10 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     return track == null || track.points.isEmpty ? null : track;
   }
 
-  Future<void> _openTrackEditor(dynamic sessionKey, HuntSession session) async {
+  Future<void> _openTrackEditor(
+    dynamic sessionKey,
+    HuntSession session,
+  ) async {
     final rawTrack = _editableTrackForSession(session);
     if (rawTrack == null) return;
 
@@ -2234,9 +2222,8 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     final dur = TextEditingController(text: session.durationMinutes.toString());
     final birds = TextEditingController(text: session.birdsSeen.toString());
     final pts = TextEditingController(text: session.points.toString());
-    final secs = TextEditingController(
-      text: session.secondaryPoints.toString(),
-    );
+    final secs =
+        TextEditingController(text: session.secondaryPoints.toString());
     final tms = TextEditingController(text: session.tomstandCount.toString());
     final fls = TextEditingController(text: session.flushes.toString());
     final notes = TextEditingController(text: session.notes);
@@ -2260,14 +2247,12 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                         TextSpan(
                           text: 'Hund: ',
                           children: [
-                            DogLabelResolver(
-                              _dogsBox.values.toList(),
-                            ).spanForId(
+                            DogLabelResolver(_dogsBox.values.toList())
+                                .spanForId(
                               context,
                               session.dogId,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
@@ -2288,12 +2273,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                               );
                               if (d == null) return;
                               dt = DateTime(
-                                d.year,
-                                d.month,
-                                d.day,
-                                dt.hour,
-                                dt.minute,
-                              );
+                                  d.year, d.month, d.day, dt.hour, dt.minute);
                               setSB(() {});
                             },
                             child: Text(
@@ -2313,12 +2293,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                               );
                               if (t == null) return;
                               dt = DateTime(
-                                dt.year,
-                                dt.month,
-                                dt.day,
-                                t.hour,
-                                t.minute,
-                              );
+                                  dt.year, dt.month, dt.day, t.hour, t.minute);
                               setSB(() {});
                             },
                             child: Text(
@@ -2331,63 +2306,52 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                     ),
                     const SizedBox(height: 12),
                     TextField(
-                      controller: loc,
-                      decoration: InputDecoration(
-                        labelText: dialogL10n.hunt_session_field_location_label,
-                      ),
-                    ),
+                        controller: loc,
+                        decoration: InputDecoration(
+                            labelText:
+                                dialogL10n.hunt_session_field_location_label)),
                     TextField(
-                      controller: dur,
-                      decoration: InputDecoration(
-                        labelText: dialogL10n
-                            .hunt_session_field_duration_minutes_label,
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
+                        controller: dur,
+                        decoration: InputDecoration(
+                            labelText: dialogL10n
+                                .hunt_session_field_duration_minutes_label),
+                        keyboardType: TextInputType.number),
                     TextField(
-                      controller: birds,
-                      decoration: InputDecoration(
-                        labelText:
-                            dialogL10n.hunt_session_field_birds_seen_label,
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
+                        controller: birds,
+                        decoration: InputDecoration(
+                            labelText:
+                                dialogL10n.hunt_session_field_birds_seen_label),
+                        keyboardType: TextInputType.number),
                     TextField(
-                      controller: pts,
-                      decoration: InputDecoration(
-                        labelText: dialogL10n.hunt_session_field_points_label,
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
+                        controller: pts,
+                        decoration: InputDecoration(
+                            labelText:
+                                dialogL10n.hunt_session_field_points_label),
+                        keyboardType: TextInputType.number),
                     TextField(
-                      controller: secs,
-                      decoration: InputDecoration(
-                        labelText: dialogL10n
-                            .hunt_session_field_secondary_points_label,
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
+                        controller: secs,
+                        decoration: InputDecoration(
+                            labelText: dialogL10n
+                                .hunt_session_field_secondary_points_label),
+                        keyboardType: TextInputType.number),
                     TextField(
-                      controller: tms,
-                      decoration: InputDecoration(
-                        labelText: dialogL10n.hunt_session_field_tomstand_label,
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
+                        controller: tms,
+                        decoration: InputDecoration(
+                            labelText:
+                                dialogL10n.hunt_session_field_tomstand_label),
+                        keyboardType: TextInputType.number),
                     TextField(
-                      controller: fls,
-                      decoration: InputDecoration(
-                        labelText: dialogL10n.hunt_session_field_flushes_label,
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
+                        controller: fls,
+                        decoration: InputDecoration(
+                            labelText:
+                                dialogL10n.hunt_session_field_flushes_label),
+                        keyboardType: TextInputType.number),
                     TextField(
-                      controller: notes,
-                      decoration: InputDecoration(
-                        labelText: dialogL10n.hunt_session_field_notes_label,
-                      ),
-                      maxLines: 3,
-                    ),
+                        controller: notes,
+                        decoration: InputDecoration(
+                            labelText:
+                                dialogL10n.hunt_session_field_notes_label),
+                        maxLines: 3),
                   ],
                 ),
               ),
@@ -2443,9 +2407,11 @@ class _HuntSessionPageState extends State<HuntSessionPage>
       final key = session.trackKey;
       if (key == null) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.session_export_no_track)));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.session_export_no_track),
+            ),
+          );
         }
         return;
       }
@@ -2494,9 +2460,10 @@ class _HuntSessionPageState extends State<HuntSessionPage>
 
       await _hapticSuccess();
 
-      await Share.shareXFiles([
-        XFile(file.path),
-      ], text: 'GPX fra $dogLabel (${session.dateTime.toIso8601String()})');
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: 'GPX fra $dogLabel (${session.dateTime.toIso8601String()})',
+      );
     } catch (error, stackTrace) {
       debugPrint('[GPX][EXPORT] error: $error');
       debugPrint(stackTrace.toString());
@@ -2524,11 +2491,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
             children: [
               ListTile(
                 leading: const Icon(Icons.map),
-                title: Text(
-                  _isExportingGpx
-                      ? l10n.session_gpx_exporting_ellipsis
-                      : l10n.session_gpx_export_label,
-                ),
+                title: Text(_isExportingGpx
+                    ? l10n.session_gpx_exporting_ellipsis
+                    : l10n.session_gpx_export_label),
                 onTap: _isExportingGpx
                     ? null
                     : () {
@@ -2696,31 +2661,28 @@ class _HuntSessionPageState extends State<HuntSessionPage>
 
     final canShowNewSessionSection =
         widget.showNewSessionSection || _isEditMode;
-    final showForm =
-        canShowNewSessionSection &&
+    final showForm = canShowNewSessionSection &&
         (_showNewSessionForm || _isEditMode || widget.autoStartNow);
     final showTracking = showForm && !_isEditMode;
     final l10n = AppLocalizations.of(context)!;
     final dogs = _activeDogs();
     final sessions = _visibleSessions();
     final activeDogIds = dogs.map((dog) => dog.id).toSet();
-    final sessionEntries =
-        (_sessionsBox
-              .toMap()
-              .entries
-              .where(
-                (entry) =>
-                    !entry.value.isDeleted &&
-                    activeDogIds.contains(entry.value.dogId),
-              )
-              .map((entry) => MapEntry(entry.key, entry.value))
-              .toList())
-          ..sort((a, b) => b.value.dateTime.compareTo(a.value.dateTime));
+    final sessionEntries = (_sessionsBox
+        .toMap()
+        .entries
+        .where((entry) =>
+            !entry.value.isDeleted && activeDogIds.contains(entry.value.dogId))
+        .map(
+          (entry) => MapEntry(entry.key, entry.value),
+        )
+        .toList())
+      ..sort((a, b) => b.value.dateTime.compareTo(a.value.dateTime));
     final latestSessionEntry = sessionEntries.isEmpty
         ? null
         : (List<MapEntry<dynamic, HuntSession>>.from(sessionEntries)
-                ..sort((a, b) => b.value.dateTime.compareTo(a.value.dateTime)))
-              .first;
+              ..sort((a, b) => b.value.dateTime.compareTo(a.value.dateTime)))
+            .first;
     final latestSession = latestSessionEntry?.value;
     final dogLabelResolver = DogLabelResolver(dogs);
     final birdSpeciesOptions = _birdSpeciesBox.values.toList()..sort();
@@ -2733,27 +2695,21 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     final filteredEntries = _sessionDogFilterId == null
         ? sessionEntries
         : sessionEntries
-              .where((entry) => entry.value.dogId == _sessionDogFilterId)
-              .toList();
+            .where((entry) => entry.value.dogId == _sessionDogFilterId)
+            .toList();
 
     final dogSessions = _selectedDog == null
         ? <HuntSession>[]
         : sessions.where((s) => s.dogId == _selectedDog!.id).toList();
 
-    final totalDuration = dogSessions.fold<int>(
-      0,
-      (sum, s) => sum + s.durationMinutes,
-    );
+    final totalDuration =
+        dogSessions.fold<int>(0, (sum, s) => sum + s.durationMinutes);
     final totalBirds = dogSessions.fold<int>(0, (sum, s) => sum + s.birdsSeen);
     final totalPoints = dogSessions.fold<int>(0, (sum, s) => sum + s.points);
-    final totalSecondaryPoints = dogSessions.fold<int>(
-      0,
-      (sum, s) => sum + s.secondaryPoints,
-    );
-    final totalTomstand = dogSessions.fold<int>(
-      0,
-      (sum, s) => sum + s.tomstandCount,
-    );
+    final totalSecondaryPoints =
+        dogSessions.fold<int>(0, (sum, s) => sum + s.secondaryPoints);
+    final totalTomstand =
+        dogSessions.fold<int>(0, (sum, s) => sum + s.tomstandCount);
     final totalFlushes = dogSessions.fold<int>(0, (sum, s) => sum + s.flushes);
 
     if (widget.homeCompact &&
@@ -2778,16 +2734,16 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                   child: Card(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
+                          horizontal: 16, vertical: 12),
                       child: Row(
                         children: [
                           Expanded(
                             child: _selectedDog == null
                                 ? Text(
                                     l10n.home_select_dog,
-                                    style: Theme.of(context).textTheme.bodySmall
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
                                         ?.copyWith(
                                           fontSize: 13,
                                           color: Theme.of(context)
@@ -2797,16 +2753,16 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                         ),
                                   )
                                 : DefaultTextStyle(
-                                    style:
-                                        Theme.of(
-                                          context,
-                                        ).textTheme.bodySmall?.copyWith(
-                                          fontSize: 13,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurface
-                                              .withOpacity(0.65),
-                                        ) ??
+                                    style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              fontSize: 13,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface
+                                                  .withOpacity(0.65),
+                                            ) ??
                                         const TextStyle(fontSize: 13),
                                     child: Text.rich(
                                       dogLabelResolver.spanForDog(
@@ -2843,10 +2799,8 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                       children: [
                         Expanded(
                           child: latestSession == null
-                              ? Text(
-                                  l10n.home_no_sessions_yet,
-                                  style: lastInfoStyle,
-                                )
+                              ? Text(l10n.home_no_sessions_yet,
+                                  style: lastInfoStyle)
                               : Text.rich(
                                   TextSpan(
                                     children: [
@@ -2888,11 +2842,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                     _pushActiveSession(l10n);
                                   }
                                 },
-                          child: Text(
-                            latestSession != null
-                                ? l10n.home_openSession
-                                : l10n.home_startNewSession,
-                          ),
+                          child: Text(latestSession != null
+                              ? l10n.home_openSession
+                              : l10n.home_startNewSession),
                         ),
                       ],
                     ),
@@ -2934,11 +2886,12 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                       l10n.session_form_no_dogs_help,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withValues(alpha: 0.78),
-                        height: 1.35,
-                      ),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.78),
+                            height: 1.35,
+                          ),
                     ),
                   ),
                 if (dogs.isNotEmpty) ...[
@@ -2947,14 +2900,11 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: _isPickingGpx
-                              ? null
-                              : _importGpxForNewSession,
-                          child: Text(
-                            _isPickingGpx
-                                ? l10n.session_gpx_importing_ellipsis
-                                : l10n.session_gpx_import_label,
-                          ),
+                          onPressed:
+                              _isPickingGpx ? null : _importGpxForNewSession,
+                          child: Text(_isPickingGpx
+                              ? l10n.session_gpx_importing_ellipsis
+                              : l10n.session_gpx_import_label),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -2974,10 +2924,11 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                       child: Text(
                         _versionText!,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withOpacity(0.6),
-                        ),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withOpacity(0.6),
+                            ),
                       ),
                     ),
                   ),
@@ -3021,7 +2972,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                             children: [
                               Text(
                                 l10n.session_field_session_button,
-                                style: Theme.of(context).textTheme.titleSmall
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall
                                     ?.copyWith(fontWeight: FontWeight.w700),
                               ),
                               const SizedBox(height: 4),
@@ -3029,7 +2982,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                               const SizedBox(height: 12),
                               Text(
                                 l10n.session_manual_registration_button,
-                                style: Theme.of(context).textTheme.titleSmall
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall
                                     ?.copyWith(fontWeight: FontWeight.w700),
                               ),
                               const SizedBox(height: 4),
@@ -3057,9 +3012,10 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primaryContainer.withOpacity(0.35),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primaryContainer
+                        .withOpacity(0.35),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: Theme.of(context).dividerColor.withOpacity(0.3),
@@ -3070,16 +3026,20 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                     children: [
                       Text(
                         l10n.session_field_session_button,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w600),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                       ),
                       const SizedBox(height: 6),
                       Text(
                         l10n.session_field_session_help,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          height: 1.35,
-                        ),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                              height: 1.35,
+                            ),
                       ),
                       const SizedBox(height: 12),
                       FilledButton.icon(
@@ -3113,8 +3073,8 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                     onPressed: _anyBusy
                         ? null
                         : (dogs.isEmpty
-                              ? _openAddDogEditor
-                              : () => setState(() {
+                            ? _openAddDogEditor
+                            : () => setState(() {
                                   _resetNewSessionFormState(
                                     keepSelectedDog: true,
                                   );
@@ -3143,11 +3103,12 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                   l10n.session_form_no_dogs_help,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.78),
-                    height: 1.35,
-                  ),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.78),
+                        height: 1.35,
+                      ),
                 ),
               ),
           ],
@@ -3157,9 +3118,10 @@ class _HuntSessionPageState extends State<HuntSessionPage>
               margin: const EdgeInsets.only(bottom: 16),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.surfaceVariant.withOpacity(0.6),
+                color: Theme.of(context)
+                    .colorScheme
+                    .surfaceVariant
+                    .withOpacity(0.6),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: Theme.of(context).dividerColor.withOpacity(0.3),
@@ -3171,9 +3133,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                   Text(
                     l10n.session_form_dog_section_title,
                     style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                        fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   if (dogs.isEmpty)
@@ -3184,12 +3144,13 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                         const SizedBox(height: 8),
                         Text(
                           l10n.session_form_no_dogs_help,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withValues(alpha: 0.78),
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.78),
+                                  ),
                         ),
                         const SizedBox(height: 12),
                         FilledButton.tonalIcon(
@@ -3206,9 +3167,8 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                         String? selectedDogId = _selectedDogId;
                         if (selectedDogId != null &&
                             !dogIds.contains(selectedDogId)) {
-                          selectedDogId = dogs.isNotEmpty
-                              ? dogs.first.id
-                              : null;
+                          selectedDogId =
+                              dogs.isNotEmpty ? dogs.first.id : null;
                           if (selectedDogId != _selectedDogId) {
                             WidgetsBinding.instance.addPostFrameCallback((_) {
                               if (mounted) {
@@ -3218,18 +3178,18 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                           }
                         }
 
-                        final selectedStyle =
-                            Theme.of(
-                              context,
-                            ).textTheme.titleMedium?.copyWith(fontSize: 16) ??
+                        final selectedStyle = Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(fontSize: 16) ??
                             const TextStyle(fontSize: 16);
 
                         final itemStyle =
                             Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ) ??
-                            const TextStyle(fontSize: 16);
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ) ??
+                                const TextStyle(fontSize: 16);
 
                         return DropdownButton<String>(
                           isExpanded: true,
@@ -3261,9 +3221,8 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                 ),
                               )
                               .toList(),
-                          onChanged: _anyBusy
-                              ? null
-                              : (id) => _setSelectedDogId(id),
+                          onChanged:
+                              _anyBusy ? null : (id) => _setSelectedDogId(id),
                         );
                       },
                     ),
@@ -3273,9 +3232,8 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                     const SizedBox(height: 12),
                     Builder(
                       builder: (context) {
-                        final nameStyle = Theme.of(
-                          context,
-                        ).textTheme.titleMedium;
+                        final nameStyle =
+                            Theme.of(context).textTheme.titleMedium;
                         final nameColor = nameStyle?.color;
                         return Wrap(
                           spacing: 8,
@@ -3289,10 +3247,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                   dogLabelResolver.spanForDog(
                                     context,
                                     _selectedDog!,
-                                    style:
-                                        (nameStyle ??
-                                                const TextStyle(fontSize: 16))
-                                            .copyWith(color: nameColor),
+                                    style: (nameStyle ??
+                                            const TextStyle(fontSize: 16))
+                                        .copyWith(color: nameColor),
                                   ),
                                 ],
                               ),
@@ -3311,26 +3268,19 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '${l10n.session_summary_sessions_label} ${dogSessions.length}',
-                    ),
+                        '${l10n.session_summary_sessions_label} ${dogSessions.length}'),
                     Text(
-                      '${l10n.session_summary_total_time_label} $totalDuration min',
-                    ),
+                        '${l10n.session_summary_total_time_label} $totalDuration min'),
                     Text(
-                      '${l10n.session_summary_total_bird_contacts_label} $totalBirds',
-                    ),
+                        '${l10n.session_summary_total_bird_contacts_label} $totalBirds'),
                     Text(
-                      '${l10n.session_summary_total_points_label} $totalPoints',
-                    ),
+                        '${l10n.session_summary_total_points_label} $totalPoints'),
                     Text(
-                      '${l10n.session_summary_total_secondary_points_label} $totalSecondaryPoints',
-                    ),
+                        '${l10n.session_summary_total_secondary_points_label} $totalSecondaryPoints'),
                     Text(
-                      '${l10n.session_summary_total_tomstand_label} $totalTomstand',
-                    ),
+                        '${l10n.session_summary_total_tomstand_label} $totalTomstand'),
                     Text(
-                      '${l10n.session_summary_total_flushes_label} $totalFlushes',
-                    ),
+                        '${l10n.session_summary_total_flushes_label} $totalFlushes'),
                   ],
                 ],
               ),
@@ -3341,9 +3291,10 @@ class _HuntSessionPageState extends State<HuntSessionPage>
               margin: const EdgeInsets.only(bottom: 16),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.primaryContainer.withOpacity(0.35),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primaryContainer
+                    .withOpacity(0.35),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: Theme.of(context).dividerColor.withOpacity(0.25),
@@ -3377,12 +3328,11 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                   _isEditMode
                                       ? l10n.hunt_session_title_edit
                                       : l10n.session_action_add_new_session,
-                                  style:
-                                      Theme.of(
-                                        context,
-                                      ).textTheme.titleMedium?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                      ) ??
+                                  style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
+                                              fontWeight: FontWeight.w600) ??
                                       const TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w600,
@@ -3407,16 +3357,15 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                       MaterialTapTargetSize.shrinkWrap,
                                   visualDensity: VisualDensity.compact,
                                   side: BorderSide(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
                                   ),
                                 ),
                                 child: Text(
                                   l10n.session_action_cancel,
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.titleMedium,
+                                  style:
+                                      Theme.of(context).textTheme.titleMedium,
                                 ),
                               ),
                           ],
@@ -3483,7 +3432,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                       children: [
                         Text(
                           'Antall',
-                          style: Theme.of(context).textTheme.bodyMedium
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
                               ?.copyWith(fontWeight: FontWeight.w600),
                         ),
                         const Spacer(),
@@ -3491,12 +3442,12 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                           icon: const Icon(Icons.remove),
                           onPressed: _birdsShotCount > 0
                               ? () => setState(() {
-                                  _birdsShotCount -= 1;
-                                  if (_birdsShotCount <= 0) {
-                                    _birdsShotCount = 0;
-                                    _birdsShotSpecies = null;
-                                  }
-                                })
+                                    _birdsShotCount -= 1;
+                                    if (_birdsShotCount <= 0) {
+                                      _birdsShotCount = 0;
+                                      _birdsShotSpecies = null;
+                                    }
+                                  })
                               : null,
                         ),
                         Container(
@@ -3507,9 +3458,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                           ),
                           child: Text(
@@ -3535,8 +3486,8 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                       isExpanded: true,
                       initialValue:
                           birdSpeciesDropdownOptions.contains(_birdsShotSpecies)
-                          ? _birdsShotSpecies
-                          : null,
+                              ? _birdsShotSpecies
+                              : null,
                       hint: const Text('Velg art'),
                       items: birdSpeciesDropdownOptions
                           .map(
@@ -3559,13 +3510,13 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                         padding: const EdgeInsets.only(top: 8),
                         child: Text(
                           'Legg til fuglearter via "Velg fuglearter" først.',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                fontSize: 12,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    fontSize: 12,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
                         ),
                       ),
                     const SizedBox(height: 12),
@@ -3574,15 +3525,12 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton.icon(
-                        onPressed: _isPickingGpx
-                            ? null
-                            : _importGpxForNewSession,
+                        onPressed:
+                            _isPickingGpx ? null : _importGpxForNewSession,
                         icon: const Icon(Icons.file_upload),
-                        label: Text(
-                          _isPickingGpx
-                              ? l10n.session_gpx_importing_ellipsis
-                              : l10n.session_gpx_import_label,
-                        ),
+                        label: Text(_isPickingGpx
+                            ? l10n.session_gpx_importing_ellipsis
+                            : l10n.session_gpx_import_label),
                       ),
                     ),
                     if (_importedTrackPreview.isNotEmpty)
@@ -3603,8 +3551,8 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                     ],
                     const SizedBox(height: 12),
                   ],
-
                   // “Avansert: GPS-sporing” skjules i V1 – ingen widget her.
+
                   if (showForm) ...[
                     const SizedBox(height: 4),
                     Text(
@@ -3664,26 +3612,24 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                       onSelected: (selection) {
                         _locationController.value = TextEditingValue(
                           text: selection,
-                          selection: TextSelection.collapsed(
-                            offset: selection.length,
-                          ),
+                          selection:
+                              TextSelection.collapsed(offset: selection.length),
                         );
                         _activeSessionController.setLocationName(selection);
                       },
                       fieldViewBuilder:
                           (context, controller, focusNode, onFieldSubmitted) {
-                            return TextField(
-                              controller: controller,
-                              focusNode: focusNode,
-                              decoration: InputDecoration(
-                                labelText:
-                                    l10n.hunt_session_field_location_label,
-                              ),
-                              enabled: !_anyBusy,
-                              textInputAction: TextInputAction.done,
-                              onSubmitted: (_) => onFieldSubmitted(),
-                            );
-                          },
+                        return TextField(
+                          controller: controller,
+                          focusNode: focusNode,
+                          decoration: InputDecoration(
+                            labelText: l10n.hunt_session_field_location_label,
+                          ),
+                          enabled: !_anyBusy,
+                          textInputAction: TextInputAction.done,
+                          onSubmitted: (_) => onFieldSubmitted(),
+                        );
+                      },
                       optionsViewBuilder: (context, onSelected, options) {
                         final optionList = options.toList(growable: false);
                         if (optionList.isEmpty) {
@@ -3717,9 +3663,8 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                     TextField(
                       controller: _durationController,
                       decoration: InputDecoration(
-                        labelText:
-                            l10n.hunt_session_field_duration_minutes_label,
-                      ),
+                          labelText:
+                              l10n.hunt_session_field_duration_minutes_label),
                       keyboardType: TextInputType.number,
                       enabled: !_anyBusy,
                       onChanged: (_) {
@@ -3737,49 +3682,42 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                         child: Text(
                           l10n.session_detail_label_duration_from_track,
                           style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.black54,
-                          ),
+                              fontSize: 12, color: Colors.black54),
                         ),
                       ),
                     TextField(
                       controller: _birdsController,
                       decoration: InputDecoration(
-                        labelText: l10n.hunt_session_field_birds_seen_label,
-                      ),
+                          labelText: l10n.hunt_session_field_birds_seen_label),
                       keyboardType: TextInputType.number,
                       enabled: !_anyBusy,
                     ),
                     TextField(
                       controller: _pointsController,
                       decoration: InputDecoration(
-                        labelText: l10n.hunt_session_field_points_label,
-                      ),
+                          labelText: l10n.hunt_session_field_points_label),
                       keyboardType: TextInputType.number,
                       enabled: !_anyBusy,
                     ),
                     TextField(
                       controller: _secondaryPointsController,
                       decoration: InputDecoration(
-                        labelText:
-                            l10n.hunt_session_field_secondary_points_label,
-                      ),
+                          labelText:
+                              l10n.hunt_session_field_secondary_points_label),
                       keyboardType: TextInputType.number,
                       enabled: !_anyBusy,
                     ),
                     TextField(
                       controller: _tomstandController,
                       decoration: InputDecoration(
-                        labelText: l10n.hunt_session_field_tomstand_label,
-                      ),
+                          labelText: l10n.hunt_session_field_tomstand_label),
                       keyboardType: TextInputType.number,
                       enabled: !_anyBusy,
                     ),
                     TextField(
                       controller: _flushesController,
                       decoration: InputDecoration(
-                        labelText: l10n.hunt_session_field_flushes_label,
-                      ),
+                          labelText: l10n.hunt_session_field_flushes_label),
                       keyboardType: TextInputType.number,
                       enabled: !_anyBusy,
                     ),
@@ -3789,9 +3727,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                     Text(
                       l10n.session_birds_section_title,
                       style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                          fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     FilledButton.icon(
@@ -3827,17 +3763,15 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                     Text(
                       l10n.session_media_section_title,
                       style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                          fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     FilledButton.icon(
                       onPressed: _anyBusy
                           ? null
                           : () => _showAddMediaSheet(
-                              sessionKey: _editingSessionKey,
-                            ),
+                                sessionKey: _editingSessionKey,
+                              ),
                       icon: const Icon(Icons.add_a_photo),
                       label: Text(l10n.session_media_add_photo_video),
                     ),
@@ -3874,9 +3808,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                     Text(
                       l10n.session_notes_section_title,
                       style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                          fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     TextField(
@@ -3890,9 +3822,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                         labelText: l10n.hunt_session_field_notes_label,
                         alignLabelWithHint: true,
                         contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 16,
-                        ),
+                            horizontal: 12, vertical: 16),
                         border: const OutlineInputBorder(),
                       ),
                     ),
@@ -3907,8 +3837,8 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                         _isSavingSession
                             ? l10n.session_detail_action_saving
                             : (_isEditMode
-                                  ? l10n.session_detail_action_save_changes
-                                  : l10n.session_save_button),
+                                ? l10n.session_detail_action_save_changes
+                                : l10n.session_save_button),
                       ),
                     ),
                   ],
@@ -3916,15 +3846,17 @@ class _HuntSessionPageState extends State<HuntSessionPage>
               ),
             ),
           ], // ✅ LUKKER: if (showForm) ...[
+
           // --- Lagrede økter (egen section card) ---
           if (widget.showSessionList) ...[
             Container(
               margin: const EdgeInsets.only(bottom: 16),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.secondaryContainer.withOpacity(0.25),
+                color: Theme.of(context)
+                    .colorScheme
+                    .secondaryContainer
+                    .withOpacity(0.25),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: Theme.of(context).dividerColor.withOpacity(0.20),
@@ -3936,9 +3868,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                   Text(
                     l10n.session_saved_list_title,
                     style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                        fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   _buildDogFilterChips(dogs, dogLabelResolver),
@@ -3998,16 +3928,16 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                                       filteredEntries[i]
                                                           .value
                                                           .dogId,
-                                                      style: Theme.of(
-                                                        context,
-                                                      ).textTheme.titleMedium,
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .titleMedium,
                                                     ),
                                                     TextSpan(
                                                       text:
                                                           ' – ${filteredEntries[i].value.location}',
-                                                      style: Theme.of(
-                                                        context,
-                                                      ).textTheme.titleMedium,
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .titleMedium,
                                                     ),
                                                   ],
                                                 ),
@@ -4016,8 +3946,7 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                                 Padding(
                                                   padding:
                                                       const EdgeInsets.only(
-                                                        top: 4,
-                                                      ),
+                                                          top: 4),
                                                   child: _TrackSummaryWidget(
                                                     summary: summary,
                                                     timeFormat:
@@ -4031,9 +3960,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                           onPressed: _anyBusy
                                               ? null
                                               : () => _showSessionMenu(
-                                                  filteredEntries[i].key,
-                                                  filteredEntries[i].value,
-                                                ),
+                                                    filteredEntries[i].key,
+                                                    filteredEntries[i].value,
+                                                  ),
                                           icon: const Icon(Icons.more_vert),
                                         ),
                                       ],
@@ -4087,13 +4016,15 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                     Text(
                                       '${l10n.session_label_birds_down}: '
                                       '${filteredEntries[i].value.birdsShotCount}',
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodyMedium,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium,
                                     ),
                                   ],
                                 ),
-                                if (filteredEntries[i].value.notes
+                                if (filteredEntries[i]
+                                    .value
+                                    .notes
                                     .trim()
                                     .isNotEmpty) ...[
                                   const SizedBox(height: 10),
@@ -4110,9 +4041,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                           .withValues(alpha: 0.55),
                                       border: Border(
                                         left: BorderSide(
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.primary,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
                                           width: 3,
                                         ),
                                       ),
@@ -4128,9 +4059,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                               .textTheme
                                               .labelMedium
                                               ?.copyWith(
-                                                color: Theme.of(
-                                                  context,
-                                                ).colorScheme.onSurfaceVariant,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
                                                 fontWeight: FontWeight.w600,
                                               ),
                                         ),
@@ -4139,9 +4070,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                           filteredEntries[i].value.notes.trim(),
                                           maxLines: 3,
                                           overflow: TextOverflow.ellipsis,
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.bodyMedium,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium,
                                         ),
                                       ],
                                     ),
@@ -4155,17 +4086,15 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                   width: double.infinity,
                                   child: FilledButton.icon(
                                     icon: const Icon(Icons.file_upload),
-                                    label: Text(
-                                      _isPickingGpx
-                                          ? l10n.session_gpx_importing_ellipsis
-                                          : l10n.session_gpx_import_label,
-                                    ),
+                                    label: Text(_isPickingGpx
+                                        ? l10n.session_gpx_importing_ellipsis
+                                        : l10n.session_gpx_import_label),
                                     onPressed: _isPickingGpx
                                         ? null
                                         : () => _importGpxForExistingSession(
-                                            filteredEntries[i].key,
-                                            filteredEntries[i].value,
-                                          ),
+                                              filteredEntries[i].key,
+                                              filteredEntries[i].value,
+                                            ),
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -4175,16 +4104,14 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                     key: ValueKey(
                                       'session-events-${filteredEntries[i].key}',
                                     ),
-                                    icon: const Icon(
-                                      Icons.location_on_outlined,
-                                    ),
+                                    icon: const Icon(Icons.location_on_outlined),
                                     label: Text(l10n.hunt_events_title),
                                     onPressed: _anyBusy
                                         ? null
                                         : () => _openSessionEvents(
-                                            filteredEntries[i].key,
-                                            filteredEntries[i].value,
-                                          ),
+                                              filteredEntries[i].key,
+                                              filteredEntries[i].value,
+                                            ),
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -4203,9 +4130,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                       onPressed: _anyBusy
                                           ? null
                                           : () => _openTrackEditor(
-                                              filteredEntries[i].key,
-                                              filteredEntries[i].value,
-                                            ),
+                                                filteredEntries[i].key,
+                                                filteredEntries[i].value,
+                                              ),
                                     ),
                                   ),
                                   const SizedBox(height: 8),
@@ -4218,9 +4145,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                     onPressed: _anyBusy
                                         ? null
                                         : (filteredEntries[i].value.trackId ==
-                                                  null
-                                              ? null
-                                              : () => _openMapForSession(
+                                                null
+                                            ? null
+                                            : () => _openMapForSession(
                                                   filteredEntries[i].key,
                                                   filteredEntries[i].value,
                                                 )),
@@ -4239,8 +4166,8 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                     onPressed: (_anyBusy || _isExportingGpx)
                                         ? null
                                         : () => _exportGpxForSession(
-                                            filteredEntries[i].value,
-                                          ),
+                                              filteredEntries[i].value,
+                                            ),
                                   ),
                                 ),
                               ],
@@ -4326,9 +4253,10 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     if (mediaPaths.isEmpty) {
       return Text(
         l10n.session_detail_empty_media,
-        style: Theme.of(
-          context,
-        ).textTheme.bodySmall?.copyWith(color: Theme.of(context).hintColor),
+        style: Theme.of(context)
+            .textTheme
+            .bodySmall
+            ?.copyWith(color: Theme.of(context).hintColor),
       );
     }
 
@@ -4360,12 +4288,14 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     final child = !exists || resolvedPath == null
         ? placeholder
         : isVideo
-        ? const Icon(Icons.videocam, size: 36)
-        : Image.file(File(resolvedPath), fit: BoxFit.cover);
+            ? const Icon(Icons.videocam, size: 36)
+            : Image.file(
+                File(resolvedPath),
+                fit: BoxFit.cover,
+              );
     return InkWell(
-      onTap: exists && resolvedPath != null
-          ? () => _handleMediaTap(path)
-          : null,
+      onTap:
+          exists && resolvedPath != null ? () => _handleMediaTap(path) : null,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: Container(
@@ -4396,13 +4326,15 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     final preview = !exists || resolvedPath == null
         ? placeholder
         : isVideo
-        ? const Icon(Icons.videocam, size: 32)
-        : Image.file(
-            File(resolvedPath),
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) =>
-                const Icon(Icons.broken_image, size: 32),
-          );
+            ? const Icon(Icons.videocam, size: 32)
+            : Image.file(
+                File(resolvedPath),
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const Icon(
+                  Icons.broken_image,
+                  size: 32,
+                ),
+              );
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -4416,7 +4348,10 @@ class _HuntSessionPageState extends State<HuntSessionPage>
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(path.split('/').last, overflow: TextOverflow.ellipsis),
+            child: Text(
+              path.split('/').last,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
           IconButton(
             onPressed: _anyBusy ? null : () => _deleteSessionMediaAt(index),
@@ -4468,9 +4403,8 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     if (sessionKey != null) {
       final source = _editingSession ?? _sessionsBox.get(sessionKey);
       if (source != null) {
-        final updated = source.copyWith(
-          mediaPaths: List<String>.from(_mediaPaths),
-        );
+        final updated =
+            source.copyWith(mediaPaths: List<String>.from(_mediaPaths));
         await _sessionsBox.put(sessionKey, updated);
         _editingSession = updated;
       }
@@ -4481,9 +4415,8 @@ class _HuntSessionPageState extends State<HuntSessionPage>
   Widget _buildDetailsExpansion(HuntSession session, dynamic sessionKey) {
     final l10n = AppLocalizations.of(context)!;
     final dateText = DateFormat('dd.MM.yyyy HH:mm').format(session.dateTime);
-    final durationText = _formatDuration(
-      Duration(minutes: session.durationMinutes),
-    );
+    final durationText =
+        _formatDuration(Duration(minutes: session.durationMinutes));
     final birdsText = birdText(session.birdsSeen);
     final standTextValue = standText(session.points);
     final secondaryText = session.secondaryPoints.toString();
@@ -4544,19 +4477,9 @@ class _HuntSessionPageState extends State<HuntSessionPage>
         ),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Wrap(
-            alignment: WrapAlignment.end,
-            spacing: 8,
-            runSpacing: 8,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              OutlinedButton.icon(
-                key: ValueKey('session-events-$sessionKey'),
-                onPressed: _anyBusy
-                    ? null
-                    : () => _openSessionEvents(sessionKey, session),
-                icon: const Icon(Icons.location_on_outlined),
-                label: Text(l10n.hunt_events_title),
-              ),
               if (_editableTrackForSession(session) != null) ...[
                 OutlinedButton.icon(
                   key: ValueKey('edit-gps-track-$sessionKey'),
@@ -4566,12 +4489,12 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                   icon: const Icon(Icons.content_cut),
                   label: const Text('Rediger GPS-spor'),
                 ),
+                const SizedBox(width: 8),
               ],
               FilledButton(
                 key: ValueKey('edit-session-$sessionKey'),
-                onPressed: _anyBusy
-                    ? null
-                    : () => _navigateToEditSession(sessionKey),
+                onPressed:
+                    _anyBusy ? null : () => _navigateToEditSession(sessionKey),
                 child: Text(l10n.hunt_session_title_edit),
               ),
             ],
@@ -4594,7 +4517,13 @@ class _HuntSessionPageState extends State<HuntSessionPage>
               style: style?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
-          Expanded(flex: 4, child: Text(value, style: style)),
+          Expanded(
+            flex: 4,
+            child: Text(
+              value,
+              style: style,
+            ),
+          ),
         ],
       ),
     );
