@@ -68,7 +68,9 @@ class MissingHeatCycleDogCloudIdException implements Exception {
 
 class MissingHuntEventDogCloudIdException implements Exception {
   const MissingHuntEventDogCloudIdException(this.eventId);
+
   final String eventId;
+
   @override
   String toString() => 'Missing dog cloudId for hunt event: $eventId';
 }

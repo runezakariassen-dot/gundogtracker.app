@@ -449,37 +449,6 @@ class PullSyncService {
     }
   }
 
-  Future<void> _pullHuntEventsForDog(Dog dog, {DateTime? updatedAfter}) async {
-    if (_huntEventBox == null && !Hive.isBoxOpen(huntEventsBoxName)) return;
-    final cloudDogId = dog.cloudId?.trim();
-    if (cloudDogId == null || cloudDogId.isEmpty) return;
-    final fetch = _huntEventFetchHandler;
-    final events = fetch != null
-        ? await fetch(
-            cloudDogId: cloudDogId,
-            localDogId: dog.id,
-            localDogKey: dog.dogKey,
-            updatedAfter: updatedAfter,
-          )
-        : await (_huntEventSyncService ??
-                  FirestoreHuntEventSyncService.instance)
-              .fetchForDog(
-                cloudDogId: cloudDogId,
-                localDogId: dog.id,
-                localDogKey: dog.dogKey,
-                updatedAfter: updatedAfter,
-              );
-    final box = _huntEventBox ?? huntEventsBox();
-    for (final cloud in events) {
-      final local = box.get(cloud.id);
-      final decision = SyncMergePolicy.forHuntEvent(local: local, cloud: cloud);
-      if (decision == MergeDecision.insert ||
-          decision == MergeDecision.cloudNewer) {
-        await box.put(cloud.id, cloud);
-      }
-    }
-  }
-
   Future<void> _pullHeatCyclesForDog(Dog dog, {DateTime? updatedAfter}) async {
     if (_heatCycleRepository == null && !Hive.isBoxOpen(appSettingsBoxName)) {
       return;
@@ -506,6 +475,41 @@ class PullSyncService {
       dog.id,
       entries,
     );
+  }
+
+  Future<void> _pullHuntEventsForDog(Dog dog, {DateTime? updatedAfter}) async {
+    if (_huntEventBox == null && !Hive.isBoxOpen(huntEventsBoxName)) {
+      return;
+    }
+    final cloudDogId = dog.cloudId?.trim();
+    if (cloudDogId == null || cloudDogId.isEmpty) return;
+
+    final fetch = _huntEventFetchHandler;
+    final events = fetch != null
+        ? await fetch(
+            cloudDogId: cloudDogId,
+            localDogId: dog.id,
+            localDogKey: dog.dogKey,
+            updatedAfter: updatedAfter,
+          )
+        : await (_huntEventSyncService ??
+                  FirestoreHuntEventSyncService.instance)
+              .fetchForDog(
+                cloudDogId: cloudDogId,
+                localDogId: dog.id,
+                localDogKey: dog.dogKey,
+                updatedAfter: updatedAfter,
+              );
+
+    final box = _huntEventBox ?? huntEventsBox();
+    for (final cloud in events) {
+      final local = box.get(cloud.id);
+      final decision = SyncMergePolicy.forHuntEvent(local: local, cloud: cloud);
+      if (decision == MergeDecision.insert ||
+          decision == MergeDecision.cloudNewer) {
+        await box.put(cloud.id, cloud);
+      }
+    }
   }
 
   Future<void> _applyCloudTombstone({

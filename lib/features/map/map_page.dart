@@ -12,27 +12,27 @@ import 'package:uuid/uuid.dart';
 import '../../models/gps_point.dart';
 import '../../models/hunt_event.dart';
 import '../../models/offline_region_metadata.dart';
+import '../../ui/hunt_event_labels.dart';
 import '../../widgets/big_action_button.dart';
 import 'map_tile_sources.dart';
 import 'offline_tiles/offline_download_controller.dart';
 import 'offline_tiles/offline_region_service.dart';
 import 'offline_tiles/tile_cache_service.dart';
 import '../../l10n/app_localizations.dart';
-import '../../ui/hunt_event_labels.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({
     super.key,
     required this.points,
+    this.events = const <HuntEvent>[],
     this.title,
     this.titleSpan,
-    this.events = const <HuntEvent>[],
   });
 
   final List<GpsPoint> points;
+  final List<HuntEvent> events;
   final String? title;
   final InlineSpan? titleSpan;
-  final List<HuntEvent> events;
 
   @override
   State<MapPage> createState() => _MapPageState();
