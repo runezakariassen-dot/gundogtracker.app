@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
@@ -214,18 +216,41 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
       widget.trackEdit,
     );
     _type = widget.event?.type ?? HuntEventType.stand;
-    final rawIndex = widget.event?.trackPointIndex ?? _selection.rawStartIndex;
-    _index = (rawIndex - _selection.rawStartIndex)
-        .clamp(0, _selection.points.length - 1)
-        .toDouble();
+    if (_selection.points.isEmpty) {
+      _index = 0;
+    } else {
+      final rawIndex =
+          widget.event?.trackPointIndex ?? _selection.rawStartIndex;
+      _index = (rawIndex - _selection.rawStartIndex)
+          .clamp(0, _selection.points.length - 1)
+          .toDouble();
+    }
     _species = TextEditingController(text: widget.event?.birdSpecies ?? '');
     _note = TextEditingController(text: widget.event?.note ?? '');
   }
 
-  GpsPoint get _point => _selection.points[_index.round()];
+  GpsPoint? get _point {
+    if (_selection.points.isEmpty) return null;
+    return _selection.points[_index.round()];
+  }
+
+  void _onTrackTap(TapDownDetails details, Size size) {
+    if (!widget.canEdit || _selection.points.isEmpty) return;
+    final layout = _EventTrackLayout(points: _selection.points, size: size);
+    final nearestIndex = layout.nearestIndexForTap(
+      details.localPosition,
+      pointSnapRadiusPx: 44,
+      lineSnapRadiusPx: 28,
+      maxSnapDistancePx: 84,
+    );
+    if (nearestIndex == null) return;
+    setState(() => _index = nearestIndex.toDouble());
+  }
 
   Future<void> _save() async {
     if (!widget.canEdit || _saving) return;
+    final point = _point;
+    if (point == null) return;
     setState(() => _saving = true);
     final now = DateTime.now().toUtc();
     final userId = (widget.currentUserId ?? _currentUserId)();
@@ -236,11 +261,11 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
       dogId: widget.session.dogId,
       dogKey: widget.session.dogKey,
       type: _type,
-      occurredAt: _point.time.toUtc(),
+      occurredAt: point.time.toUtc(),
       sourceTrackId: widget.rawTrack.id,
       trackPointIndex: _selection.rawIndexForEffectiveIndex(_index.round()),
-      latitude: _point.lat,
-      longitude: _point.lon,
+      latitude: point.lat,
+      longitude: point.lon,
       birdSpecies: _nullable(_species.text),
       note: _nullable(_note.text),
       source: existing?.source ?? HuntEventSource.manual,
@@ -271,6 +296,7 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final readOnly = !widget.canEdit;
+    final point = _point;
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -296,32 +322,67 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
                 : (value) => setState(() => _type = value ?? _type),
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            height: 220,
-            child: Card(
-              child: CustomPaint(
-                key: ValueKey('event-track-preview-${_index.round()}'),
-                painter: _EventTrackPainter(_selection.points, _index.round()),
+          if (point != null) ...[
+            SizedBox(
+              height: 220,
+              child: Card(
+                clipBehavior: Clip.antiAlias,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final size = Size(
+                      constraints.maxWidth,
+                      constraints.maxHeight,
+                    );
+                    return GestureDetector(
+                      key: const ValueKey('hunt-event-track-preview-tap-area'),
+                      behavior: HitTestBehavior.opaque,
+                      onTapDown: readOnly
+                          ? null
+                          : (details) => _onTrackTap(details, size),
+                      child: CustomPaint(
+                        key: ValueKey('event-track-preview-${_index.round()}'),
+                        painter: _EventTrackPainter(
+                          _selection.points,
+                          _index.round(),
+                        ),
+                        child: const SizedBox.expand(),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
-          ),
+            if (!readOnly) ...[
+              const SizedBox(height: 8),
+              Text(
+                l10n.hunt_event_track_tap_hint,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ] else
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(l10n.session_map_error_no_tracks),
+            ),
           const SizedBox(height: 12),
-          Text(
-            '${l10n.hunt_event_field_time}: '
-            '${DateFormat('HH:mm:ss').format(_point.time.toLocal())}',
-          ),
-          Slider(
-            key: const ValueKey('hunt-event-track-slider'),
-            value: _index,
-            min: 0,
-            max: (_selection.points.length - 1).toDouble(),
-            divisions: _selection.points.length > 1
-                ? _selection.points.length - 1
-                : null,
-            onChanged: readOnly
-                ? null
-                : (value) => setState(() => _index = value),
-          ),
+          if (point != null) ...[
+            Text(
+              '${l10n.hunt_event_field_time}: '
+              '${DateFormat('HH:mm:ss').format(point.time.toLocal())}',
+            ),
+            Slider(
+              key: const ValueKey('hunt-event-track-slider'),
+              value: _index,
+              min: 0,
+              max: (_selection.points.length - 1).toDouble(),
+              divisions: _selection.points.length > 1
+                  ? _selection.points.length - 1
+                  : null,
+              onChanged: readOnly
+                  ? null
+                  : (value) => setState(() => _index = value),
+            ),
+          ],
           TextField(
             controller: _species,
             enabled: !readOnly,
@@ -380,26 +441,17 @@ class _EventTrackPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (points.isEmpty) return;
-    final minLat = points.map((p) => p.lat).reduce((a, b) => a < b ? a : b);
-    final maxLat = points.map((p) => p.lat).reduce((a, b) => a > b ? a : b);
-    final minLon = points.map((p) => p.lon).reduce((a, b) => a < b ? a : b);
-    final maxLon = points.map((p) => p.lon).reduce((a, b) => a > b ? a : b);
-    Offset offset(GpsPoint p) => Offset(
-      16 +
-          (p.lon - minLon) /
-              ((maxLon - minLon).abs() + 0.0000001) *
-              (size.width - 32),
-      size.height -
-          16 -
-          (p.lat - minLat) /
-              ((maxLat - minLat).abs() + 0.0000001) *
-              (size.height - 32),
-    );
+    if (points.isEmpty || selectedIndex < 0 || selectedIndex >= points.length) {
+      return;
+    }
+    final layout = _EventTrackLayout(points: points, size: size);
     final path = Path()
-      ..moveTo(offset(points.first).dx, offset(points.first).dy);
+      ..moveTo(
+        layout.offsetForPoint(points.first).dx,
+        layout.offsetForPoint(points.first).dy,
+      );
     for (final point in points.skip(1)) {
-      final value = offset(point);
+      final value = layout.offsetForPoint(point);
       path.lineTo(value.dx, value.dy);
     }
     canvas.drawPath(
@@ -410,7 +462,7 @@ class _EventTrackPainter extends CustomPainter {
         ..style = PaintingStyle.stroke,
     );
     canvas.drawCircle(
-      offset(points[selectedIndex]),
+      layout.offsetForPoint(points[selectedIndex]),
       8,
       Paint()..color = Colors.red,
     );
@@ -420,4 +472,99 @@ class _EventTrackPainter extends CustomPainter {
   bool shouldRepaint(_EventTrackPainter oldDelegate) =>
       oldDelegate.selectedIndex != selectedIndex ||
       oldDelegate.points != points;
+}
+
+class _EventTrackLayout {
+  const _EventTrackLayout({required this.points, required this.size});
+
+  final List<GpsPoint> points;
+  final Size size;
+  static const double _padding = 16;
+
+  Offset offsetForPoint(GpsPoint point) {
+    final minLat = points.map((p) => p.lat).reduce(math.min);
+    final maxLat = points.map((p) => p.lat).reduce(math.max);
+    final minLon = points.map((p) => p.lon).reduce(math.min);
+    final maxLon = points.map((p) => p.lon).reduce(math.max);
+    return Offset(
+      _padding +
+          (point.lon - minLon) /
+              ((maxLon - minLon).abs() + 0.0000001) *
+              (size.width - (_padding * 2)),
+      size.height -
+          _padding -
+          (point.lat - minLat) /
+              ((maxLat - minLat).abs() + 0.0000001) *
+              (size.height - (_padding * 2)),
+    );
+  }
+
+  int? nearestIndexForTap(
+    Offset tap, {
+    required double pointSnapRadiusPx,
+    required double lineSnapRadiusPx,
+    required double maxSnapDistancePx,
+  }) {
+    if (points.isEmpty) return null;
+    int nearestIndex = 0;
+    var nearestPointDistanceSquared = double.infinity;
+    final projected = points.map(offsetForPoint).toList(growable: false);
+    for (var index = 0; index < projected.length; index++) {
+      final distanceSquared = (projected[index] - tap).distanceSquared;
+      if (distanceSquared < nearestPointDistanceSquared) {
+        nearestPointDistanceSquared = distanceSquared;
+        nearestIndex = index;
+      }
+    }
+
+    final pointSnapRadiusSquared = pointSnapRadiusPx * pointSnapRadiusPx;
+    if (nearestPointDistanceSquared <= pointSnapRadiusSquared) {
+      return nearestIndex;
+    }
+
+    var nearestLineDistanceSquared = double.infinity;
+    for (var index = 1; index < projected.length; index++) {
+      final segmentDistanceSquared = _distanceSquaredToSegment(
+        point: tap,
+        start: projected[index - 1],
+        end: projected[index],
+      );
+      if (segmentDistanceSquared < nearestLineDistanceSquared) {
+        nearestLineDistanceSquared = segmentDistanceSquared;
+      }
+    }
+    final lineSnapRadiusSquared = lineSnapRadiusPx * lineSnapRadiusPx;
+    if (nearestLineDistanceSquared <= lineSnapRadiusSquared) {
+      return nearestIndex;
+    }
+
+    final maxSnapDistanceSquared = maxSnapDistancePx * maxSnapDistancePx;
+    if (nearestPointDistanceSquared <= maxSnapDistanceSquared) {
+      return nearestIndex;
+    }
+    return null;
+  }
+
+  double _distanceSquaredToSegment({
+    required Offset point,
+    required Offset start,
+    required Offset end,
+  }) {
+    final segment = end - start;
+    final segmentLengthSquared =
+        segment.dx * segment.dx + segment.dy * segment.dy;
+    if (segmentLengthSquared == 0) {
+      return (point - start).distanceSquared;
+    }
+    final t =
+        (((point.dx - start.dx) * segment.dx) +
+            ((point.dy - start.dy) * segment.dy)) /
+        segmentLengthSquared;
+    final clampedT = t.clamp(0.0, 1.0);
+    final projection = Offset(
+      start.dx + (segment.dx * clampedT),
+      start.dy + (segment.dy * clampedT),
+    );
+    return (point - projection).distanceSquared;
+  }
 }

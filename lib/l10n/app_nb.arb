@@ -2132,6 +2132,7 @@
   "hunt_event_edit_title": "Rediger hendelse",
   "hunt_event_field_type": "Type",
   "hunt_event_field_time": "Tid",
+  "hunt_event_track_tap_hint": "Trykk på sporet for å velge sted",
   "hunt_event_field_bird_species_optional": "Fugleart (valgfritt)",
   "hunt_event_field_note_optional": "Notat (valgfritt)",
   "hunt_event_save": "Lagre",

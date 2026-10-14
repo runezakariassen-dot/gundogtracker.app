@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
+import 'package:intl/intl.dart';
 import 'package:jakthund_app/data/hive_boxes.dart';
 import 'package:jakthund_app/data/hive_path_service.dart';
 import 'package:jakthund_app/domain/domain_bootstrap.dart';
@@ -96,14 +97,23 @@ void main() {
       repository: repository,
       session: session,
     );
-    await tester.tap(find.byKey(const ValueKey('add-hunt-event')));
-    await _pumpRoute(tester);
+    final originalTrackPoints = List<GpsPoint>.from(track.points);
+    await _openCreateEditor(tester);
+    await _tapPreviewNearEffectiveIndex(tester, 2);
+    await tester.pump();
 
-    final slider = tester.widget<Slider>(
+    expect(find.byKey(const ValueKey('event-track-preview-2')), findsOneWidget);
+    final selectedTime = track.points[4].time.toLocal();
+    final expectedTime = '${selectedTime.hour.toString().padLeft(2, '0')}:'
+        '${selectedTime.minute.toString().padLeft(2, '0')}:'
+        '${selectedTime.second.toString().padLeft(2, '0')}';
+
+    expect(find.text('Tid: $expectedTime'), findsOneWidget);
+    final sliderAfterTap = tester.widget<Slider>(
       find.byKey(const ValueKey('hunt-event-track-slider')),
     );
-    slider.onChanged!(2);
-    await tester.pump();
+    expect(sliderAfterTap.value, 2);
+
     await tester.enterText(
       find.widgetWithText(TextField, 'Notat (valgfritt)'),
       'Ved bekken',
@@ -120,7 +130,62 @@ void main() {
     expect(event.trackPointIndex, 4);
     expect(event.latitude, track.points[4].lat);
     expect(event.note, 'Ved bekken');
-    expect(track.points, hasLength(5));
+    expect(track.points, orderedEquals(originalTrackPoints));
+  });
+
+  testWidgets('map tap near first middle and final points updates selection', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      canEdit: true,
+      repository: repository,
+      session: session,
+    );
+    await _openCreateEditor(tester);
+
+    await _tapPreviewNearEffectiveIndex(tester, 0, const Offset(-8, 10));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('event-track-preview-0')), findsOneWidget);
+    _expectSelectedTime(tester, track.points[2]);
+
+    await _tapPreviewNearEffectiveIndex(tester, 1, const Offset(10, -8));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('event-track-preview-1')), findsOneWidget);
+    _expectSelectedTime(tester, track.points[3]);
+
+    final sliderAfterMiddleTap = tester.widget<Slider>(
+      find.byKey(const ValueKey('hunt-event-track-slider')),
+    );
+    expect(sliderAfterMiddleTap.value, 1);
+
+    await _tapPreviewNearEffectiveIndex(tester, 2, const Offset(6, -6));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('event-track-preview-2')), findsOneWidget);
+    _expectSelectedTime(tester, track.points[4]);
+  });
+
+  testWidgets('slider still updates marker and selected time', (tester) async {
+    await _pump(
+      tester,
+      canEdit: true,
+      repository: repository,
+      session: session,
+    );
+    await _openCreateEditor(tester);
+
+    final slider = tester.widget<Slider>(
+      find.byKey(const ValueKey('hunt-event-track-slider')),
+    );
+    slider.onChanged!(1);
+    await tester.pump();
+    expect(find.byKey(const ValueKey('event-track-preview-1')), findsOneWidget);
+    _expectSelectedTime(tester, track.points[3]);
+
+    slider.onChanged!(2);
+    await tester.pump();
+    expect(find.byKey(const ValueKey('event-track-preview-2')), findsOneWidget);
+    _expectSelectedTime(tester, track.points[4]);
   });
 
   testWidgets('viewer sees events read-only without add save or delete', (
@@ -140,7 +205,53 @@ void main() {
     await tester.tap(find.byKey(ValueKey('hunt-event-${event.id}')));
     await _pumpRoute(tester);
     expect(find.byKey(const ValueKey('save-hunt-event')), findsNothing);
+    expect(find.byKey(const ValueKey('event-track-preview-1')), findsOneWidget);
     expect(find.text('Hendelse'), findsOneWidget);
+
+    await _tapPreviewNearEffectiveIndex(tester, 2);
+    await tester.pump();
+    expect(find.byKey(const ValueKey('event-track-preview-1')), findsOneWidget);
+  });
+
+  testWidgets('missing track hides add action and handles safely', (
+    tester,
+  ) async {
+    final missingTrackSession = session.copyWith(trackId: 'missing-track');
+    await _pump(
+      tester,
+      canEdit: true,
+      repository: repository,
+      session: missingTrackSession,
+    );
+
+    expect(find.byKey(const ValueKey('add-hunt-event')), findsNothing);
+    expect(find.text('Ingen hendelser registrert'), findsOneWidget);
+  });
+
+  testWidgets('empty track hides add action and handles safely', (
+    tester,
+  ) async {
+    final emptyTrack = Track(
+      id: 'track-empty',
+      createdAt: DateTime.utc(2026),
+      source: 'test',
+      points: const <GpsPoint>[],
+    );
+    await tester.runAsync(() async {
+      await tracksBox().put(emptyTrack.id, emptyTrack);
+    });
+
+    final emptyTrackSession = session.copyWith(trackId: emptyTrack.id);
+
+    await _pump(
+      tester,
+      canEdit: true,
+      repository: repository,
+      session: emptyTrackSession,
+    );
+
+    expect(find.byKey(const ValueKey('add-hunt-event')), findsNothing);
+    expect(find.text('Ingen hendelser registrert'), findsOneWidget);
   });
 
   testWidgets('editor can update and soft-delete an event', (tester) async {
@@ -179,19 +290,19 @@ void main() {
 }
 
 HuntEvent _event(GpsPoint point) => HuntEvent(
-  id: 'event-1',
-  sessionId: 'session-1',
-  dogId: 'dog-1',
-  type: HuntEventType.stand,
-  occurredAt: point.time,
-  sourceTrackId: 'track-1',
-  trackPointIndex: 3,
-  latitude: point.lat,
-  longitude: point.lon,
-  createdAt: DateTime.utc(2026),
-  updatedAt: DateTime.utc(2026),
-  createdByUserId: 'owner',
-);
+      id: 'event-1',
+      sessionId: 'session-1',
+      dogId: 'dog-1',
+      type: HuntEventType.stand,
+      occurredAt: point.time,
+      sourceTrackId: 'track-1',
+      trackPointIndex: 3,
+      latitude: point.lat,
+      longitude: point.lon,
+      createdAt: DateTime.utc(2026),
+      updatedAt: DateTime.utc(2026),
+      createdByUserId: 'owner',
+    );
 
 Future<void> _pump(
   WidgetTester tester, {
@@ -221,6 +332,33 @@ Future<void> _pumpRoute(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 500));
 }
 
+void _expectSelectedTime(WidgetTester tester, GpsPoint point) {
+  final formatted = DateFormat('HH:mm:ss').format(point.time.toLocal());
+  expect(find.text('Tid: $formatted'), findsOneWidget);
+}
+
+Future<void> _openCreateEditor(WidgetTester tester) async {
+  await tester.tap(find.byKey(const ValueKey('add-hunt-event')));
+  await _pumpRoute(tester);
+}
+
+Future<void> _tapPreviewNearEffectiveIndex(
+  WidgetTester tester,
+  int index, [
+  Offset delta = Offset.zero,
+]) async {
+  final area = find.byKey(const ValueKey('hunt-event-track-preview-tap-area'));
+  final rect = tester.getRect(area);
+  const padding = 16.0;
+  const totalPoints = 3;
+  final ratio = totalPoints == 1 ? 0.0 : index / (totalPoints - 1);
+  final local = Offset(
+    padding + ((rect.width - (padding * 2)) * ratio),
+    rect.height - padding - ((rect.height - (padding * 2)) * ratio),
+  );
+  await tester.tapAt(rect.topLeft + local + delta);
+}
+
 class _MemoryHuntEventRepository extends HuntEventRepository {
   _MemoryHuntEventRepository() : super(box: huntEventsBox(), enableSync: false);
 
@@ -234,15 +372,14 @@ class _MemoryHuntEventRepository extends HuntEventRepository {
     String sessionId, {
     bool includeDeleted = false,
   }) {
-    final values =
-        _events.values
-            .where(
-              (event) =>
-                  event.sessionId == sessionId &&
-                  (includeDeleted || event.deletedAt == null),
-            )
-            .toList()
-          ..sort((a, b) => a.occurredAt.compareTo(b.occurredAt));
+    final values = _events.values
+        .where(
+          (event) =>
+              event.sessionId == sessionId &&
+              (includeDeleted || event.deletedAt == null),
+        )
+        .toList()
+      ..sort((a, b) => a.occurredAt.compareTo(b.occurredAt));
     return values;
   }
 

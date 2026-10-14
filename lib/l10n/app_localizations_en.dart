@@ -3862,6 +3862,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hunt_event_field_time => 'Time';
 
   @override
+  String get hunt_event_track_tap_hint => 'Tap the track to choose location';
+
+  @override
   String get hunt_event_field_bird_species_optional => 'Bird species (optional)';
 
   @override

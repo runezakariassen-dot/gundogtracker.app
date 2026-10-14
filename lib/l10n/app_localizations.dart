@@ -6993,6 +6993,12 @@ abstract class AppLocalizations {
   /// **'Time'**
   String get hunt_event_field_time;
 
+  /// No description provided for @hunt_event_track_tap_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the track to choose location'**
+  String get hunt_event_track_tap_hint;
+
   /// No description provided for @hunt_event_field_bird_species_optional.
   ///
   /// In en, this message translates to:

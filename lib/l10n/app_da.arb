@@ -1710,6 +1710,7 @@
   "hunt_event_edit_title": "Rediger hændelse",
   "hunt_event_field_type": "Type",
   "hunt_event_field_time": "Tid",
+  "hunt_event_track_tap_hint": "Tryk på sporet for at vælge sted",
   "hunt_event_field_bird_species_optional": "Fugleart (valgfri)",
   "hunt_event_field_note_optional": "Notat (valgfri)",
   "hunt_event_save": "Gem",

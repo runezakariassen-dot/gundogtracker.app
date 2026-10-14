@@ -2157,6 +2157,7 @@
   "hunt_event_edit_title": "Edit event",
   "hunt_event_field_type": "Type",
   "hunt_event_field_time": "Time",
+  "hunt_event_track_tap_hint": "Tap the track to choose location",
   "hunt_event_field_bird_species_optional": "Bird species (optional)",
   "hunt_event_field_note_optional": "Note (optional)",
   "hunt_event_save": "Save",

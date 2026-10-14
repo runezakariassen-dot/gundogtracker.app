@@ -3862,6 +3862,9 @@ class AppLocalizationsDa extends AppLocalizations {
   String get hunt_event_field_time => 'Tid';
 
   @override
+  String get hunt_event_track_tap_hint => 'Tryk på sporet for at vælge sted';
+
+  @override
   String get hunt_event_field_bird_species_optional => 'Fugleart (valgfri)';
 
   @override
