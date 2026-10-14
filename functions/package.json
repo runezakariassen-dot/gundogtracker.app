@@ -9,6 +9,7 @@
     "build": "tsc",
     "test": "npm run build && node --test test/*.test.js",
     "test:rules:track": "firebase emulators:exec --config ../firebase.json --project demo-jakthund-track-rules --only firestore,storage \"node --test test/rules/track_cloud_rules.test.js\"",
+    "test:rules:events": "firebase emulators:exec --config ../firebase.json --project demo-jakthund-event-rules --only firestore \"node --test test/rules/hunt_event_rules.test.js\"",
     "lint": "eslint --ext .js,.ts src",
     "serve": "firebase emulators:start --only functions",
     "shell": "firebase functions:shell",

@@ -3827,4 +3827,73 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings_notifications_shared_dog_save_failed => 'Could not save the notification setting. Please try again.';
+
+  @override
+  String get hunt_events_title => 'Events';
+
+  @override
+  String get hunt_events_add => 'Add event';
+
+  @override
+  String get hunt_events_none => 'No events registered';
+
+  @override
+  String get hunt_events_delete_title => 'Delete event?';
+
+  @override
+  String get hunt_events_delete_body => 'The event will be removed from the session.';
+
+  @override
+  String get hunt_events_delete_action => 'Delete';
+
+  @override
+  String get hunt_events_outside_track => 'Outside edited GPS range';
+
+  @override
+  String get hunt_event_view_title => 'Event';
+
+  @override
+  String get hunt_event_edit_title => 'Edit event';
+
+  @override
+  String get hunt_event_field_type => 'Type';
+
+  @override
+  String get hunt_event_field_time => 'Time';
+
+  @override
+  String get hunt_event_field_bird_species_optional => 'Bird species (optional)';
+
+  @override
+  String get hunt_event_field_note_optional => 'Note (optional)';
+
+  @override
+  String get hunt_event_save => 'Save';
+
+  @override
+  String get hunt_event_saving => 'Saving...';
+
+  @override
+  String get hunt_event_type_stand => 'Point';
+
+  @override
+  String get hunt_event_type_bird_contact => 'Bird contact';
+
+  @override
+  String get hunt_event_type_flush => 'Flush';
+
+  @override
+  String get hunt_event_type_bump => 'Bump';
+
+  @override
+  String get hunt_event_type_bird_down => 'Bird down';
+
+  @override
+  String get hunt_event_type_backing => 'Backing';
+
+  @override
+  String get hunt_event_type_empty_stand => 'Empty point';
+
+  @override
+  String get hunt_event_type_other => 'Other';
 }

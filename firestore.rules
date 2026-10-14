@@ -116,6 +116,46 @@ service cloud.firestore {
         );
     }
 
+    function isValidHuntEventData(data, dogId, eventId) {
+      return data.schemaVersion == 1
+        && data.eventId == eventId
+        && data.dogId == dogId
+        && data.sessionId is string
+        && data.sessionId.size() > 0
+        && data.type in [
+          'stand', 'birdContact', 'flush', 'bump', 'birdDown',
+          'backing', 'emptyStand', 'other'
+        ]
+        && data.source in [
+          'manual', 'gpxWaypoint', 'garminExplore', 'imported'
+        ]
+        && data.occurredAt is timestamp
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp
+        && data.createdByUserId is string
+        && data.createdByUserId.size() > 0
+        && isNullableString(data.updatedByUserId)
+        && isNullableString(data.sourceTrackId)
+        && (data.trackPointIndex == null
+          || (data.trackPointIndex is int && data.trackPointIndex >= 0))
+        && (
+          (data.latitude == null && data.longitude == null)
+          || (
+            data.latitude is number
+            && data.latitude >= -90
+            && data.latitude <= 90
+            && data.longitude is number
+            && data.longitude >= -180
+            && data.longitude <= 180
+          )
+        )
+        && isNullableString(data.birdSpecies)
+        && isNullableString(data.note)
+        && isNullableString(data.sourceWaypointName)
+        && isNullableString(data.sourceWaypointSymbol)
+        && (data.deletedAt == null || data.deletedAt is timestamp);
+    }
+
     function isOwnerMemberCreate(dogId, memberId) {
       return isSignedIn()
         && memberId == request.auth.uid
@@ -339,6 +379,22 @@ service cloud.firestore {
           && request.resource.data.cloudDogId == resource.data.cloudDogId
           && request.resource.data.createdAt == resource.data.createdAt
           && request.resource.data.createdByUserId == resource.data.createdByUserId
+          && request.resource.data.schemaVersion == resource.data.schemaVersion
+          && request.resource.data.updatedAt >= resource.data.updatedAt;
+      }
+
+      match /events/{eventId} {
+        allow read: if isDogMember(dogId);
+        allow create: if canManageDogMedia(dogId)
+          && request.resource.data.createdByUserId == request.auth.uid
+          && isValidHuntEventData(request.resource.data, dogId, eventId);
+        allow update: if canManageDogMedia(dogId)
+          && isValidHuntEventData(request.resource.data, dogId, eventId)
+          && request.resource.data.eventId == resource.data.eventId
+          && request.resource.data.dogId == resource.data.dogId
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.createdByUserId
+            == resource.data.createdByUserId
           && request.resource.data.schemaVersion == resource.data.schemaVersion
           && request.resource.data.updatedAt >= resource.data.updatedAt;
       }

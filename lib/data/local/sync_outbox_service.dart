@@ -8,6 +8,7 @@ import '../../data/dto/dog_dto.dart';
 import '../../data/hive_boxes.dart';
 import '../../models/dog.dart';
 import '../../models/hunt_session.dart';
+import '../../models/hunt_event.dart';
 import '../../models/health_record.dart';
 import '../../models/sync_task.dart';
 import '../../services/cloud/auto_sync_coordinator.dart';
@@ -43,11 +44,11 @@ class SyncOutboxService {
     AutoSyncCoordinator? autoSyncCoordinator,
     DateTime Function()? now,
     bool enableAutoSync = true,
-  })  : _box = box ?? syncTasksBox(),
-        _autoSyncCoordinator = enableAutoSync
-            ? (autoSyncCoordinator ?? AutoSyncCoordinator.instance)
-            : null,
-        _now = now ?? DateTime.now;
+  }) : _box = box ?? syncTasksBox(),
+       _autoSyncCoordinator = enableAutoSync
+           ? (autoSyncCoordinator ?? AutoSyncCoordinator.instance)
+           : null,
+       _now = now ?? DateTime.now;
 
   static const int maxRetryCount = 4;
 
@@ -61,20 +62,14 @@ class SyncOutboxService {
     final saved = await _saveTask(
       entityType: 'dog_upsert',
       entityId: dog.id,
-      payload: {
-        ...dogToJson(dog),
-        'operation': 'upsert',
-      },
+      payload: {...dogToJson(dog), 'operation': 'upsert'},
     );
     if (saved) {
       _triggerAutoSyncAfterEnqueue();
     }
   }
 
-  Future<void> enqueueDeleteDog(
-    Dog dog, {
-    DateTime? deletedAt,
-  }) async {
+  Future<void> enqueueDeleteDog(Dog dog, {DateTime? deletedAt}) async {
     final effectiveDeletedAt = deletedAt?.toUtc() ?? _now().toUtc();
     debugPrint('[SYNC][DELETE] enqueue dog delete: ${dog.id}');
     final saved = await _saveTask(
@@ -148,6 +143,26 @@ class SyncOutboxService {
   String _sessionId(HuntSession session, String fallback) {
     final stableId = session.sessionId?.trim();
     return stableId == null || stableId.isEmpty ? fallback : stableId;
+  }
+
+  Future<void> enqueueUpsertHuntEvent(HuntEvent event) async {
+    final saved = await _saveOrReplacePendingTask(
+      entityType: 'hunt_event_upsert',
+      entityId: event.id,
+      payload: <String, dynamic>{...event.toJson(), 'operation': 'upsert'},
+    );
+    if (!saved) throw SyncOutboxEnqueueException('hunt_event_upsert', event.id);
+    _triggerAutoSyncAfterEnqueue();
+  }
+
+  Future<void> enqueueDeleteHuntEvent(HuntEvent event) async {
+    final saved = await _saveOrReplacePendingTask(
+      entityType: 'hunt_event_delete',
+      entityId: event.id,
+      payload: <String, dynamic>{...event.toJson(), 'operation': 'delete'},
+    );
+    if (!saved) throw SyncOutboxEnqueueException('hunt_event_delete', event.id);
+    _triggerAutoSyncAfterEnqueue();
   }
 
   Future<void> enqueueUpsertHealthRecord(HealthRecord record) async {
@@ -277,8 +292,9 @@ class SyncOutboxService {
     SyncTask? latest;
 
     for (final task in _box.values) {
-      if (!normalizedEntityTypes
-          .contains(task.entityType.trim().toLowerCase())) {
+      if (!normalizedEntityTypes.contains(
+        task.entityType.trim().toLowerCase(),
+      )) {
         continue;
       }
       if (task.entityId.trim() != normalizedEntityId) {
@@ -358,6 +374,8 @@ class SyncOutboxService {
       'health_record_upsert',
       'heat_cycle_upsert',
       'heat_cycle_delete',
+      'hunt_event_upsert',
+      'hunt_event_delete',
     },
   }) {
     return _resetFailedTasksForRetry(
@@ -377,6 +395,8 @@ class SyncOutboxService {
       'health_record_upsert',
       'heat_cycle_upsert',
       'heat_cycle_delete',
+      'hunt_event_upsert',
+      'hunt_event_delete',
     },
   }) {
     return _resetFailedTasksForRetry(
@@ -406,7 +426,8 @@ class SyncOutboxService {
     for (final entry in _box.toMap().entries) {
       final task = entry.value;
       final normalizedEntityType = task.entityType.trim().toLowerCase();
-      final shouldReset = task.status == SyncStatus.failed &&
+      final shouldReset =
+          task.status == SyncStatus.failed &&
           normalizedEntityTypes.contains(normalizedEntityType);
 
       if (!shouldReset) {
@@ -532,10 +553,7 @@ class SyncOutboxService {
     );
   }
 
-  Future<void> markTaskWaitingForDependency(
-    String taskId,
-    Object error,
-  ) async {
+  Future<void> markTaskWaitingForDependency(String taskId, Object error) async {
     final existing = _box.get(taskId);
     if (existing == null) return;
     await _box.put(
@@ -647,10 +665,7 @@ class SyncOutboxService {
     }
   }
 
-  bool _isReadyToRun(
-    SyncTask task, {
-    required DateTime now,
-  }) {
+  bool _isReadyToRun(SyncTask task, {required DateTime now}) {
     final nextAttemptAt = task.nextAttemptAt;
     if (nextAttemptAt == null) {
       return true;
@@ -663,8 +678,9 @@ class SyncOutboxService {
   }
 
   bool _isTaskNewer(SyncTask candidate, SyncTask current) {
-    final createdAtComparison =
-        candidate.createdAt.compareTo(current.createdAt);
+    final createdAtComparison = candidate.createdAt.compareTo(
+      current.createdAt,
+    );
     if (createdAtComparison != 0) {
       return createdAtComparison > 0;
     }

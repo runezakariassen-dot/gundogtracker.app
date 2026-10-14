@@ -1,21 +1,14 @@
 import '../../models/dog.dart';
 import '../../models/hunt_session.dart';
 import '../../models/health_record.dart';
+import '../../models/hunt_event.dart';
 
-enum MergeDecision {
-  insert,
-  cloudNewer,
-  localNewer,
-  equal,
-}
+enum MergeDecision { insert, cloudNewer, localNewer, equal }
 
 class SyncMergePolicy {
   const SyncMergePolicy._();
 
-  static MergeDecision forDog({
-    required Dog? local,
-    required Dog cloud,
-  }) {
+  static MergeDecision forDog({required Dog? local, required Dog cloud}) {
     return _compareUpdatedAt(
       localUpdatedAt: local?.updatedAt,
       cloudUpdatedAt: cloud.updatedAt,
@@ -35,6 +28,16 @@ class SyncMergePolicy {
   static MergeDecision forHealthRecord({
     required HealthRecord? local,
     required HealthRecord cloud,
+  }) {
+    return _compareUpdatedAt(
+      localUpdatedAt: local?.updatedAt,
+      cloudUpdatedAt: cloud.updatedAt,
+    );
+  }
+
+  static MergeDecision forHuntEvent({
+    required HuntEvent? local,
+    required HuntEvent cloud,
   }) {
     return _compareUpdatedAt(
       localUpdatedAt: local?.updatedAt,

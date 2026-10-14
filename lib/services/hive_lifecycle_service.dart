@@ -13,6 +13,7 @@ import '../models/dog_media_asset.dart';
 import '../models/dog_milestone_state.dart';
 import '../models/dog_membership.dart';
 import '../models/gps_track.dart';
+import '../models/hunt_event.dart';
 import '../models/hunt_session.dart';
 import '../models/health_record.dart';
 import '../models/map_settings.dart';
@@ -55,6 +56,10 @@ class HiveLifecycleService {
       name: sessionTrackEditsBoxName,
       open: (attempts) =>
           _openBoxOnce<SessionTrackEdit>(sessionTrackEditsBoxName, attempts),
+    ),
+    _BoxDescriptor<HuntEvent>(
+      name: huntEventsBoxName,
+      open: (attempts) => _openBoxOnce<HuntEvent>(huntEventsBoxName, attempts),
     ),
     _BoxDescriptor<GpsTrack>(
       name: gpsTracksBoxName,

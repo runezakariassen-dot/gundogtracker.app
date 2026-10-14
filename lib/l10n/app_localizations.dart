@@ -6926,6 +6926,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not save the notification setting. Please try again.'**
   String get settings_notifications_shared_dog_save_failed;
+
+  /// No description provided for @hunt_events_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Events'**
+  String get hunt_events_title;
+
+  /// No description provided for @hunt_events_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add event'**
+  String get hunt_events_add;
+
+  /// No description provided for @hunt_events_none.
+  ///
+  /// In en, this message translates to:
+  /// **'No events registered'**
+  String get hunt_events_none;
+
+  /// No description provided for @hunt_events_delete_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete event?'**
+  String get hunt_events_delete_title;
+
+  /// No description provided for @hunt_events_delete_body.
+  ///
+  /// In en, this message translates to:
+  /// **'The event will be removed from the session.'**
+  String get hunt_events_delete_body;
+
+  /// No description provided for @hunt_events_delete_action.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get hunt_events_delete_action;
+
+  /// No description provided for @hunt_events_outside_track.
+  ///
+  /// In en, this message translates to:
+  /// **'Outside edited GPS range'**
+  String get hunt_events_outside_track;
+
+  /// No description provided for @hunt_event_view_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Event'**
+  String get hunt_event_view_title;
+
+  /// No description provided for @hunt_event_edit_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit event'**
+  String get hunt_event_edit_title;
+
+  /// No description provided for @hunt_event_field_type.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get hunt_event_field_type;
+
+  /// No description provided for @hunt_event_field_time.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get hunt_event_field_time;
+
+  /// No description provided for @hunt_event_field_bird_species_optional.
+  ///
+  /// In en, this message translates to:
+  /// **'Bird species (optional)'**
+  String get hunt_event_field_bird_species_optional;
+
+  /// No description provided for @hunt_event_field_note_optional.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional)'**
+  String get hunt_event_field_note_optional;
+
+  /// No description provided for @hunt_event_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get hunt_event_save;
+
+  /// No description provided for @hunt_event_saving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving...'**
+  String get hunt_event_saving;
+
+  /// No description provided for @hunt_event_type_stand.
+  ///
+  /// In en, this message translates to:
+  /// **'Point'**
+  String get hunt_event_type_stand;
+
+  /// No description provided for @hunt_event_type_bird_contact.
+  ///
+  /// In en, this message translates to:
+  /// **'Bird contact'**
+  String get hunt_event_type_bird_contact;
+
+  /// No description provided for @hunt_event_type_flush.
+  ///
+  /// In en, this message translates to:
+  /// **'Flush'**
+  String get hunt_event_type_flush;
+
+  /// No description provided for @hunt_event_type_bump.
+  ///
+  /// In en, this message translates to:
+  /// **'Bump'**
+  String get hunt_event_type_bump;
+
+  /// No description provided for @hunt_event_type_bird_down.
+  ///
+  /// In en, this message translates to:
+  /// **'Bird down'**
+  String get hunt_event_type_bird_down;
+
+  /// No description provided for @hunt_event_type_backing.
+  ///
+  /// In en, this message translates to:
+  /// **'Backing'**
+  String get hunt_event_type_backing;
+
+  /// No description provided for @hunt_event_type_empty_stand.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty point'**
+  String get hunt_event_type_empty_stand;
+
+  /// No description provided for @hunt_event_type_other.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get hunt_event_type_other;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

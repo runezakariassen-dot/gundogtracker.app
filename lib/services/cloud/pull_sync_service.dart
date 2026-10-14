@@ -9,6 +9,7 @@ import '../../models/dog.dart';
 import '../../models/dog_heat_cycle_log.dart';
 import '../../models/gps_track.dart';
 import '../../models/hunt_session.dart';
+import '../../models/hunt_event.dart';
 import '../../models/health_record.dart';
 import '../../models/sync_task.dart';
 import '../hive_lifecycle_service.dart';
@@ -17,6 +18,7 @@ import 'firestore_heat_cycle_sync_service.dart';
 import 'firestore_session_sync_service.dart';
 import 'firestore_health_record_sync_service.dart';
 import 'firestore_track_sync_service.dart';
+import 'firestore_hunt_event_sync_service.dart';
 import 'network_awareness_service.dart';
 import 'sync_merge_policy.dart';
 
@@ -36,6 +38,13 @@ typedef HeatCycleFetchHandler = Future<List<DogHeatCycleLog>> Function({
 typedef TrackDownloadDependency = Future<void> Function({
   required String trackId,
   required String cloudDogId,
+});
+
+typedef HuntEventFetchHandler = Future<List<HuntEvent>> Function({
+  required String cloudDogId,
+  required String localDogId,
+  String? localDogKey,
+  DateTime? updatedAfter,
 });
 
 Future<void> _defaultTrackDownloadDependency({
@@ -64,6 +73,9 @@ class PullSyncService {
     HeatCycleFetchHandler? heatCycleFetchHandler,
     DogHeatCycleRepository? heatCycleRepository,
     TrackDownloadDependency? trackDownloadDependency,
+    FirestoreHuntEventSyncService? huntEventSyncService,
+    HuntEventFetchHandler? huntEventFetchHandler,
+    Box<HuntEvent>? huntEventBox,
     DateTime Function()? now,
   })  : _dogSyncService = dogSyncService ?? FirestoreDogSyncService.instance,
         _sessionSyncService =
@@ -83,6 +95,9 @@ class PullSyncService {
         _heatCycleRepository = heatCycleRepository,
         _trackDownloadDependency =
             trackDownloadDependency ?? _defaultTrackDownloadDependency,
+        _huntEventSyncService = huntEventSyncService,
+        _huntEventFetchHandler = huntEventFetchHandler,
+        _huntEventBox = huntEventBox,
         _now = now ?? DateTime.now;
 
   final FirestoreDogSyncService _dogSyncService;
@@ -99,6 +114,9 @@ class PullSyncService {
   final HeatCycleFetchHandler? _heatCycleFetchHandler;
   final DogHeatCycleRepository? _heatCycleRepository;
   final TrackDownloadDependency _trackDownloadDependency;
+  final FirestoreHuntEventSyncService? _huntEventSyncService;
+  final HuntEventFetchHandler? _huntEventFetchHandler;
+  final Box<HuntEvent>? _huntEventBox;
   final DateTime Function() _now;
 
   Future<void> pullAllVisibleData() async {
@@ -139,6 +157,10 @@ class PullSyncService {
           updatedAfter: lastSuccessfulPullAt,
         );
         await _pullHeatCyclesForDog(
+          dog,
+          updatedAfter: lastSuccessfulPullAt,
+        );
+        await _pullHuntEventsForDog(
           dog,
           updatedAfter: lastSuccessfulPullAt,
         );
@@ -475,6 +497,44 @@ class PullSyncService {
 
     await (_heatCycleRepository ?? DogHeatCycleRepository())
         .mergePulledForDog(dog.id, entries);
+  }
+
+  Future<void> _pullHuntEventsForDog(
+    Dog dog, {
+    DateTime? updatedAfter,
+  }) async {
+    if (_huntEventBox == null && !Hive.isBoxOpen(huntEventsBoxName)) {
+      return;
+    }
+    final cloudDogId = dog.cloudId?.trim();
+    if (cloudDogId == null || cloudDogId.isEmpty) return;
+
+    final fetch = _huntEventFetchHandler;
+    final events = fetch != null
+        ? await fetch(
+            cloudDogId: cloudDogId,
+            localDogId: dog.id,
+            localDogKey: dog.dogKey,
+            updatedAfter: updatedAfter,
+          )
+        : await (_huntEventSyncService ??
+                FirestoreHuntEventSyncService.instance)
+            .fetchForDog(
+            cloudDogId: cloudDogId,
+            localDogId: dog.id,
+            localDogKey: dog.dogKey,
+            updatedAfter: updatedAfter,
+          );
+
+    final box = _huntEventBox ?? huntEventsBox();
+    for (final cloud in events) {
+      final local = box.get(cloud.id);
+      final decision = SyncMergePolicy.forHuntEvent(local: local, cloud: cloud);
+      if (decision == MergeDecision.insert ||
+          decision == MergeDecision.cloudNewer) {
+        await box.put(cloud.id, cloud);
+      }
+    }
   }
 
   Future<void> _applyCloudTombstone({

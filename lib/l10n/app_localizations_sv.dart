@@ -3827,4 +3827,73 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get settings_notifications_shared_dog_save_failed => 'Det gick inte att spara notisinställningen. Försök igen.';
+
+  @override
+  String get hunt_events_title => 'Händelser';
+
+  @override
+  String get hunt_events_add => 'Lägg till händelse';
+
+  @override
+  String get hunt_events_none => 'Inga händelser registrerade';
+
+  @override
+  String get hunt_events_delete_title => 'Ta bort händelse?';
+
+  @override
+  String get hunt_events_delete_body => 'Händelsen tas bort från passet.';
+
+  @override
+  String get hunt_events_delete_action => 'Ta bort';
+
+  @override
+  String get hunt_events_outside_track => 'Utanför redigerat GPS-spår';
+
+  @override
+  String get hunt_event_view_title => 'Händelse';
+
+  @override
+  String get hunt_event_edit_title => 'Redigera händelse';
+
+  @override
+  String get hunt_event_field_type => 'Typ';
+
+  @override
+  String get hunt_event_field_time => 'Tid';
+
+  @override
+  String get hunt_event_field_bird_species_optional => 'Fågelart (valfritt)';
+
+  @override
+  String get hunt_event_field_note_optional => 'Notering (valfritt)';
+
+  @override
+  String get hunt_event_save => 'Spara';
+
+  @override
+  String get hunt_event_saving => 'Sparar...';
+
+  @override
+  String get hunt_event_type_stand => 'Stånd';
+
+  @override
+  String get hunt_event_type_bird_contact => 'Fågelkontakt';
+
+  @override
+  String get hunt_event_type_flush => 'Uppflog';
+
+  @override
+  String get hunt_event_type_bump => 'Stöt';
+
+  @override
+  String get hunt_event_type_bird_down => 'Fågel fälld';
+
+  @override
+  String get hunt_event_type_backing => 'Sekundering';
+
+  @override
+  String get hunt_event_type_empty_stand => 'Tomstånd';
+
+  @override
+  String get hunt_event_type_other => 'Annat';
 }

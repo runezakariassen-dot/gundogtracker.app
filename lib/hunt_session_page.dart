@@ -36,6 +36,7 @@ import 'package:jakthund_app/models/track.dart';
 import 'package:jakthund_app/pages/dog_editor_page.dart';
 import 'package:jakthund_app/pages/session_map_page.dart';
 import 'package:jakthund_app/pages/session_track_edit_page.dart';
+import 'package:jakthund_app/pages/session_events_page.dart';
 import 'package:jakthund_app/pages/session_media_image_helper.dart';
 import 'package:jakthund_app/pages/session_media_video_helper.dart';
 import 'package:jakthund_app/repositories/session_repository.dart';
@@ -2193,6 +2194,26 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     if (changed == true && mounted) setState(() {});
   }
 
+  Future<void> _openSessionEvents(
+    dynamic sessionKey,
+    HuntSession session,
+  ) async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SessionEventsPage(
+          sessionKey: sessionKey,
+          session: session,
+          canEdit: SessionTrackEditPermissionService().canEdit(
+            dogId: session.dogId,
+            dogKey: session.dogKey,
+          ),
+        ),
+      ),
+    );
+    if (mounted) setState(() {});
+  }
+
   // ---------- Edit/delete ----------
   // ignore: unused_element
   Future<void> _editSession(int index, HuntSession session) async {
@@ -2490,6 +2511,15 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                     _openTrackEditor(sessionKey, session);
                   },
                 ),
+              ListTile(
+                key: ValueKey('session-events-$sessionKey'),
+                leading: const Icon(Icons.location_on_outlined),
+                title: Text(l10n.hunt_events_title),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _openSessionEvents(sessionKey, session);
+                },
+              ),
               ListTile(
                 key: ValueKey('edit-session-$sessionKey'),
                 leading: const Icon(Icons.edit),
@@ -4062,6 +4092,23 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                     onPressed: _isPickingGpx
                                         ? null
                                         : () => _importGpxForExistingSession(
+                                              filteredEntries[i].key,
+                                              filteredEntries[i].value,
+                                            ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: OutlinedButton.icon(
+                                    key: ValueKey(
+                                      'session-events-${filteredEntries[i].key}',
+                                    ),
+                                    icon: const Icon(Icons.location_on_outlined),
+                                    label: Text(l10n.hunt_events_title),
+                                    onPressed: _anyBusy
+                                        ? null
+                                        : () => _openSessionEvents(
                                               filteredEntries[i].key,
                                               filteredEntries[i].value,
                                             ),

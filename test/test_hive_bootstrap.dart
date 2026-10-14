@@ -11,6 +11,7 @@ import 'package:jakthund_app/models/dog_milestone_state.dart';
 import 'package:jakthund_app/models/gps_point.dart';
 import 'package:jakthund_app/models/gps_track.dart';
 import 'package:jakthund_app/models/hunt_session.dart';
+import 'package:jakthund_app/models/hunt_event.dart';
 import 'package:jakthund_app/models/session_type_adapter.dart';
 import 'package:jakthund_app/models/track.dart';
 import 'package:jakthund_app/models/session_track_edit.dart';
@@ -29,6 +30,7 @@ Future<Directory> initHiveForTests({required String prefix}) async {
   _registerAdapter(GpsTrackAdapter());
   _registerAdapter(TrackAdapter());
   _registerAdapter(SessionTrackEditAdapter());
+  _registerAdapter(HuntEventAdapter());
   _registerAdapter(ActiveSessionDraftAdapter());
 
   await Future.wait([
@@ -37,6 +39,7 @@ Future<Directory> initHiveForTests({required String prefix}) async {
     Hive.openBox<GpsTrack>(gpsTracksBoxName),
     Hive.openBox<Track>(tracksBoxName),
     Hive.openBox<SessionTrackEdit>(sessionTrackEditsBoxName),
+    Hive.openBox<HuntEvent>(huntEventsBoxName),
     Hive.openBox<String>(birdSpeciesBoxName),
     Hive.openBox<dynamic>(appSettingsBoxName),
     Hive.openBox<DateTime>(milestoneSeenBoxName),

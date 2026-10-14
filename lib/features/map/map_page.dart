@@ -10,7 +10,9 @@ import 'package:latlong2/latlong.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../models/gps_point.dart';
+import '../../models/hunt_event.dart';
 import '../../models/offline_region_metadata.dart';
+import '../../ui/hunt_event_labels.dart';
 import '../../widgets/big_action_button.dart';
 import 'map_tile_sources.dart';
 import 'offline_tiles/offline_download_controller.dart';
@@ -22,11 +24,13 @@ class MapPage extends StatefulWidget {
   const MapPage({
     super.key,
     required this.points,
+    this.events = const <HuntEvent>[],
     this.title,
     this.titleSpan,
   });
 
   final List<GpsPoint> points;
+  final List<HuntEvent> events;
   final String? title;
   final InlineSpan? titleSpan;
 
@@ -132,6 +136,34 @@ class _MapPageState extends State<MapPage> {
     _logMapUi('focus_track');
     _mapController.fitCamera(
       CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(40)),
+    );
+  }
+
+  void _showHuntEvent(HuntEvent event) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                huntEventTypeLabel(context, event.type),
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(DateFormat('HH:mm:ss').format(event.occurredAt.toLocal())),
+              if (event.birdSpecies?.isNotEmpty == true) Text(event.birdSpecies!),
+              if (event.note?.isNotEmpty == true) ...[
+                const SizedBox(height: 8),
+                Text(event.note!),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -1116,6 +1148,19 @@ class _MapPageState extends State<MapPage> {
                             height: 40,
                             child: const Icon(Icons.stop, color: Colors.red),
                           ),
+                        for (final event in widget.events)
+                          if (event.latitude != null && event.longitude != null)
+                            Marker(
+                              point: LatLng(event.latitude!, event.longitude!),
+                              width: 48,
+                              height: 48,
+                              child: IconButton.filled(
+                                key: ValueKey('hunt-event-marker-${event.id}'),
+                                onPressed: () => _showHuntEvent(event),
+                                icon: Icon(huntEventTypeIcon(event.type)),
+                                tooltip: huntEventTypeLabel(context, event.type),
+                              ),
+                            ),
                       ],
                     ),
                     RichAttributionWidget(
