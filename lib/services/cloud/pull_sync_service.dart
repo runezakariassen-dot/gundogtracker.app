@@ -9,6 +9,7 @@ import '../../models/dog.dart';
 import '../../models/dog_heat_cycle_log.dart';
 import '../../models/gps_track.dart';
 import '../../models/hunt_session.dart';
+import '../../models/hunt_event.dart';
 import '../../models/health_record.dart';
 import '../../models/sync_task.dart';
 import '../hive_lifecycle_service.dart';
@@ -17,26 +18,38 @@ import 'firestore_heat_cycle_sync_service.dart';
 import 'firestore_session_sync_service.dart';
 import 'firestore_health_record_sync_service.dart';
 import 'firestore_track_sync_service.dart';
+import 'firestore_hunt_event_sync_service.dart';
 import 'network_awareness_service.dart';
 import 'sync_merge_policy.dart';
 
-typedef HealthRecordFetchHandler = Future<List<HealthRecord>> Function({
-  required String cloudDogId,
-  required String localDogId,
-  String? localDogKey,
-  DateTime? updatedAfter,
-});
+typedef HealthRecordFetchHandler =
+    Future<List<HealthRecord>> Function({
+      required String cloudDogId,
+      required String localDogId,
+      String? localDogKey,
+      DateTime? updatedAfter,
+    });
 
-typedef HeatCycleFetchHandler = Future<List<DogHeatCycleLog>> Function({
-  required String cloudDogId,
-  required String localDogId,
-  DateTime? updatedAfter,
-});
+typedef HeatCycleFetchHandler =
+    Future<List<DogHeatCycleLog>> Function({
+      required String cloudDogId,
+      required String localDogId,
+      DateTime? updatedAfter,
+    });
 
-typedef TrackDownloadDependency = Future<void> Function({
-  required String trackId,
-  required String cloudDogId,
-});
+typedef TrackDownloadDependency =
+    Future<void> Function({
+      required String trackId,
+      required String cloudDogId,
+    });
+
+typedef HuntEventFetchHandler =
+    Future<List<HuntEvent>> Function({
+      required String cloudDogId,
+      required String localDogId,
+      String? localDogKey,
+      DateTime? updatedAfter,
+    });
 
 Future<void> _defaultTrackDownloadDependency({
   required String trackId,
@@ -64,26 +77,32 @@ class PullSyncService {
     HeatCycleFetchHandler? heatCycleFetchHandler,
     DogHeatCycleRepository? heatCycleRepository,
     TrackDownloadDependency? trackDownloadDependency,
+    FirestoreHuntEventSyncService? huntEventSyncService,
+    HuntEventFetchHandler? huntEventFetchHandler,
+    Box<HuntEvent>? huntEventBox,
     DateTime Function()? now,
-  })  : _dogSyncService = dogSyncService ?? FirestoreDogSyncService.instance,
-        _sessionSyncService =
-            sessionSyncService ?? FirestoreSessionSyncService.instance,
-        _networkAwarenessService =
-            networkAwarenessService ?? NetworkAwarenessServiceImpl(),
-        _syncStateStore = syncStateStore ?? SyncStateStore(),
-        _outboxService =
-            outboxService ?? SyncOutboxService(enableAutoSync: false),
-        _dogBox = dogBox,
-        _sessionBox = sessionBox,
-        _healthRecordSyncService = healthRecordSyncService,
-        _healthRecordFetchHandler = healthRecordFetchHandler,
-        _healthRecordBox = healthRecordBox,
-        _heatCycleSyncService = heatCycleSyncService,
-        _heatCycleFetchHandler = heatCycleFetchHandler,
-        _heatCycleRepository = heatCycleRepository,
-        _trackDownloadDependency =
-            trackDownloadDependency ?? _defaultTrackDownloadDependency,
-        _now = now ?? DateTime.now;
+  }) : _dogSyncService = dogSyncService ?? FirestoreDogSyncService.instance,
+       _sessionSyncService =
+           sessionSyncService ?? FirestoreSessionSyncService.instance,
+       _networkAwarenessService =
+           networkAwarenessService ?? NetworkAwarenessServiceImpl(),
+       _syncStateStore = syncStateStore ?? SyncStateStore(),
+       _outboxService =
+           outboxService ?? SyncOutboxService(enableAutoSync: false),
+       _dogBox = dogBox,
+       _sessionBox = sessionBox,
+       _healthRecordSyncService = healthRecordSyncService,
+       _healthRecordFetchHandler = healthRecordFetchHandler,
+       _healthRecordBox = healthRecordBox,
+       _heatCycleSyncService = heatCycleSyncService,
+       _heatCycleFetchHandler = heatCycleFetchHandler,
+       _heatCycleRepository = heatCycleRepository,
+       _trackDownloadDependency =
+           trackDownloadDependency ?? _defaultTrackDownloadDependency,
+       _huntEventSyncService = huntEventSyncService,
+       _huntEventFetchHandler = huntEventFetchHandler,
+       _huntEventBox = huntEventBox,
+       _now = now ?? DateTime.now;
 
   final FirestoreDogSyncService _dogSyncService;
   final FirestoreSessionSyncService _sessionSyncService;
@@ -99,6 +118,9 @@ class PullSyncService {
   final HeatCycleFetchHandler? _heatCycleFetchHandler;
   final DogHeatCycleRepository? _heatCycleRepository;
   final TrackDownloadDependency _trackDownloadDependency;
+  final FirestoreHuntEventSyncService? _huntEventSyncService;
+  final HuntEventFetchHandler? _huntEventFetchHandler;
+  final Box<HuntEvent>? _huntEventBox;
   final DateTime Function() _now;
 
   Future<void> pullAllVisibleData() async {
@@ -130,18 +152,10 @@ class PullSyncService {
         if (dog.deletedAt != null) {
           continue;
         }
-        await _pullSessionsForDog(
-          dog,
-          updatedAfter: lastSuccessfulPullAt,
-        );
-        await _pullHealthRecordsForDog(
-          dog,
-          updatedAfter: lastSuccessfulPullAt,
-        );
-        await _pullHeatCyclesForDog(
-          dog,
-          updatedAfter: lastSuccessfulPullAt,
-        );
+        await _pullSessionsForDog(dog, updatedAfter: lastSuccessfulPullAt);
+        await _pullHealthRecordsForDog(dog, updatedAfter: lastSuccessfulPullAt);
+        await _pullHeatCyclesForDog(dog, updatedAfter: lastSuccessfulPullAt);
+        await _pullHuntEventsForDog(dog, updatedAfter: lastSuccessfulPullAt);
       }
 
       await _syncStateStore.setLastSuccessfulPullAt(pullStartedAt);
@@ -259,19 +273,13 @@ class PullSyncService {
 
     await box.put(
       hiveKey,
-      cloudDog.copyWith(
-        id: localDog.id,
-        dogKey: localDog.dogKey,
-      ),
+      cloudDog.copyWith(id: localDog.id, dogKey: localDog.dogKey),
     );
     debugPrint('[SYNC][DELETE] pull dog tombstone applied locally: $cloudId');
     debugPrint('[SYNC][DELETE] dog hidden from visibility: $cloudId');
   }
 
-  Future<void> _pullSessionsForDog(
-    Dog dog, {
-    DateTime? updatedAfter,
-  }) async {
+  Future<void> _pullSessionsForDog(Dog dog, {DateTime? updatedAfter}) async {
     final cloudId = dog.cloudId;
     if (cloudId == null || cloudId.isEmpty) {
       return;
@@ -279,11 +287,8 @@ class PullSyncService {
 
     debugPrint('[SYNC][PULL] fetching sessions for dog: $cloudId');
 
-    final cloudSessionEntries =
-        await _sessionSyncService.fetchSessionEntriesWithIdsForDog(
-      cloudId,
-      updatedAfter: updatedAfter,
-    );
+    final cloudSessionEntries = await _sessionSyncService
+        .fetchSessionEntriesWithIdsForDog(cloudId, updatedAfter: updatedAfter);
     debugPrint(
       '[SYNC][DELTA] session delta fetch count: ${cloudSessionEntries.length} '
       'for dog: $cloudId',
@@ -304,8 +309,8 @@ class PullSyncService {
         .where((trackId) => trackId.isNotEmpty)
         .toSet();
     final localSessions = (_sessionBox ?? sessionsBox()).values.where(
-          (session) => session.dogId == dog.id && session.deletedAt == null,
-        );
+      (session) => session.dogId == dog.id && session.deletedAt == null,
+    );
     for (final session in localSessions) {
       final trackId = session.trackId?.trim();
       if (trackId == null ||
@@ -313,10 +318,7 @@ class PullSyncService {
           processedTrackIds.contains(trackId)) {
         continue;
       }
-      await _trackDownloadDependency(
-        trackId: trackId,
-        cloudDogId: cloudId,
-      );
+      await _trackDownloadDependency(trackId: trackId, cloudDogId: cloudId);
     }
   }
 
@@ -358,8 +360,10 @@ class PullSyncService {
       return;
     }
 
-    final decision =
-        SyncMergePolicy.forSession(local: localSession, cloud: cloudSession);
+    final decision = SyncMergePolicy.forSession(
+      local: localSession,
+      cloud: cloudSession,
+    );
     final localizedCloudSession = cloudSession.copyWith(
       dogId: dog.id,
       dogKey: dog.dogKey,
@@ -394,10 +398,7 @@ class PullSyncService {
   ) async {
     final trackId = cloudSession.trackId?.trim();
     if (trackId == null || trackId.isEmpty) return;
-    await _trackDownloadDependency(
-      trackId: trackId,
-      cloudDogId: dog.cloudId!,
-    );
+    await _trackDownloadDependency(trackId: trackId, cloudDogId: dog.cloudId!);
   }
 
   Future<void> _pullHealthRecordsForDog(
@@ -419,13 +420,13 @@ class PullSyncService {
             updatedAfter: updatedAfter,
           )
         : await (_healthRecordSyncService ??
-                FirestoreHealthRecordSyncService.instance)
-            .fetchHealthRecordsForDog(
-            cloudDogId: cloudDogId,
-            localDogId: dog.id,
-            localDogKey: dog.dogKey,
-            updatedAfter: updatedAfter,
-          );
+                  FirestoreHealthRecordSyncService.instance)
+              .fetchHealthRecordsForDog(
+                cloudDogId: cloudDogId,
+                localDogId: dog.id,
+                localDogKey: dog.dogKey,
+                updatedAfter: updatedAfter,
+              );
 
     final box = _healthRecordBox ?? healthRecordsBox();
     for (final cloudRecord in records) {
@@ -448,10 +449,38 @@ class PullSyncService {
     }
   }
 
-  Future<void> _pullHeatCyclesForDog(
-    Dog dog, {
-    DateTime? updatedAfter,
-  }) async {
+  Future<void> _pullHuntEventsForDog(Dog dog, {DateTime? updatedAfter}) async {
+    if (_huntEventBox == null && !Hive.isBoxOpen(huntEventsBoxName)) return;
+    final cloudDogId = dog.cloudId?.trim();
+    if (cloudDogId == null || cloudDogId.isEmpty) return;
+    final fetch = _huntEventFetchHandler;
+    final events = fetch != null
+        ? await fetch(
+            cloudDogId: cloudDogId,
+            localDogId: dog.id,
+            localDogKey: dog.dogKey,
+            updatedAfter: updatedAfter,
+          )
+        : await (_huntEventSyncService ??
+                  FirestoreHuntEventSyncService.instance)
+              .fetchForDog(
+                cloudDogId: cloudDogId,
+                localDogId: dog.id,
+                localDogKey: dog.dogKey,
+                updatedAfter: updatedAfter,
+              );
+    final box = _huntEventBox ?? huntEventsBox();
+    for (final cloud in events) {
+      final local = box.get(cloud.id);
+      final decision = SyncMergePolicy.forHuntEvent(local: local, cloud: cloud);
+      if (decision == MergeDecision.insert ||
+          decision == MergeDecision.cloudNewer) {
+        await box.put(cloud.id, cloud);
+      }
+    }
+  }
+
+  Future<void> _pullHeatCyclesForDog(Dog dog, {DateTime? updatedAfter}) async {
     if (_heatCycleRepository == null && !Hive.isBoxOpen(appSettingsBoxName)) {
       return;
     }
@@ -466,15 +495,17 @@ class PullSyncService {
             updatedAfter: updatedAfter,
           )
         : await (_heatCycleSyncService ??
-                FirestoreHeatCycleSyncService.instance)
-            .fetchHeatCyclesForDog(
-            cloudDogId: cloudDogId,
-            localDogId: dog.id,
-            updatedAfter: updatedAfter,
-          );
+                  FirestoreHeatCycleSyncService.instance)
+              .fetchHeatCyclesForDog(
+                cloudDogId: cloudDogId,
+                localDogId: dog.id,
+                updatedAfter: updatedAfter,
+              );
 
-    await (_heatCycleRepository ?? DogHeatCycleRepository())
-        .mergePulledForDog(dog.id, entries);
+    await (_heatCycleRepository ?? DogHeatCycleRepository()).mergePulledForDog(
+      dog.id,
+      entries,
+    );
   }
 
   Future<void> _applyCloudTombstone({
@@ -540,8 +571,9 @@ class PullSyncService {
   ) async {
     final trackKey = session.trackKey;
     if (trackKey != null) {
-      await HiveLifecycleService.getBox<GpsTrack>(gpsTracksBoxName)
-          .delete(trackKey);
+      await HiveLifecycleService.getBox<GpsTrack>(
+        gpsTracksBoxName,
+      ).delete(trackKey);
     }
     final box = _sessionBox ?? sessionsBox();
     await box.delete(_resolveSessionHiveKey(sessionId));

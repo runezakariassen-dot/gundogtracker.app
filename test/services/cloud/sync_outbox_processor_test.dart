@@ -10,6 +10,7 @@ import 'package:jakthund_app/models/dog_heat_cycle_log.dart';
 import 'package:jakthund_app/models/dog_sex.dart';
 import 'package:jakthund_app/models/health_record.dart';
 import 'package:jakthund_app/models/hunt_session.dart';
+import 'package:jakthund_app/models/hunt_event.dart';
 import 'package:jakthund_app/models/session_type.dart';
 import 'package:jakthund_app/models/sync_task.dart';
 import 'package:jakthund_app/services/cloud/sync_outbox_processor.dart';
@@ -73,10 +74,7 @@ void main() {
   });
 
   test('dog_upsert processes to sent', () async {
-    final outboxService = SyncOutboxService(
-      box: box,
-      enableAutoSync: false,
-    );
+    final outboxService = SyncOutboxService(box: box, enableAutoSync: false);
     final persistedDogs = <Dog>[];
     final processor = SyncOutboxProcessor(
       outboxService: outboxService,
@@ -110,10 +108,7 @@ void main() {
   });
 
   test('mixed batch with dog_upsert and session_upsert', () async {
-    final outboxService = SyncOutboxService(
-      box: box,
-      enableAutoSync: false,
-    );
+    final outboxService = SyncOutboxService(box: box, enableAutoSync: false);
     final processed = <String>[];
     final processor = SyncOutboxProcessor(
       outboxService: outboxService,
@@ -122,12 +117,10 @@ void main() {
         processed.add('dog:${dog.id}');
         return dog;
       },
-      sessionUpsertHandler: ({
-        required String sessionId,
-        required HuntSession session,
-      }) async {
-        processed.add('session:$sessionId');
-      },
+      sessionUpsertHandler:
+          ({required String sessionId, required HuntSession session}) async {
+            processed.add('session:$sessionId');
+          },
       persistSyncedDog: (dog) async {},
     );
 
@@ -156,27 +149,19 @@ void main() {
 
     await processor.runOnce(limit: 10);
 
-    expect(
-      processed,
-      unorderedEquals(['dog:dog-1', 'session:session-1']),
-    );
+    expect(processed, unorderedEquals(['dog:dog-1', 'session:session-1']));
     expect(box.values.every((task) => task.status == SyncStatus.sent), isTrue);
   });
 
   test('session upload failure stays retryable in the outbox', () async {
-    final outboxService = SyncOutboxService(
-      box: box,
-      enableAutoSync: false,
-    );
+    final outboxService = SyncOutboxService(box: box, enableAutoSync: false);
     final processor = SyncOutboxProcessor(
       outboxService: outboxService,
       networkAwarenessService: FakeNetworkAwarenessService(online: true),
-      sessionUpsertHandler: ({
-        required String sessionId,
-        required HuntSession session,
-      }) async {
-        throw StateError('temporary Track upload failure');
-      },
+      sessionUpsertHandler:
+          ({required String sessionId, required HuntSession session}) async {
+            throw StateError('temporary Track upload failure');
+          },
     );
     await outboxService.enqueueUpsertSession(
       'session-track-retry',
@@ -203,10 +188,7 @@ void main() {
   });
 
   test('dog_delete pushes tombstone to cloud and marks task sent', () async {
-    final outboxService = SyncOutboxService(
-      box: box,
-      enableAutoSync: false,
-    );
+    final outboxService = SyncOutboxService(box: box, enableAutoSync: false);
     final deleted = <String>[];
     final processor = SyncOutboxProcessor(
       outboxService: outboxService,
@@ -232,92 +214,79 @@ void main() {
 
     await processor.runOnce(limit: 10);
 
-    expect(
-      deleted,
-      <String>['dog-1:${deletedAt.toIso8601String()}'],
-    );
+    expect(deleted, <String>['dog-1:${deletedAt.toIso8601String()}']);
     expect(box.values.single.status, SyncStatus.sent);
   });
 
-  test('session_delete pushes tombstone to cloud and marks task sent',
-      () async {
-    final outboxService = SyncOutboxService(
-      box: box,
-      enableAutoSync: false,
-    );
-    final deleted = <String>[];
-    final processor = SyncOutboxProcessor(
-      outboxService: outboxService,
-      networkAwarenessService: FakeNetworkAwarenessService(online: true),
-      sessionDeleteHandler: ({
-        required String sessionId,
-        required HuntSession session,
-      }) async {
-        deleted.add('$sessionId:${session.deletedAt?.toIso8601String()}');
-      },
-      persistSyncedDog: (dog) async {},
-    );
-    final deletedAt = DateTime.utc(2026, 3, 22, 12);
+  test(
+    'session_delete pushes tombstone to cloud and marks task sent',
+    () async {
+      final outboxService = SyncOutboxService(box: box, enableAutoSync: false);
+      final deleted = <String>[];
+      final processor = SyncOutboxProcessor(
+        outboxService: outboxService,
+        networkAwarenessService: FakeNetworkAwarenessService(online: true),
+        sessionDeleteHandler:
+            ({required String sessionId, required HuntSession session}) async {
+              deleted.add('$sessionId:${session.deletedAt?.toIso8601String()}');
+            },
+        persistSyncedDog: (dog) async {},
+      );
+      final deletedAt = DateTime.utc(2026, 3, 22, 12);
 
-    await outboxService.enqueueDeleteSession(
-      'session-1',
-      HuntSession(
-        dogId: 'dog-1',
-        dateTime: DateTime(2024, 1, 1, 9, 0),
-        location: 'Skog',
-        durationMinutes: 45,
-        birdsSeen: 2,
-        points: 3,
-        flushes: 1,
-        notes: 'Delete',
-        sessionType: SessionType.training,
-        updatedAt: deletedAt,
+      await outboxService.enqueueDeleteSession(
+        'session-1',
+        HuntSession(
+          dogId: 'dog-1',
+          dateTime: DateTime(2024, 1, 1, 9, 0),
+          location: 'Skog',
+          durationMinutes: 45,
+          birdsSeen: 2,
+          points: 3,
+          flushes: 1,
+          notes: 'Delete',
+          sessionType: SessionType.training,
+          updatedAt: deletedAt,
+          deletedAt: deletedAt,
+        ),
         deletedAt: deletedAt,
-      ),
-      deletedAt: deletedAt,
-    );
+      );
 
-    await processor.runOnce(limit: 10);
+      await processor.runOnce(limit: 10);
 
-    expect(
-      deleted,
-      <String>['session-1:${deletedAt.toIso8601String()}'],
-    );
-    expect(box.values.single.status, SyncStatus.sent);
-  });
+      expect(deleted, <String>['session-1:${deletedAt.toIso8601String()}']);
+      expect(box.values.single.status, SyncStatus.sent);
+    },
+  );
 
-  test('does not run processor when offline and leaves tasks pending',
-      () async {
-    final outboxService = SyncOutboxService(
-      box: box,
-      enableAutoSync: false,
-    );
-    final processor = SyncOutboxProcessor(
-      outboxService: outboxService,
-      networkAwarenessService: FakeNetworkAwarenessService(online: false),
-      dogUpsertHandler: (dog) async => dog,
-      persistSyncedDog: (dog) async {},
-    );
+  test(
+    'does not run processor when offline and leaves tasks pending',
+    () async {
+      final outboxService = SyncOutboxService(box: box, enableAutoSync: false);
+      final processor = SyncOutboxProcessor(
+        outboxService: outboxService,
+        networkAwarenessService: FakeNetworkAwarenessService(online: false),
+        dogUpsertHandler: (dog) async => dog,
+        persistSyncedDog: (dog) async {},
+      );
 
-    await outboxService.enqueueUpsertDog(
-      Dog(
-        id: 'dog-1',
-        name: 'Birk',
-        dogKey: 'NO12345',
-        regNrDisplay: 'NO123/45',
-      ),
-    );
+      await outboxService.enqueueUpsertDog(
+        Dog(
+          id: 'dog-1',
+          name: 'Birk',
+          dogKey: 'NO12345',
+          regNrDisplay: 'NO123/45',
+        ),
+      );
 
-    await processor.runOnce();
+      await processor.runOnce();
 
-    expect(box.values.single.status, SyncStatus.pending);
-  });
+      expect(box.values.single.status, SyncStatus.pending);
+    },
+  );
 
   test('online and retry works after offline skip', () async {
-    final outboxService = SyncOutboxService(
-      box: box,
-      enableAutoSync: false,
-    );
+    final outboxService = SyncOutboxService(box: box, enableAutoSync: false);
     final processorOffline = SyncOutboxProcessor(
       outboxService: outboxService,
       networkAwarenessService: FakeNetworkAwarenessService(online: false),
@@ -348,122 +317,119 @@ void main() {
     expect(box.values.single.status, SyncStatus.sent);
   });
 
-  test('health record task resolves latest local record and cloud dog id',
-      () async {
-    if (!Hive.isAdapterRegistered(50)) {
-      Hive.registerAdapter(HealthRecordAdapter());
-    }
-    if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(DogAdapter());
-    if (!Hive.isAdapterRegistered(222)) {
-      Hive.registerAdapter(DogSexAdapter());
-    }
-    final healthBox = await Hive.openBox<HealthRecord>('health_records');
-    final dogBox = await Hive.openBox<Dog>('dogs');
-    final outboxService = SyncOutboxService(
-      box: box,
-      enableAutoSync: false,
-    );
-    final record = HealthRecord(
-      id: 'health-1',
-      dogId: 'dog-1',
-      type: HealthRecordType.medication,
-      title: 'Latest title',
-      recordedAt: DateTime.utc(2026, 1, 1),
-      createdAt: DateTime.utc(2026, 1, 1),
-      updatedAt: DateTime.utc(2026, 1, 2),
-    );
-    await healthBox.put(record.id, record);
-    await dogBox.put(
-      'dog-1',
-      Dog(
-        id: 'dog-1',
+  test(
+    'health record task resolves latest local record and cloud dog id',
+    () async {
+      if (!Hive.isAdapterRegistered(50)) {
+        Hive.registerAdapter(HealthRecordAdapter());
+      }
+      if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(DogAdapter());
+      if (!Hive.isAdapterRegistered(222)) {
+        Hive.registerAdapter(DogSexAdapter());
+      }
+      final healthBox = await Hive.openBox<HealthRecord>('health_records');
+      final dogBox = await Hive.openBox<Dog>('dogs');
+      final outboxService = SyncOutboxService(box: box, enableAutoSync: false);
+      final record = HealthRecord(
+        id: 'health-1',
+        dogId: 'dog-1',
+        type: HealthRecordType.medication,
+        title: 'Latest title',
+        recordedAt: DateTime.utc(2026, 1, 1),
+        createdAt: DateTime.utc(2026, 1, 1),
+        updatedAt: DateTime.utc(2026, 1, 2),
+      );
+      await healthBox.put(record.id, record);
+      await dogBox.put(
+        'dog-1',
+        Dog(
+          id: 'dog-1',
+          name: 'Birk',
+          dogKey: 'DOG-1',
+          regNrDisplay: 'NO12345/24',
+          cloudId: 'cloud-dog-1',
+        ),
+      );
+      await outboxService.enqueueUpsertHealthRecord(record);
+      final pushed = <String>[];
+      final processor = SyncOutboxProcessor(
+        outboxService: outboxService,
+        networkAwarenessService: FakeNetworkAwarenessService(online: true),
+        healthRecordBox: healthBox,
+        dogBox: dogBox,
+        healthRecordUpsertHandler:
+            ({required HealthRecord record, required String cloudDogId}) async {
+              pushed.add('$cloudDogId:${record.title}');
+            },
+      );
+
+      await processor.runOnce();
+
+      expect(pushed, <String>['cloud-dog-1:Latest title']);
+      expect(box.values.single.status, SyncStatus.sent);
+    },
+  );
+
+  test(
+    'missing cloud id waits without retry increment and later completes',
+    () async {
+      if (!Hive.isAdapterRegistered(50)) {
+        Hive.registerAdapter(HealthRecordAdapter());
+      }
+      if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(DogAdapter());
+      if (!Hive.isAdapterRegistered(222)) {
+        Hive.registerAdapter(DogSexAdapter());
+      }
+      final healthBox = await Hive.openBox<HealthRecord>('health_retry');
+      final dogBox = await Hive.openBox<Dog>('dogs_retry');
+      final record = HealthRecord(
+        id: 'health-retry',
+        dogId: 'dog-retry',
+        type: HealthRecordType.other,
+        title: 'Retry',
+        recordedAt: DateTime(2026, 7, 20),
+        createdAt: DateTime.utc(2026, 7, 20),
+        updatedAt: DateTime.utc(2026, 7, 20),
+      );
+      final dog = Dog(
+        id: 'dog-retry',
         name: 'Birk',
-        dogKey: 'DOG-1',
+        dogKey: 'DOG-RETRY',
         regNrDisplay: 'NO12345/24',
-        cloudId: 'cloud-dog-1',
-      ),
-    );
-    await outboxService.enqueueUpsertHealthRecord(record);
-    final pushed = <String>[];
-    final processor = SyncOutboxProcessor(
-      outboxService: outboxService,
-      networkAwarenessService: FakeNetworkAwarenessService(online: true),
-      healthRecordBox: healthBox,
-      dogBox: dogBox,
-      healthRecordUpsertHandler: ({
-        required HealthRecord record,
-        required String cloudDogId,
-      }) async {
-        pushed.add('$cloudDogId:${record.title}');
-      },
-    );
+      );
+      await healthBox.put(record.id, record);
+      await dogBox.put(dog.id, dog);
+      final outbox = SyncOutboxService(box: box, enableAutoSync: false);
+      await outbox.enqueueUpsertHealthRecord(record);
+      final originalTaskId = box.values.single.taskId;
+      var pushes = 0;
+      final processor = SyncOutboxProcessor(
+        outboxService: outbox,
+        networkAwarenessService: FakeNetworkAwarenessService(online: true),
+        healthRecordBox: healthBox,
+        dogBox: dogBox,
+        healthRecordUpsertHandler:
+            ({required HealthRecord record, required String cloudDogId}) async {
+              pushes++;
+            },
+      );
 
-    await processor.runOnce();
+      await processor.runOnce();
+      expect(box.values.single.status, SyncStatus.pending);
+      expect(box.values.single.retryCount, 0);
+      expect(box.values.single.taskId, originalTaskId);
+      expect(box.length, 1);
+      expect(pushes, 0);
 
-    expect(pushed, <String>['cloud-dog-1:Latest title']);
-    expect(box.values.single.status, SyncStatus.sent);
-  });
-
-  test('missing cloud id waits without retry increment and later completes',
-      () async {
-    if (!Hive.isAdapterRegistered(50)) {
-      Hive.registerAdapter(HealthRecordAdapter());
-    }
-    if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(DogAdapter());
-    if (!Hive.isAdapterRegistered(222)) {
-      Hive.registerAdapter(DogSexAdapter());
-    }
-    final healthBox = await Hive.openBox<HealthRecord>('health_retry');
-    final dogBox = await Hive.openBox<Dog>('dogs_retry');
-    final record = HealthRecord(
-      id: 'health-retry',
-      dogId: 'dog-retry',
-      type: HealthRecordType.other,
-      title: 'Retry',
-      recordedAt: DateTime(2026, 7, 20),
-      createdAt: DateTime.utc(2026, 7, 20),
-      updatedAt: DateTime.utc(2026, 7, 20),
-    );
-    final dog = Dog(
-      id: 'dog-retry',
-      name: 'Birk',
-      dogKey: 'DOG-RETRY',
-      regNrDisplay: 'NO12345/24',
-    );
-    await healthBox.put(record.id, record);
-    await dogBox.put(dog.id, dog);
-    final outbox = SyncOutboxService(box: box, enableAutoSync: false);
-    await outbox.enqueueUpsertHealthRecord(record);
-    final originalTaskId = box.values.single.taskId;
-    var pushes = 0;
-    final processor = SyncOutboxProcessor(
-      outboxService: outbox,
-      networkAwarenessService: FakeNetworkAwarenessService(online: true),
-      healthRecordBox: healthBox,
-      dogBox: dogBox,
-      healthRecordUpsertHandler: ({
-        required HealthRecord record,
-        required String cloudDogId,
-      }) async {
-        pushes++;
-      },
-    );
-
-    await processor.runOnce();
-    expect(box.values.single.status, SyncStatus.pending);
-    expect(box.values.single.retryCount, 0);
-    expect(box.values.single.taskId, originalTaskId);
-    expect(box.length, 1);
-    expect(pushes, 0);
-
-    await dogBox.put(dog.id, dog.copyWith(cloudId: 'cloud-dog-retry'));
-    await processor.runOnce();
-    expect(box.values.single.status, SyncStatus.sent);
-    expect(box.values.single.retryCount, 0);
-    expect(box.values.single.taskId, originalTaskId);
-    expect(box.length, 1);
-    expect(pushes, 1);
-  });
+      await dogBox.put(dog.id, dog.copyWith(cloudId: 'cloud-dog-retry'));
+      await processor.runOnce();
+      expect(box.values.single.status, SyncStatus.sent);
+      expect(box.values.single.retryCount, 0);
+      expect(box.values.single.taskId, originalTaskId);
+      expect(box.length, 1);
+      expect(pushes, 1);
+    },
+  );
 
   test('one failing health record does not stop the next task', () async {
     if (!Hive.isAdapterRegistered(50)) {
@@ -498,13 +464,11 @@ void main() {
       networkAwarenessService: FakeNetworkAwarenessService(online: true),
       healthRecordBox: healthBox,
       dogBox: dogBox,
-      healthRecordUpsertHandler: ({
-        required HealthRecord record,
-        required String cloudDogId,
-      }) async {
-        if (record.id == first.id) throw StateError('network failure');
-        pushed.add(record.id);
-      },
+      healthRecordUpsertHandler:
+          ({required HealthRecord record, required String cloudDogId}) async {
+            if (record.id == first.id) throw StateError('network failure');
+            pushed.add(record.id);
+          },
     );
 
     await processor.runOnce(limit: 10);
@@ -562,12 +526,10 @@ void main() {
       networkAwarenessService: FakeNetworkAwarenessService(online: true),
       dogBox: dogBox,
       heatCycleRepository: repository,
-      heatCycleUpsertHandler: ({
-        required DogHeatCycleLog entry,
-        required String cloudDogId,
-      }) async {
-        pushed.add('$cloudDogId:${entry.id}:${entry.createdByUserId}');
-      },
+      heatCycleUpsertHandler:
+          ({required DogHeatCycleLog entry, required String cloudDogId}) async {
+            pushed.add('$cloudDogId:${entry.id}:${entry.createdByUserId}');
+          },
     );
 
     await processor.runOnce();
@@ -619,10 +581,11 @@ void main() {
       networkAwarenessService: FakeNetworkAwarenessService(online: true),
       dogBox: dogBox,
       heatCycleRepository: repository,
-      heatCycleUpsertHandler: ({
-        required DogHeatCycleLog entry,
-        required String cloudDogId,
-      }) async {},
+      heatCycleUpsertHandler:
+          ({
+            required DogHeatCycleLog entry,
+            required String cloudDogId,
+          }) async {},
     );
 
     await processor.runOnce();
@@ -633,14 +596,74 @@ void main() {
     await dogBox.close();
     await settingsBox.close();
   });
+
+  test(
+    'hunt event upload retries and then sends the latest tombstone',
+    () async {
+      if (!Hive.isAdapterRegistered(52)) {
+        Hive.registerAdapter(HuntEventAdapter());
+      }
+      if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(DogAdapter());
+      final events = await Hive.openBox<HuntEvent>('processor_hunt_events');
+      final dogs = await Hive.openBox<Dog>('processor_hunt_event_dogs');
+      final dog = Dog(
+        id: 'dog-event',
+        name: 'Luna',
+        dogKey: 'DOG-EVENT',
+        regNrDisplay: 'NO3/26',
+        cloudId: 'cloud-dog-event',
+      );
+      await dogs.put(dog.id, dog);
+      final deletedAt = DateTime.utc(2026, 8, 1, 12);
+      final event = HuntEvent(
+        id: 'event-retry',
+        sessionId: 'session-1',
+        dogId: dog.id,
+        type: HuntEventType.stand,
+        occurredAt: DateTime.utc(2026, 8, 1, 10),
+        createdAt: DateTime.utc(2026, 8, 1, 10),
+        updatedAt: deletedAt,
+        createdByUserId: 'owner',
+        deletedAt: deletedAt,
+      );
+      await events.put(event.id, event);
+      final outbox = SyncOutboxService(box: box, enableAutoSync: false);
+      await outbox.enqueueDeleteHuntEvent(event);
+      var attempts = 0;
+      HuntEvent? uploaded;
+      final processor = SyncOutboxProcessor(
+        outboxService: outbox,
+        networkAwarenessService: FakeNetworkAwarenessService(online: true),
+        dogBox: dogs,
+        huntEventBox: events,
+        huntEventUpsertHandler:
+            ({required HuntEvent event, required String cloudDogId}) async {
+              attempts++;
+              if (attempts == 1) throw StateError('offline');
+              expect(cloudDogId, dog.cloudId);
+              uploaded = event;
+            },
+      );
+
+      await processor.runOnce();
+      expect(box.values.single.status, SyncStatus.failed);
+      await outbox.resetFailedTasksForRetry();
+      await processor.runOnce();
+      expect(box.values.single.status, SyncStatus.sent);
+      expect(uploaded?.deletedAt, deletedAt);
+
+      await events.close();
+      await dogs.close();
+    },
+  );
 }
 
 HealthRecord _healthRecord(String id) => HealthRecord(
-      id: id,
-      dogId: 'dog-1',
-      type: HealthRecordType.other,
-      title: id,
-      recordedAt: DateTime(2026, 7, 20),
-      createdAt: DateTime.utc(2026, 7, 20),
-      updatedAt: DateTime.utc(2026, 7, 20),
-    );
+  id: id,
+  dogId: 'dog-1',
+  type: HealthRecordType.other,
+  title: id,
+  recordedAt: DateTime(2026, 7, 20),
+  createdAt: DateTime.utc(2026, 7, 20),
+  updatedAt: DateTime.utc(2026, 7, 20),
+);

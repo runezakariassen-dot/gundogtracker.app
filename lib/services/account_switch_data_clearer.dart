@@ -7,6 +7,7 @@ import '../models/dog_membership.dart';
 import '../models/dog_milestone_state.dart';
 import '../models/gps_track.dart';
 import '../models/hunt_session.dart';
+import '../models/hunt_event.dart';
 import '../models/outbox_entry.dart';
 import '../models/ownership_transfer.dart';
 import '../models/share_invitation.dart';
@@ -32,6 +33,7 @@ class AccountSwitchDataClearer {
     await _clearBox<Dog>(dogsBoxName);
     await _clearBox<HuntSession>(sessionsBoxName);
     await _clearBox<Track>(tracksBoxName);
+    await _clearBox<HuntEvent>(huntEventsBoxName);
     await _clearBox<GpsTrack>(gpsTracksBoxName);
     await _clearBox<DogMembership>(dogMembershipsBoxName);
     await _clearBox<ShareInvitation>(shareInvitesBoxName);

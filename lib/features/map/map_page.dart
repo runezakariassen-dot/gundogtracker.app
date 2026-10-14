@@ -10,6 +10,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../models/gps_point.dart';
+import '../../models/hunt_event.dart';
 import '../../models/offline_region_metadata.dart';
 import '../../widgets/big_action_button.dart';
 import 'map_tile_sources.dart';
@@ -17,6 +18,7 @@ import 'offline_tiles/offline_download_controller.dart';
 import 'offline_tiles/offline_region_service.dart';
 import 'offline_tiles/tile_cache_service.dart';
 import '../../l10n/app_localizations.dart';
+import '../../ui/hunt_event_labels.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({
@@ -24,11 +26,13 @@ class MapPage extends StatefulWidget {
     required this.points,
     this.title,
     this.titleSpan,
+    this.events = const <HuntEvent>[],
   });
 
   final List<GpsPoint> points;
   final String? title;
   final InlineSpan? titleSpan;
+  final List<HuntEvent> events;
 
   @override
   State<MapPage> createState() => _MapPageState();
@@ -108,10 +112,7 @@ class _MapPageState extends State<MapPage> {
       _mapController.move(_trackPoints.first, 15);
     } else {
       _mapController.fitCamera(
-        CameraFit.bounds(
-          bounds: bounds,
-          padding: const EdgeInsets.all(40),
-        ),
+        CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(40)),
       );
     }
     _didFit = true;
@@ -135,13 +136,42 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
+  void _showHuntEvent(HuntEvent event) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                huntEventTypeLabel(context, event.type),
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(DateFormat('HH:mm:ss').format(event.occurredAt.toLocal())),
+              if (event.birdSpecies?.isNotEmpty == true)
+                Text(event.birdSpecies!),
+              if (event.note?.isNotEmpty == true) ...[
+                const SizedBox(height: 8),
+                Text(event.note!),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _centerOnUser({bool fromFollow = false}) async {
     if (!await _ensureLocationPermission()) {
       _logMapUi('center_user', 'no_permission');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Fant ikke posisjon')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Fant ikke posisjon')));
       return;
     }
 
@@ -157,9 +187,9 @@ class _MapPageState extends State<MapPage> {
     if (!mounted) return;
     if (pos == null) {
       _logMapUi('center_user', 'no_position');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Fant ikke posisjon')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Fant ikke posisjon')));
       return;
     }
 
@@ -192,9 +222,9 @@ class _MapPageState extends State<MapPage> {
   Future<void> _startFollowStream() async {
     if (!await _ensureLocationPermission()) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Fant ikke posisjon')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Fant ikke posisjon')));
       setState(() {
         _followMe = false;
       });
@@ -202,23 +232,25 @@ class _MapPageState extends State<MapPage> {
     }
 
     await _positionSub?.cancel();
-    _positionSub = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.best,
-        distanceFilter: 5,
-      ),
-    ).listen((pos) {
-      if (!_followMe) return;
-      final now = DateTime.now();
-      if (_lastFollowUpdateAt != null &&
-          now.difference(_lastFollowUpdateAt!) < const Duration(seconds: 2)) {
-        return;
-      }
-      _lastFollowUpdateAt = now;
-      final target = LatLng(pos.latitude, pos.longitude);
-      final zoom = _mapController.camera.zoom;
-      _moveMap(target, zoom);
-    });
+    _positionSub =
+        Geolocator.getPositionStream(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.best,
+            distanceFilter: 5,
+          ),
+        ).listen((pos) {
+          if (!_followMe) return;
+          final now = DateTime.now();
+          if (_lastFollowUpdateAt != null &&
+              now.difference(_lastFollowUpdateAt!) <
+                  const Duration(seconds: 2)) {
+            return;
+          }
+          _lastFollowUpdateAt = now;
+          final target = LatLng(pos.latitude, pos.longitude);
+          final zoom = _mapController.camera.zoom;
+          _moveMap(target, zoom);
+        });
   }
 
   Future<bool> _ensureLocationPermission() async {
@@ -284,7 +316,8 @@ class _MapPageState extends State<MapPage> {
       return;
     }
     final isOffline = _isBoundsOffline(bounds, _tileSource.key);
-    final changed = isOffline != _isViewportOffline ||
+    final changed =
+        isOffline != _isViewportOffline ||
         _viewportBounds == null ||
         !_viewportBounds!.isOverlapping(bounds);
     if (!changed) return;
@@ -323,10 +356,7 @@ class _MapPageState extends State<MapPage> {
         return StatefulBuilder(
           builder: (context, setState) {
             final l10n = AppLocalizations.of(context)!;
-            final estimate = _estimateWorkload(
-              area: area,
-              detail: detail,
-            );
+            final estimate = _estimateWorkload(area: area, detail: detail);
             final tooLarge = estimate != null && estimate > 20000;
             return AlertDialog(
               title: Text(l10n.map_download_title),
@@ -372,9 +402,7 @@ class _MapPageState extends State<MapPage> {
                         estimate == null
                             ? 'Estimert: n/a'
                             : 'Estimert: ca. $estimate tiles',
-                        style: TextStyle(
-                          color: tooLarge ? Colors.red : null,
-                        ),
+                        style: TextStyle(color: tooLarge ? Colors.red : null),
                       ),
                     ),
                     if (tooLarge)
@@ -400,9 +428,9 @@ class _MapPageState extends State<MapPage> {
                   onPressed: tooLarge
                       ? null
                       : () => Navigator.pop(
-                            context,
-                            _DownloadSelection(area: area, detail: detail),
-                          ),
+                          context,
+                          _DownloadSelection(area: area, detail: detail),
+                        ),
                   child: Text(l10n.map_download_start),
                 ),
               ],
@@ -477,10 +505,7 @@ class _MapPageState extends State<MapPage> {
       tileSourceKey: _tileSource.key,
       tileLayer: _buildTileLayer(_tileSource),
     );
-    final bounds = controller.buildBoundsFromCenter(
-      trackCenter,
-      area.radiusKm,
-    );
+    final bounds = controller.buildBoundsFromCenter(trackCenter, area.radiusKm);
     final estimatedTiles = controller.estimateWorkload(
       bounds,
       detail.minZoom,
@@ -529,41 +554,94 @@ class _MapPageState extends State<MapPage> {
     _downloadInstanceId = DateTime.now().microsecondsSinceEpoch;
     unawaited(_showDownloadDialog(progressNotifier, onCancel: _cancelDownload));
 
-    await runZonedGuarded(() async {
-      final download = controller.startDownload(
-        bounds: bounds,
-        minZoom: detail.minZoom,
-        maxZoom: detail.maxZoom,
-        parallelThreads: 2,
-        maxBufferLength: 60,
-        skipExistingTiles: true,
-      );
+    await runZonedGuarded(
+      () async {
+        final download = controller.startDownload(
+          bounds: bounds,
+          minZoom: detail.minZoom,
+          maxZoom: detail.maxZoom,
+          parallelThreads: 2,
+          maxBufferLength: 60,
+          skipExistingTiles: true,
+        );
 
-      _downloadInstanceId = controller.instanceId;
+        _downloadInstanceId = controller.instanceId;
 
-      final completer = Completer<void>();
-      late StreamSubscription<DownloadProgress> subscription;
-      subscription = download.progress.listen(
-        (progress) {
-          progressNotifier.value = progress.percentageProgress;
-          setState(() {
-            _downloadProgress = progress.percentageProgress;
-          });
+        final completer = Completer<void>();
+        late StreamSubscription<DownloadProgress> subscription;
+        subscription = download.progress.listen(
+          (progress) {
+            progressNotifier.value = progress.percentageProgress;
+            setState(() {
+              _downloadProgress = progress.percentageProgress;
+            });
+            _logMapDownload(
+              'progress',
+              bounds: bounds,
+              minZoom: detail.minZoom,
+              maxZoom: detail.maxZoom,
+              tileSourceKey: _tileSource.key,
+              estimatedTiles: estimatedTiles,
+              progressPercent: progress.percentageProgress,
+              radiusKm: area.radiusKm,
+            );
+          },
+          onError: (error, stackTrace) {
+            _logMapDownload(
+              'stream-error',
+              error: error,
+              stackTrace: stackTrace,
+              bounds: bounds,
+              minZoom: detail.minZoom,
+              maxZoom: detail.maxZoom,
+              tileSourceKey: _tileSource.key,
+              estimatedTiles: estimatedTiles,
+              radiusKm: area.radiusKm,
+            );
+            completer.completeError(error, stackTrace);
+          },
+          onDone: () {
+            completer.complete();
+          },
+        );
+
+        try {
+          await completer.future;
+          final metadata = OfflineRegionMetadata(
+            id: const Uuid().v4(),
+            name: 'Kart ${area.label} (${detail.label}, ${_tileSource.label})',
+            createdAt: DateTime.now(),
+            minLat: bounds.south,
+            minLon: bounds.west,
+            maxLat: bounds.north,
+            maxLon: bounds.east,
+            minZoom: detail.minZoom,
+            maxZoom: detail.maxZoom,
+            tileSourceKey: _tileSource.key,
+            radiusKm: area.radiusKm,
+            storeName: regionStoreName,
+          );
+          await _offlineRegionService.add(metadata);
+          _loadOfflineRegions();
+          if (!mounted) return;
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Ferdig')));
           _logMapDownload(
-            'progress',
+            'done',
             bounds: bounds,
             minZoom: detail.minZoom,
             maxZoom: detail.maxZoom,
             tileSourceKey: _tileSource.key,
             estimatedTiles: estimatedTiles,
-            progressPercent: progress.percentageProgress,
             radiusKm: area.radiusKm,
+            startedAt: startTime,
+            endedAt: DateTime.now(),
           );
-        },
-        onError: (error, stackTrace) {
+        } catch (e, stackTrace) {
           _logMapDownload(
-            'stream-error',
-            error: error,
+            'failed',
+            error: e,
             stackTrace: stackTrace,
             bounds: bounds,
             minZoom: detail.minZoom,
@@ -571,51 +649,30 @@ class _MapPageState extends State<MapPage> {
             tileSourceKey: _tileSource.key,
             estimatedTiles: estimatedTiles,
             radiusKm: area.radiusKm,
+            startedAt: startTime,
+            endedAt: DateTime.now(),
           );
-          completer.completeError(error, stackTrace);
-        },
-        onDone: () {
-          completer.complete();
-        },
-      );
-
-      try {
-        await completer.future;
-        final metadata = OfflineRegionMetadata(
-          id: const Uuid().v4(),
-          name: 'Kart ${area.label} (${detail.label}, ${_tileSource.label})',
-          createdAt: DateTime.now(),
-          minLat: bounds.south,
-          minLon: bounds.west,
-          maxLat: bounds.north,
-          maxLon: bounds.east,
-          minZoom: detail.minZoom,
-          maxZoom: detail.maxZoom,
-          tileSourceKey: _tileSource.key,
-          radiusKm: area.radiusKm,
-          storeName: regionStoreName,
-        );
-        await _offlineRegionService.add(metadata);
-        _loadOfflineRegions();
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ferdig')),
-        );
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Kunne ikke laste ned kart')),
+          );
+        } finally {
+          await subscription.cancel();
+          progressNotifier.dispose();
+          if (mounted) {
+            Navigator.of(context, rootNavigator: true).pop();
+            setState(() {
+              _isDownloading = false;
+              _downloadInstanceId = null;
+              _downloadProgress = null;
+            });
+          }
+        }
+      },
+      (error, stackTrace) {
         _logMapDownload(
-          'done',
-          bounds: bounds,
-          minZoom: detail.minZoom,
-          maxZoom: detail.maxZoom,
-          tileSourceKey: _tileSource.key,
-          estimatedTiles: estimatedTiles,
-          radiusKm: area.radiusKm,
-          startedAt: startTime,
-          endedAt: DateTime.now(),
-        );
-      } catch (e, stackTrace) {
-        _logMapDownload(
-          'failed',
-          error: e,
+          'zone-error',
+          error: error,
           stackTrace: stackTrace,
           bounds: bounds,
           minZoom: detail.minZoom,
@@ -626,14 +683,10 @@ class _MapPageState extends State<MapPage> {
           startedAt: startTime,
           endedAt: DateTime.now(),
         );
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Kunne ikke laste ned kart')),
-        );
-      } finally {
-        await subscription.cancel();
-        progressNotifier.dispose();
         if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Kunne ikke laste ned kart')),
+          );
           Navigator.of(context, rootNavigator: true).pop();
           setState(() {
             _isDownloading = false;
@@ -641,51 +694,23 @@ class _MapPageState extends State<MapPage> {
             _downloadProgress = null;
           });
         }
-      }
-    }, (error, stackTrace) {
-      _logMapDownload(
-        'zone-error',
-        error: error,
-        stackTrace: stackTrace,
-        bounds: bounds,
-        minZoom: detail.minZoom,
-        maxZoom: detail.maxZoom,
-        tileSourceKey: _tileSource.key,
-        estimatedTiles: estimatedTiles,
-        radiusKm: area.radiusKm,
-        startedAt: startTime,
-        endedAt: DateTime.now(),
-      );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Kunne ikke laste ned kart')),
-        );
-        Navigator.of(context, rootNavigator: true).pop();
-        setState(() {
-          _isDownloading = false;
-          _downloadInstanceId = null;
-          _downloadProgress = null;
-        });
-      }
-      progressNotifier.dispose();
-    });
+        progressNotifier.dispose();
+      },
+    );
   }
 
   Future<void> _cancelDownload() async {
     if (_downloadInstanceId == null) return;
     try {
-      await TileCacheService.storeFor(_tileSource)
-          .download
-          .cancel(instanceId: _downloadInstanceId!);
+      await TileCacheService.storeFor(
+        _tileSource,
+      ).download.cancel(instanceId: _downloadInstanceId!);
       if (mounted) {
         setState(() {
           _downloadProgress = null;
         });
       }
-      _logMapDownload(
-        'cancelled',
-        tileSourceKey: _tileSource.key,
-      );
+      _logMapDownload('cancelled', tileSourceKey: _tileSource.key);
     } catch (e, stackTrace) {
       _logMapDownload(
         'cancel-error',
@@ -735,8 +760,9 @@ class _MapPageState extends State<MapPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Slett offline kart'),
-        content:
-            const Text('Dette sletter nedlastede karttiles for valgt stil.'),
+        content: const Text(
+          'Dette sletter nedlastede karttiles for valgt stil.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -755,9 +781,9 @@ class _MapPageState extends State<MapPage> {
     await _offlineRegionService.clear(tileSourceKey: _tileSource.key);
     _loadOfflineRegions();
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Offline kart slettet')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Offline kart slettet')));
     _logOffline('delete-style-done', 'style=${_tileSource.key}');
   }
 
@@ -808,10 +834,7 @@ class _MapPageState extends State<MapPage> {
       tileSourceKey: _tileSource.key,
       tileLayer: _buildTileLayer(_tileSource),
     );
-    final bounds = controller.buildBoundsFromCenter(
-      center,
-      area.radiusKm,
-    );
+    final bounds = controller.buildBoundsFromCenter(center, area.radiusKm);
     return controller.estimateWorkload(bounds, detail.minZoom, detail.maxZoom);
   }
 
@@ -828,17 +851,15 @@ class _MapPageState extends State<MapPage> {
           backgroundColor: selected ? Colors.black12 : null,
           minimumSize: const Size.fromHeight(44),
         ),
-        child: Align(
-          alignment: Alignment.centerLeft,
-          child: Text(label),
-        ),
+        child: Align(alignment: Alignment.centerLeft, child: Text(label)),
       ),
     );
   }
 
   Widget _regionCard(OfflineRegionMetadata region) {
-    final dateText =
-        DateFormat('dd.MM.yyyy').format(region.createdAt.toLocal());
+    final dateText = DateFormat(
+      'dd.MM.yyyy',
+    ).format(region.createdAt.toLocal());
     final sourceLabel = tileSourceByKey(region.tileSourceKey).label;
     final radiusKm = region.radiusKm ?? _approxRadiusKm(region);
     return Container(
@@ -920,9 +941,11 @@ class _MapPageState extends State<MapPage> {
   }
 
   Future<void> _deleteRegion(OfflineRegionMetadata region) async {
-    final storeName = region.storeName ??
-        TileCacheService.storeFor(tileSourceByKey(region.tileSourceKey))
-            .storeName;
+    final storeName =
+        region.storeName ??
+        TileCacheService.storeFor(
+          tileSourceByKey(region.tileSourceKey),
+        ).storeName;
     _logOffline('delete-start', 'region=${region.id} store=$storeName');
     try {
       await TileCacheService.ensureStoreReadyByName(storeName);
@@ -930,17 +953,17 @@ class _MapPageState extends State<MapPage> {
       await _offlineRegionService.removeById(region.id);
       _loadOfflineRegions();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kart slettet')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Kart slettet')));
       _logOffline('delete-done', 'region=${region.id}');
     } catch (e, stackTrace) {
       _logOffline('delete-error', '$e');
       debugPrint(stackTrace.toString());
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kunne ikke slette kart')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Kunne ikke slette kart')));
     }
   }
 
@@ -961,10 +984,7 @@ class _MapPageState extends State<MapPage> {
         color: Colors.black54,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Text(
-        text,
-        style: const TextStyle(color: Colors.white),
-      ),
+      child: Text(text, style: const TextStyle(color: Colors.white)),
     );
   }
 
@@ -1106,8 +1126,10 @@ class _MapPageState extends State<MapPage> {
                           point: _trackPoints.first,
                           width: 40,
                           height: 40,
-                          child:
-                              const Icon(Icons.play_arrow, color: Colors.green),
+                          child: const Icon(
+                            Icons.play_arrow,
+                            color: Colors.green,
+                          ),
                         ),
                         if (_trackPoints.length > 1)
                           Marker(
@@ -1116,6 +1138,22 @@ class _MapPageState extends State<MapPage> {
                             height: 40,
                             child: const Icon(Icons.stop, color: Colors.red),
                           ),
+                        for (final event in widget.events)
+                          if (event.latitude != null && event.longitude != null)
+                            Marker(
+                              point: LatLng(event.latitude!, event.longitude!),
+                              width: 48,
+                              height: 48,
+                              child: IconButton.filled(
+                                key: ValueKey('hunt-event-marker-${event.id}'),
+                                onPressed: () => _showHuntEvent(event),
+                                icon: Icon(huntEventTypeIcon(event.type)),
+                                tooltip: huntEventTypeLabel(
+                                  context,
+                                  event.type,
+                                ),
+                              ),
+                            ),
                       ],
                     ),
                     RichAttributionWidget(
@@ -1129,11 +1167,7 @@ class _MapPageState extends State<MapPage> {
                     ),
                   ],
                 ),
-                Positioned(
-                  top: 12,
-                  left: 12,
-                  child: _offlineStatusChip(),
-                ),
+                Positioned(top: 12, left: 12, child: _offlineStatusChip()),
                 if (_shouldShowOfflineUnavailable())
                   Positioned(
                     bottom: 12,
@@ -1221,10 +1255,7 @@ class _MapPageState extends State<MapPage> {
 }
 
 class _AreaOption {
-  const _AreaOption({
-    required this.label,
-    required this.radiusKm,
-  });
+  const _AreaOption({required this.label, required this.radiusKm});
 
   final String label;
   final double radiusKm;
@@ -1243,10 +1274,7 @@ class _DetailOption {
 }
 
 class _DownloadSelection {
-  const _DownloadSelection({
-    required this.area,
-    required this.detail,
-  });
+  const _DownloadSelection({required this.area, required this.detail});
 
   final _AreaOption area;
   final _DetailOption detail;
@@ -1256,16 +1284,12 @@ LatLng _toLatLng(GpsPoint point) => LatLng(point.lat, point.lon);
 
 LatLngBounds calcBounds(List<LatLng> points) => LatLngBounds.fromPoints(points);
 
-LatLng calcCenter(LatLngBounds bounds) => LatLng(
-      (bounds.north + bounds.south) / 2,
-      (bounds.east + bounds.west) / 2,
-    );
+LatLng calcCenter(LatLngBounds bounds) =>
+    LatLng((bounds.north + bounds.south) / 2, (bounds.east + bounds.west) / 2);
 
 List<LatLng> _downsampleIfNeeded(List<LatLng> points) {
   const maxPoints = 2000;
   if (points.length <= maxPoints) return points;
   final step = (points.length / maxPoints).ceil();
-  return [
-    for (var i = 0; i < points.length; i += step) points[i],
-  ];
+  return [for (var i = 0; i < points.length; i += step) points[i]];
 }

@@ -8,6 +8,7 @@ import '../../data/local/sync_outbox_service.dart';
 import '../../models/dog.dart';
 import '../../models/dog_heat_cycle_log.dart';
 import '../../models/hunt_session.dart';
+import '../../models/hunt_event.dart';
 import '../../models/health_record.dart';
 import '../../models/session_type.dart';
 import '../../models/sync_task.dart';
@@ -15,27 +16,37 @@ import 'firestore_dog_sync_service.dart';
 import 'firestore_heat_cycle_sync_service.dart';
 import 'firestore_session_sync_service.dart';
 import 'firestore_health_record_sync_service.dart';
+import 'firestore_hunt_event_sync_service.dart';
 import 'network_awareness_service.dart';
 
 typedef DogUpsertHandler = Future<Dog> Function(Dog dog);
 typedef DogDeleteHandler = Future<void> Function(Dog dog);
-typedef SessionUpsertHandler = Future<void> Function({
-  required String sessionId,
-  required HuntSession session,
-});
-typedef SessionDeleteHandler = Future<void> Function({
-  required String sessionId,
-  required HuntSession session,
-});
+typedef SessionUpsertHandler =
+    Future<void> Function({
+      required String sessionId,
+      required HuntSession session,
+    });
+typedef SessionDeleteHandler =
+    Future<void> Function({
+      required String sessionId,
+      required HuntSession session,
+    });
 typedef SyncedDogPersistence = Future<void> Function(Dog dog);
-typedef HealthRecordUpsertHandler = Future<void> Function({
-  required HealthRecord record,
-  required String cloudDogId,
-});
-typedef HeatCycleUpsertHandler = Future<void> Function({
-  required DogHeatCycleLog entry,
-  required String cloudDogId,
-});
+typedef HealthRecordUpsertHandler =
+    Future<void> Function({
+      required HealthRecord record,
+      required String cloudDogId,
+    });
+typedef HeatCycleUpsertHandler =
+    Future<void> Function({
+      required DogHeatCycleLog entry,
+      required String cloudDogId,
+    });
+typedef HuntEventUpsertHandler =
+    Future<void> Function({
+      required HuntEvent event,
+      required String cloudDogId,
+    });
 
 class MissingHealthRecordDogCloudIdException implements Exception {
   const MissingHealthRecordDogCloudIdException(this.recordId);
@@ -55,6 +66,13 @@ class MissingHeatCycleDogCloudIdException implements Exception {
   String toString() => 'Missing dog cloudId for heat cycle: $heatCycleId';
 }
 
+class MissingHuntEventDogCloudIdException implements Exception {
+  const MissingHuntEventDogCloudIdException(this.eventId);
+  final String eventId;
+  @override
+  String toString() => 'Missing dog cloudId for hunt event: $eventId';
+}
+
 class SyncOutboxProcessor {
   SyncOutboxProcessor({
     SyncOutboxService? outboxService,
@@ -72,25 +90,31 @@ class SyncOutboxProcessor {
     FirestoreHeatCycleSyncService? heatCycleSyncService,
     HeatCycleUpsertHandler? heatCycleUpsertHandler,
     DogHeatCycleRepository? heatCycleRepository,
+    FirestoreHuntEventSyncService? huntEventSyncService,
+    HuntEventUpsertHandler? huntEventUpsertHandler,
+    Box<HuntEvent>? huntEventBox,
     Box<Dog>? dogBox,
-  })  : _outboxService = outboxService ?? SyncOutboxService(),
-        _dogSyncService = dogSyncService ?? FirestoreDogSyncService.instance,
-        _sessionSyncService =
-            sessionSyncService ?? FirestoreSessionSyncService.instance,
-        _networkAwarenessService =
-            networkAwarenessService ?? NetworkAwarenessServiceImpl(),
-        _dogUpsertHandler = dogUpsertHandler,
-        _dogDeleteHandler = dogDeleteHandler,
-        _sessionUpsertHandler = sessionUpsertHandler,
-        _sessionDeleteHandler = sessionDeleteHandler,
-        _persistSyncedDog = persistSyncedDog,
-        _healthRecordSyncService = healthRecordSyncService,
-        _healthRecordUpsertHandler = healthRecordUpsertHandler,
-        _healthRecordBox = healthRecordBox,
-        _heatCycleSyncService = heatCycleSyncService,
-        _heatCycleUpsertHandler = heatCycleUpsertHandler,
-        _heatCycleRepository = heatCycleRepository,
-        _dogBox = dogBox;
+  }) : _outboxService = outboxService ?? SyncOutboxService(),
+       _dogSyncService = dogSyncService ?? FirestoreDogSyncService.instance,
+       _sessionSyncService =
+           sessionSyncService ?? FirestoreSessionSyncService.instance,
+       _networkAwarenessService =
+           networkAwarenessService ?? NetworkAwarenessServiceImpl(),
+       _dogUpsertHandler = dogUpsertHandler,
+       _dogDeleteHandler = dogDeleteHandler,
+       _sessionUpsertHandler = sessionUpsertHandler,
+       _sessionDeleteHandler = sessionDeleteHandler,
+       _persistSyncedDog = persistSyncedDog,
+       _healthRecordSyncService = healthRecordSyncService,
+       _healthRecordUpsertHandler = healthRecordUpsertHandler,
+       _healthRecordBox = healthRecordBox,
+       _heatCycleSyncService = heatCycleSyncService,
+       _heatCycleUpsertHandler = heatCycleUpsertHandler,
+       _heatCycleRepository = heatCycleRepository,
+       _huntEventSyncService = huntEventSyncService,
+       _huntEventUpsertHandler = huntEventUpsertHandler,
+       _huntEventBox = huntEventBox,
+       _dogBox = dogBox;
 
   final SyncOutboxService _outboxService;
   final FirestoreDogSyncService _dogSyncService;
@@ -107,6 +131,9 @@ class SyncOutboxProcessor {
   final FirestoreHeatCycleSyncService? _heatCycleSyncService;
   final HeatCycleUpsertHandler? _heatCycleUpsertHandler;
   final DogHeatCycleRepository? _heatCycleRepository;
+  final FirestoreHuntEventSyncService? _huntEventSyncService;
+  final HuntEventUpsertHandler? _huntEventUpsertHandler;
+  final Box<HuntEvent>? _huntEventBox;
   final Box<Dog>? _dogBox;
 
   Future<void> runOnce({int limit = 20}) async {
@@ -144,6 +171,13 @@ class SyncOutboxProcessor {
           'entityId=${task.entityId} error=$error',
         );
       } on MissingHeatCycleDogCloudIdException catch (error) {
+        failureCount++;
+        await _outboxService.markTaskWaitingForDependency(task.taskId, error);
+        debugPrint(
+          '[SYNC][PROCESSOR] waiting type=${task.entityType} '
+          'entityId=${task.entityId} error=$error',
+        );
+      } on MissingHuntEventDogCloudIdException catch (error) {
         failureCount++;
         await _outboxService.markTaskWaitingForDependency(task.taskId, error);
         debugPrint(
@@ -203,9 +237,7 @@ class SyncOutboxProcessor {
         if (latestSessionTask != null &&
             _normalize(latestSessionTask.entityType) == 'session_delete' &&
             latestSessionTask.taskId != task.taskId) {
-          debugPrint(
-            '[SYNC][DELETE] skipped stale session upsert: $sessionId',
-          );
+          debugPrint('[SYNC][DELETE] skipped stale session upsert: $sessionId');
           return;
         }
         final session = _mapSessionPayloadToModel(payload: payload);
@@ -279,6 +311,35 @@ class SyncOutboxProcessor {
 
         await _upsertHeatCycle(entry, cloudDogId);
         return;
+      case 'hunt_event_upsert':
+      case 'hunt_event:upsert':
+      case 'hunt_event_delete':
+      case 'hunt_event:delete':
+        final eventId = task.entityId.trim();
+        if (eventId.isEmpty) {
+          throw const FormatException('Missing hunt event id.');
+        }
+        final event = (_huntEventBox ?? huntEventsBox()).get(eventId);
+        if (event == null) {
+          throw StateError('Missing local hunt event: $eventId');
+        }
+        final dog = _findDog(event.dogId);
+        final cloudDogId = dog?.cloudId?.trim();
+        if (cloudDogId == null || cloudDogId.isEmpty) {
+          throw MissingHuntEventDogCloudIdException(eventId);
+        }
+        final latest = _outboxService.latestTaskForEntityTypes(
+          entityTypes: const {'hunt_event_upsert', 'hunt_event_delete'},
+          entityId: eventId,
+        );
+        if (latest != null &&
+            _normalize(latest.entityType) == 'hunt_event_delete' &&
+            _normalize(task.entityType) == 'hunt_event_upsert' &&
+            latest.taskId != task.taskId) {
+          return;
+        }
+        await _upsertHuntEvent(event, cloudDogId);
+        return;
     }
 
     throw StateError('Unsupported task type: ${task.entityType}');
@@ -343,35 +404,32 @@ class SyncOutboxProcessor {
     return null;
   }
 
-  Future<void> _upsertHealthRecord(
-    HealthRecord record,
-    String cloudDogId,
-  ) {
+  Future<void> _upsertHealthRecord(HealthRecord record, String cloudDogId) {
     final handler = _healthRecordUpsertHandler;
     if (handler != null) {
       return handler(record: record, cloudDogId: cloudDogId);
     }
     return (_healthRecordSyncService ??
             FirestoreHealthRecordSyncService.instance)
-        .upsertHealthRecord(
-      record: record,
-      cloudDogId: cloudDogId,
-    );
+        .upsertHealthRecord(record: record, cloudDogId: cloudDogId);
   }
 
-  Future<void> _upsertHeatCycle(
-    DogHeatCycleLog entry,
-    String cloudDogId,
-  ) {
+  Future<void> _upsertHeatCycle(DogHeatCycleLog entry, String cloudDogId) {
     final handler = _heatCycleUpsertHandler;
     if (handler != null) {
       return handler(entry: entry, cloudDogId: cloudDogId);
     }
     return (_heatCycleSyncService ?? FirestoreHeatCycleSyncService.instance)
-        .upsertHeatCycle(
-      entry: entry,
-      cloudDogId: cloudDogId,
-    );
+        .upsertHeatCycle(entry: entry, cloudDogId: cloudDogId);
+  }
+
+  Future<void> _upsertHuntEvent(HuntEvent event, String cloudDogId) {
+    final handler = _huntEventUpsertHandler;
+    if (handler != null) {
+      return handler(event: event, cloudDogId: cloudDogId);
+    }
+    return (_huntEventSyncService ?? FirestoreHuntEventSyncService.instance)
+        .upsert(event: event, cloudDogId: cloudDogId);
   }
 
   Map<String, dynamic> _normalizePayload(Map<String, dynamic> payload) {
@@ -407,11 +465,13 @@ class SyncOutboxProcessor {
       birdSpecies: _readStringList(payload, 'birdSpecies'),
       mediaPaths: _readStringList(payload, 'mediaPaths'),
       createdByUserId: _optionalString(payload, 'createdByUserId'),
-      sessionType:
-          sessionTypeFromString(_optionalString(payload, 'sessionType')),
+      sessionType: sessionTypeFromString(
+        _optionalString(payload, 'sessionType'),
+      ),
       birdsShotCount: _nonNegative(_readInt(payload, 'birdsShotCount') ?? 0),
       birdsShotSpecies: _optionalString(payload, 'birdsShotSpecies'),
-      updatedAt: _readDateTime(
+      updatedAt:
+          _readDateTime(
             payload,
             'updatedAt',
             fallbackKeys: const ['updated_at'],

@@ -3827,4 +3827,73 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get settings_notifications_shared_dog_save_failed => 'Kunne ikke lagre varselinnstillingen. Prøv igjen.';
+
+  @override
+  String get hunt_events_title => 'Hendelser';
+
+  @override
+  String get hunt_events_add => 'Legg til hendelse';
+
+  @override
+  String get hunt_events_none => 'Ingen hendelser registrert';
+
+  @override
+  String get hunt_events_delete_title => 'Slett hendelse?';
+
+  @override
+  String get hunt_events_delete_body => 'Hendelsen fjernes fra økten.';
+
+  @override
+  String get hunt_events_delete_action => 'Slett';
+
+  @override
+  String get hunt_events_outside_track => 'Utenfor redigert GPS-spor';
+
+  @override
+  String get hunt_event_view_title => 'Hendelse';
+
+  @override
+  String get hunt_event_edit_title => 'Rediger hendelse';
+
+  @override
+  String get hunt_event_field_type => 'Type';
+
+  @override
+  String get hunt_event_field_time => 'Tid';
+
+  @override
+  String get hunt_event_field_bird_species_optional => 'Fugleart (valgfritt)';
+
+  @override
+  String get hunt_event_field_note_optional => 'Notat (valgfritt)';
+
+  @override
+  String get hunt_event_save => 'Lagre';
+
+  @override
+  String get hunt_event_saving => 'Lagrer...';
+
+  @override
+  String get hunt_event_type_stand => 'Stand';
+
+  @override
+  String get hunt_event_type_bird_contact => 'Fuglekontakt';
+
+  @override
+  String get hunt_event_type_flush => 'Oppflukt';
+
+  @override
+  String get hunt_event_type_bump => 'Støkk';
+
+  @override
+  String get hunt_event_type_bird_down => 'Fugl felt';
+
+  @override
+  String get hunt_event_type_backing => 'Sekundering';
+
+  @override
+  String get hunt_event_type_empty_stand => 'Tomstand';
+
+  @override
+  String get hunt_event_type_other => 'Annet';
 }

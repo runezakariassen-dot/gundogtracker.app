@@ -4,9 +4,12 @@ import 'package:hive/hive.dart';
 import '../features/map/map_page.dart';
 import '../models/gps_point.dart';
 import '../models/hunt_session.dart';
+import '../models/hunt_event.dart';
 import '../models/session_track_edit.dart';
 import '../models/track.dart';
 import '../services/effective_track_resolver.dart';
+import '../services/hunt_event_track_resolver.dart';
+import '../repositories/hunt_event_repository.dart';
 import '../services/hive_lifecycle_service.dart';
 import '../data/hive_boxes.dart';
 import '../l10n/app_localizations.dart';
@@ -35,6 +38,7 @@ class _SessionMapPageState extends State<SessionMapPage> {
   List<GpsPoint> _points = [];
   bool _isLoading = true;
   String? _error;
+  List<HuntEvent> _events = const [];
   late final Box<HuntSession> _sessionsBox;
   late final Box<Track> _tracksBox;
   late final Box<SessionTrackEdit> _trackEditsBox;
@@ -44,8 +48,9 @@ class _SessionMapPageState extends State<SessionMapPage> {
     super.initState();
     _sessionsBox = HiveLifecycleService.getBox<HuntSession>(sessionsBoxName);
     _tracksBox = HiveLifecycleService.getBox<Track>(tracksBoxName);
-    _trackEditsBox =
-        HiveLifecycleService.getBox<SessionTrackEdit>(sessionTrackEditsBoxName);
+    _trackEditsBox = HiveLifecycleService.getBox<SessionTrackEdit>(
+      sessionTrackEditsBoxName,
+    );
     _loadTrack();
   }
 
@@ -69,14 +74,19 @@ class _SessionMapPageState extends State<SessionMapPage> {
         }
       }
 
+      Track? rawTrack;
+      SessionTrackEdit? trackEdit;
       if ((points == null || points.isEmpty) && trackId != null) {
         final tracksBox = _tracksBox;
         final track = tracksBox.get(trackId);
         if (track != null) {
-          final edit = stableSessionId == null
+          rawTrack = track;
+          trackEdit = stableSessionId == null
               ? null
               : _trackEditsBox.get(stableSessionId);
-          points = const EffectiveTrackResolver().resolve(track, edit).points;
+          points = const EffectiveTrackResolver()
+              .resolve(track, trackEdit)
+              .points;
         }
       }
 
@@ -88,8 +98,23 @@ class _SessionMapPageState extends State<SessionMapPage> {
         return;
       }
 
+      final events = stableSessionId == null
+          ? const <HuntEvent>[]
+          : HuntEventRepository()
+                .listForSession(stableSessionId)
+                .where(
+                  (event) =>
+                      rawTrack == null ||
+                      const HuntEventTrackResolver().isVisibleOnEffectiveTrack(
+                        event: event,
+                        rawTrack: rawTrack,
+                        edit: trackEdit,
+                      ),
+                )
+                .toList(growable: false);
       setState(() {
         _points = points!;
+        _events = events;
         _isLoading = false;
       });
     } catch (e) {
@@ -104,9 +129,7 @@ class _SessionMapPageState extends State<SessionMapPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     if (_error != null) {
       return Scaffold(
@@ -122,6 +145,7 @@ class _SessionMapPageState extends State<SessionMapPage> {
       points: _points,
       title: widget.title,
       titleSpan: widget.titleSpan,
+      events: _events,
     );
   }
 }

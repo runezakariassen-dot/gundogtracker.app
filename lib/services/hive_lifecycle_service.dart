@@ -14,6 +14,7 @@ import '../models/dog_milestone_state.dart';
 import '../models/dog_membership.dart';
 import '../models/gps_track.dart';
 import '../models/hunt_session.dart';
+import '../models/hunt_event.dart';
 import '../models/health_record.dart';
 import '../models/map_settings.dart';
 import '../models/ownership_transfer.dart';
@@ -55,6 +56,10 @@ class HiveLifecycleService {
       name: sessionTrackEditsBoxName,
       open: (attempts) =>
           _openBoxOnce<SessionTrackEdit>(sessionTrackEditsBoxName, attempts),
+    ),
+    _BoxDescriptor<HuntEvent>(
+      name: huntEventsBoxName,
+      open: (attempts) => _openBoxOnce<HuntEvent>(huntEventsBoxName, attempts),
     ),
     _BoxDescriptor<GpsTrack>(
       name: gpsTracksBoxName,
@@ -151,7 +156,8 @@ class HiveLifecycleService {
       await _withTimeout(() => _initCore(overridePath), _initTimeout);
     } on TimeoutException {
       debugPrint(
-          '[HIVE_LIFECYCLE][TIMEOUT] init exceeded ${_initTimeout.inSeconds}s');
+        '[HIVE_LIFECYCLE][TIMEOUT] init exceeded ${_initTimeout.inSeconds}s',
+      );
       rethrow;
     } catch (error, stackTrace) {
       debugPrint('[HIVE_LIFECYCLE][FAIL] init error: $error');
@@ -181,7 +187,8 @@ class HiveLifecycleService {
       debugPrint('[HIVE_LIFECYCLE] Hive.init("${hiveDir.path}")');
     } catch (error) {
       debugPrint(
-          '[HIVE_LIFECYCLE] Hive.init skipped/failed (already init?): $error');
+        '[HIVE_LIFECYCLE] Hive.init skipped/failed (already init?): $error',
+      );
     }
 
     await _migrateLegacyBoxes();
@@ -202,7 +209,8 @@ class HiveLifecycleService {
 
       // Hvis overridePath ser ut som en "ekte path" (absolutt/relativ med / eller ~),
       // bruker vi den direkte.
-      final looksLikePath = trimmed.contains('/') ||
+      final looksLikePath =
+          trimmed.contains('/') ||
           trimmed.startsWith('~') ||
           trimmed.contains(r'\');
 
@@ -222,7 +230,8 @@ class HiveLifecycleService {
       // Ellers tolker vi overridePath som subdirName til HivePathService
       final dir = await HivePathService.init(subdirName: trimmed);
       debugPrint(
-          '[HIVE_LIFECYCLE] using override subdirName="$trimmed" -> "${dir.path}"');
+        '[HIVE_LIFECYCLE] using override subdirName="$trimmed" -> "${dir.path}"',
+      );
       return dir;
     }
 
@@ -279,7 +288,8 @@ class HiveLifecycleService {
         final recoveryAttempts = reopenAttempts[recoveryKey] ?? 0;
         if (recoveryAttempts >= 1) {
           debugPrint(
-              '[HIVE_LIFECYCLE][SKIP] box=${descriptor.name} already recovered once');
+            '[HIVE_LIFECYCLE][SKIP] box=${descriptor.name} already recovered once',
+          );
           return;
         }
 
@@ -287,12 +297,15 @@ class HiveLifecycleService {
 
         try {
           await _withTimeout(
-              () => descriptor.open(reopenAttempts), _boxTimeout);
+            () => descriptor.open(reopenAttempts),
+            _boxTimeout,
+          );
           debugPrint('[HIVE_LIFECYCLE][RECOVERED] box=${descriptor.name}');
           return;
         } catch (retryError, retryStack) {
           debugPrint(
-              '[HIVE_LIFECYCLE][SKIP] box=${descriptor.name} retry error=$retryError');
+            '[HIVE_LIFECYCLE][SKIP] box=${descriptor.name} retry error=$retryError',
+          );
           debugPrint(retryStack.toString());
           return;
         }
@@ -433,17 +446,19 @@ class HiveLifecycleService {
     final hiveDir = _hiveDir;
     if (hiveDir == null) {
       debugPrint(
-          '[HIVE][QUARANTINE] hiveDir is null (init not completed), skipping');
+        '[HIVE][QUARANTINE] hiveDir is null (init not completed), skipping',
+      );
       return;
     }
 
     debugPrint(
-        '[HIVE][QUARANTINE] requested boxName=$boxName hiveDir=${hiveDir.path}');
+      '[HIVE][QUARANTINE] requested boxName=$boxName hiveDir=${hiveDir.path}',
+    );
 
-    final timestamp = DateTime.now()
-        .toUtc()
-        .toIso8601String()
-        .replaceAll(RegExp(r'[:.]'), '-');
+    final timestamp = DateTime.now().toUtc().toIso8601String().replaceAll(
+      RegExp(r'[:.]'),
+      '-',
+    );
     final destDir = Directory(p.join(hiveDir.path, 'quarantine', timestamp));
     await destDir.create(recursive: true);
 
@@ -468,10 +483,7 @@ class HiveLifecycleService {
 }
 
 class _BoxDescriptor<T> {
-  const _BoxDescriptor({
-    required this.name,
-    required this.open,
-  });
+  const _BoxDescriptor({required this.name, required this.open});
 
   final String name;
   final Future<Box<T>> Function(Map<String, int> reopenAttempts) open;
