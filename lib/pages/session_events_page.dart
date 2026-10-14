@@ -1,8 +1,8 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:intl/intl.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:uuid/uuid.dart';
 
 import '../data/hive_boxes.dart';
@@ -16,6 +16,7 @@ import '../services/hunt_event_track_resolver.dart';
 import '../services/user_identity_service.dart';
 import '../ui/hunt_event_labels.dart';
 import '../l10n/app_localizations.dart';
+import '../features/map/map_tile_sources.dart';
 
 class SessionEventsPage extends StatefulWidget {
   const SessionEventsPage({
@@ -25,6 +26,7 @@ class SessionEventsPage extends StatefulWidget {
     required this.canEdit,
     this.repository,
     this.currentUserId,
+    this.eventMapTileProvider,
   });
 
   final Object sessionKey;
@@ -32,6 +34,7 @@ class SessionEventsPage extends StatefulWidget {
   final bool canEdit;
   final HuntEventRepository? repository;
   final String Function()? currentUserId;
+  final TileProvider? eventMapTileProvider;
 
   @override
   State<SessionEventsPage> createState() => _SessionEventsPageState();
@@ -77,6 +80,7 @@ class _SessionEventsPageState extends State<SessionEventsPage> {
           canEdit: widget.canEdit,
           repository: _repository,
           currentUserId: widget.currentUserId,
+          mapTileProvider: widget.eventMapTileProvider,
         ),
       ),
     );
@@ -120,13 +124,13 @@ class _SessionEventsPageState extends State<SessionEventsPage> {
       appBar: AppBar(title: Text(l10n.hunt_events_title)),
       floatingActionButton:
           widget.canEdit && track != null && track.points.isNotEmpty
-          ? FloatingActionButton.extended(
-              key: const ValueKey('add-hunt-event'),
-              onPressed: _openEditor,
-              icon: const Icon(Icons.add),
-              label: Text(l10n.hunt_events_add),
-            )
-          : null,
+              ? FloatingActionButton.extended(
+                  key: const ValueKey('add-hunt-event'),
+                  onPressed: _openEditor,
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.hunt_events_add),
+                )
+              : null,
       body: events.isEmpty
           ? Center(child: Text(l10n.hunt_events_none))
           : ListView.separated(
@@ -135,8 +139,7 @@ class _SessionEventsPageState extends State<SessionEventsPage> {
               separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final event = events[index];
-                final outside =
-                    track != null &&
+                final outside = track != null &&
                     !const HuntEventTrackResolver().isVisibleOnEffectiveTrack(
                       event: event,
                       rawTrack: track,
@@ -184,6 +187,7 @@ class HuntEventEditPage extends StatefulWidget {
     required this.canEdit,
     required this.repository,
     this.currentUserId,
+    this.mapTileProvider,
     this.event,
   });
 
@@ -195,6 +199,7 @@ class HuntEventEditPage extends StatefulWidget {
   final bool canEdit;
   final HuntEventRepository repository;
   final String Function()? currentUserId;
+  final TileProvider? mapTileProvider;
 
   @override
   State<HuntEventEditPage> createState() => _HuntEventEditPageState();
@@ -234,19 +239,6 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
     return _selection.points[_index.round()];
   }
 
-  void _onTrackTap(TapDownDetails details, Size size) {
-    if (!widget.canEdit || _selection.points.isEmpty) return;
-    final layout = _EventTrackLayout(points: _selection.points, size: size);
-    final nearestIndex = layout.nearestIndexForTap(
-      details.localPosition,
-      pointSnapRadiusPx: 44,
-      lineSnapRadiusPx: 28,
-      maxSnapDistancePx: 84,
-    );
-    if (nearestIndex == null) return;
-    setState(() => _index = nearestIndex.toDouble());
-  }
-
   Future<void> _save() async {
     if (!widget.canEdit || _saving) return;
     final point = _point;
@@ -276,8 +268,17 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
       createdByUserId: existing?.createdByUserId ?? userId,
       updatedByUserId: userId,
     );
-    await widget.repository.upsert(event);
-    if (mounted) Navigator.pop(context);
+    try {
+      await widget.repository.upsert(event);
+      if (mounted) Navigator.pop(context);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Kunne ikke lagre hendelsen. Prøv igjen.')),
+      );
+    }
   }
 
   String? _nullable(String value) {
@@ -303,122 +304,108 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
           readOnly ? l10n.hunt_event_view_title : l10n.hunt_event_edit_title,
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          DropdownButtonFormField<HuntEventType>(
-            initialValue: _type,
-            decoration: InputDecoration(labelText: l10n.hunt_event_field_type),
-            items: HuntEventType.values
-                .map(
-                  (type) => DropdownMenuItem(
-                    value: type,
-                    child: Text(huntEventTypeLabel(context, type)),
+      body: SafeArea(
+        child: ListView(
+          key: const ValueKey('hunt-event-editor-scroll'),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          children: [
+            DropdownButtonFormField<HuntEventType>(
+              initialValue: _type,
+              decoration:
+                  InputDecoration(labelText: l10n.hunt_event_field_type),
+              items: HuntEventType.values
+                  .map(
+                    (type) => DropdownMenuItem(
+                      value: type,
+                      child: Text(huntEventTypeLabel(context, type)),
+                    ),
+                  )
+                  .toList(),
+              onChanged: readOnly
+                  ? null
+                  : (value) => setState(() => _type = value ?? _type),
+            ),
+            const SizedBox(height: 16),
+            if (point != null) ...[
+              SizedBox(
+                height: 220,
+                child: Card(
+                  key: ValueKey('event-track-preview-${_index.round()}'),
+                  clipBehavior: Clip.antiAlias,
+                  child: HuntEventTrackMap(
+                    key: const ValueKey('hunt-event-track-preview-tap-area'),
+                    points: _selection.points,
+                    selectedIndex: _index.round(),
+                    enabled: !readOnly,
+                    tileProvider: widget.mapTileProvider,
+                    onPointSelected: (index) {
+                      if (!readOnly) setState(() => _index = index.toDouble());
+                    },
                   ),
-                )
-                .toList(),
-            onChanged: readOnly
-                ? null
-                : (value) => setState(() => _type = value ?? _type),
-          ),
-          const SizedBox(height: 16),
-          if (point != null) ...[
-            SizedBox(
-              height: 220,
-              child: Card(
-                clipBehavior: Clip.antiAlias,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final size = Size(
-                      constraints.maxWidth,
-                      constraints.maxHeight,
-                    );
-                    return GestureDetector(
-                      key: const ValueKey('hunt-event-track-preview-tap-area'),
-                      behavior: HitTestBehavior.opaque,
-                      onTapDown: readOnly
-                          ? null
-                          : (details) => _onTrackTap(details, size),
-                      child: CustomPaint(
-                        key: ValueKey('event-track-preview-${_index.round()}'),
-                        painter: _EventTrackPainter(
-                          _selection.points,
-                          _index.round(),
-                        ),
-                        child: const SizedBox.expand(),
-                      ),
-                    );
-                  },
                 ),
+              ),
+              if (!readOnly) ...[
+                const SizedBox(height: 8),
+                Text(
+                  l10n.hunt_event_track_tap_hint,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ] else
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(l10n.session_map_error_no_tracks),
+              ),
+            const SizedBox(height: 12),
+            if (point != null) ...[
+              Text(
+                '${l10n.hunt_event_field_time}: '
+                '${DateFormat('HH:mm:ss').format(point.time.toLocal())}',
+              ),
+              Slider(
+                key: const ValueKey('hunt-event-track-slider'),
+                value: _index,
+                min: 0,
+                max: (_selection.points.length - 1).toDouble(),
+                divisions: _selection.points.length > 1
+                    ? _selection.points.length - 1
+                    : null,
+                onChanged:
+                    readOnly ? null : (value) => setState(() => _index = value),
+              ),
+            ],
+            TextField(
+              controller: _species,
+              enabled: !readOnly,
+              decoration: InputDecoration(
+                labelText: l10n.hunt_event_field_bird_species_optional,
+              ),
+            ),
+            TextField(
+              controller: _note,
+              enabled: !readOnly,
+              maxLines: 3,
+              decoration: InputDecoration(
+                labelText: l10n.hunt_event_field_note_optional,
               ),
             ),
             if (!readOnly) ...[
-              const SizedBox(height: 8),
-              Text(
-                l10n.hunt_event_track_tap_hint,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
-          ] else
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(l10n.session_map_error_no_tracks),
-            ),
-          const SizedBox(height: 12),
-          if (point != null) ...[
-            Text(
-              '${l10n.hunt_event_field_time}: '
-              '${DateFormat('HH:mm:ss').format(point.time.toLocal())}',
-            ),
-            Slider(
-              key: const ValueKey('hunt-event-track-slider'),
-              value: _index,
-              min: 0,
-              max: (_selection.points.length - 1).toDouble(),
-              divisions: _selection.points.length > 1
-                  ? _selection.points.length - 1
-                  : null,
-              onChanged: readOnly
-                  ? null
-                  : (value) => setState(() => _index = value),
-            ),
-          ],
-          TextField(
-            controller: _species,
-            enabled: !readOnly,
-            decoration: InputDecoration(
-              labelText: l10n.hunt_event_field_bird_species_optional,
-            ),
-          ),
-          TextField(
-            controller: _note,
-            enabled: !readOnly,
-            maxLines: 3,
-            decoration: InputDecoration(
-              labelText: l10n.hunt_event_field_note_optional,
-            ),
-          ),
-          if (!readOnly) ...[
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(l10n.common_cancel),
-                ),
-                const SizedBox(width: 8),
-                FilledButton(
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: FilledButton(
                   key: const ValueKey('save-hunt-event'),
                   onPressed: _saving ? null : _save,
                   child: Text(
                     _saving ? l10n.hunt_event_saving : l10n.hunt_event_save,
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -434,137 +421,97 @@ String _currentUserId() {
   return UserIdentityService().getCurrentUserId();
 }
 
-class _EventTrackPainter extends CustomPainter {
-  const _EventTrackPainter(this.points, this.selectedIndex);
+class HuntEventTrackMap extends StatelessWidget {
+  const HuntEventTrackMap({
+    super.key,
+    required this.points,
+    required this.selectedIndex,
+    required this.enabled,
+    required this.onPointSelected,
+    this.tileProvider,
+  });
+
   final List<GpsPoint> points;
   final int selectedIndex;
+  final bool enabled;
+  final ValueChanged<int> onPointSelected;
+  final TileProvider? tileProvider;
 
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (points.isEmpty || selectedIndex < 0 || selectedIndex >= points.length) {
-      return;
-    }
-    final layout = _EventTrackLayout(points: points, size: size);
-    final path = Path()
-      ..moveTo(
-        layout.offsetForPoint(points.first).dx,
-        layout.offsetForPoint(points.first).dy,
+  LatLng _latLng(GpsPoint point) => LatLng(point.lat, point.lon);
+
+  int _nearestIndex(LatLng tappedPoint) {
+    var nearest = 0;
+    var nearestDistance = double.infinity;
+    const distance = Distance();
+    for (var index = 0; index < points.length; index++) {
+      final candidate = distance.as(
+        LengthUnit.Meter,
+        tappedPoint,
+        _latLng(points[index]),
       );
-    for (final point in points.skip(1)) {
-      final value = layout.offsetForPoint(point);
-      path.lineTo(value.dx, value.dy);
+      if (candidate < nearestDistance) {
+        nearest = index;
+        nearestDistance = candidate;
+      }
     }
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = Colors.blue
-        ..strokeWidth = 3
-        ..style = PaintingStyle.stroke,
-    );
-    canvas.drawCircle(
-      layout.offsetForPoint(points[selectedIndex]),
-      8,
-      Paint()..color = Colors.red,
-    );
+    return nearest;
   }
 
   @override
-  bool shouldRepaint(_EventTrackPainter oldDelegate) =>
-      oldDelegate.selectedIndex != selectedIndex ||
-      oldDelegate.points != points;
-}
-
-class _EventTrackLayout {
-  const _EventTrackLayout({required this.points, required this.size});
-
-  final List<GpsPoint> points;
-  final Size size;
-  static const double _padding = 16;
-
-  Offset offsetForPoint(GpsPoint point) {
-    final minLat = points.map((p) => p.lat).reduce(math.min);
-    final maxLat = points.map((p) => p.lat).reduce(math.max);
-    final minLon = points.map((p) => p.lon).reduce(math.min);
-    final maxLon = points.map((p) => p.lon).reduce(math.max);
-    return Offset(
-      _padding +
-          (point.lon - minLon) /
-              ((maxLon - minLon).abs() + 0.0000001) *
-              (size.width - (_padding * 2)),
-      size.height -
-          _padding -
-          (point.lat - minLat) /
-              ((maxLat - minLat).abs() + 0.0000001) *
-              (size.height - (_padding * 2)),
+  Widget build(BuildContext context) {
+    final mapPoints = points.map(_latLng).toList(growable: false);
+    final selectedPoint = mapPoints[selectedIndex];
+    return FlutterMap(
+      key: const ValueKey('hunt-event-flutter-map'),
+      options: MapOptions(
+        initialCenter: selectedPoint,
+        initialZoom: 15,
+        initialCameraFit: mapPoints.length > 1
+            ? CameraFit.bounds(
+                bounds: LatLngBounds.fromPoints(mapPoints),
+                padding: const EdgeInsets.all(24),
+              )
+            : null,
+        interactionOptions: const InteractionOptions(
+          flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
+        ),
+        onTap: enabled
+            ? (_, point) => onPointSelected(_nearestIndex(point))
+            : null,
+      ),
+      children: [
+        TileLayer(
+          key: const ValueKey('hunt-event-basemap-layer'),
+          urlTemplate: standardTileSource.urlTemplate,
+          userAgentPackageName: 'com.example.jakthund_app',
+          tileProvider: tileProvider,
+        ),
+        PolylineLayer(
+          key: const ValueKey('hunt-event-track-layer'),
+          polylines: [
+            Polyline(
+              points: mapPoints,
+              strokeWidth: 4,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ],
+        ),
+        MarkerLayer(
+          key: const ValueKey('hunt-event-marker-layer'),
+          markers: [
+            Marker(
+              point: selectedPoint,
+              width: 40,
+              height: 40,
+              child: const Icon(
+                Icons.location_pin,
+                color: Colors.red,
+                size: 36,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
-  }
-
-  int? nearestIndexForTap(
-    Offset tap, {
-    required double pointSnapRadiusPx,
-    required double lineSnapRadiusPx,
-    required double maxSnapDistancePx,
-  }) {
-    if (points.isEmpty) return null;
-    int nearestIndex = 0;
-    var nearestPointDistanceSquared = double.infinity;
-    final projected = points.map(offsetForPoint).toList(growable: false);
-    for (var index = 0; index < projected.length; index++) {
-      final distanceSquared = (projected[index] - tap).distanceSquared;
-      if (distanceSquared < nearestPointDistanceSquared) {
-        nearestPointDistanceSquared = distanceSquared;
-        nearestIndex = index;
-      }
-    }
-
-    final pointSnapRadiusSquared = pointSnapRadiusPx * pointSnapRadiusPx;
-    if (nearestPointDistanceSquared <= pointSnapRadiusSquared) {
-      return nearestIndex;
-    }
-
-    var nearestLineDistanceSquared = double.infinity;
-    for (var index = 1; index < projected.length; index++) {
-      final segmentDistanceSquared = _distanceSquaredToSegment(
-        point: tap,
-        start: projected[index - 1],
-        end: projected[index],
-      );
-      if (segmentDistanceSquared < nearestLineDistanceSquared) {
-        nearestLineDistanceSquared = segmentDistanceSquared;
-      }
-    }
-    final lineSnapRadiusSquared = lineSnapRadiusPx * lineSnapRadiusPx;
-    if (nearestLineDistanceSquared <= lineSnapRadiusSquared) {
-      return nearestIndex;
-    }
-
-    final maxSnapDistanceSquared = maxSnapDistancePx * maxSnapDistancePx;
-    if (nearestPointDistanceSquared <= maxSnapDistanceSquared) {
-      return nearestIndex;
-    }
-    return null;
-  }
-
-  double _distanceSquaredToSegment({
-    required Offset point,
-    required Offset start,
-    required Offset end,
-  }) {
-    final segment = end - start;
-    final segmentLengthSquared =
-        segment.dx * segment.dx + segment.dy * segment.dy;
-    if (segmentLengthSquared == 0) {
-      return (point - start).distanceSquared;
-    }
-    final t =
-        (((point.dx - start.dx) * segment.dx) +
-            ((point.dy - start.dy) * segment.dy)) /
-        segmentLengthSquared;
-    final clampedT = t.clamp(0.0, 1.0);
-    final projection = Offset(
-      start.dx + (segment.dx * clampedT),
-      start.dy + (segment.dy * clampedT),
-    );
-    return (point - projection).distanceSquared;
   }
 }

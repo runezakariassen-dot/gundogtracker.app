@@ -4,8 +4,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:jakthund_app/data/hive_boxes.dart';
 import 'package:jakthund_app/data/hive_path_service.dart';
 import 'package:jakthund_app/domain/domain_bootstrap.dart';
@@ -133,6 +135,32 @@ void main() {
     expect(track.points, orderedEquals(originalTrackPoints));
   });
 
+  testWidgets('editor contains basemap track and selected marker layers', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      canEdit: true,
+      repository: repository,
+      session: session,
+    );
+    await _openCreateEditor(tester);
+
+    expect(find.byType(FlutterMap), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('hunt-event-basemap-layer')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('hunt-event-track-layer')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('hunt-event-marker-layer')),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('map tap near first middle and final points updates selection', (
     tester,
   ) async {
@@ -211,6 +239,39 @@ void main() {
     await _tapPreviewNearEffectiveIndex(tester, 2);
     await tester.pump();
     expect(find.byKey(const ValueKey('event-track-preview-1')), findsOneWidget);
+  });
+
+  testWidgets('save button is below note and reachable on a small screen', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      canEdit: true,
+      repository: repository,
+      session: session,
+    );
+    await _openCreateEditor(tester);
+    tester.view.physicalSize = const Size(320, 568);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pump();
+
+    final save = find.byKey(const ValueKey('save-hunt-event'));
+    final editorScroll = find.descendant(
+      of: find.byKey(const ValueKey('hunt-event-editor-scroll')),
+      matching: find.byType(Scrollable),
+    );
+    final scrollable = tester.state<ScrollableState>(
+      editorScroll.first,
+    );
+    scrollable.position.jumpTo(scrollable.position.maxScrollExtent);
+    await tester.pump();
+    expect(save.hitTestable(), findsOneWidget);
+    expect(tester.getSize(save).height, 52);
+    await tester.tap(save);
+    await _pumpRoute(tester);
+    expect(repository.listForSession('session-1'), hasLength(1));
   });
 
   testWidgets('missing track hides add action and handles safely', (
@@ -321,10 +382,17 @@ Future<void> _pump(
         canEdit: canEdit,
         repository: repository,
         currentUserId: () => 'owner',
+        eventMapTileProvider: _TransparentTileProvider(),
       ),
     ),
   );
   await tester.pump();
+}
+
+class _TransparentTileProvider extends TileProvider {
+  @override
+  ImageProvider getImage(TileCoordinates coordinates, TileLayer options) =>
+      MemoryImage(TileProvider.transparentImage);
 }
 
 Future<void> _pumpRoute(WidgetTester tester) async {
@@ -347,16 +415,14 @@ Future<void> _tapPreviewNearEffectiveIndex(
   int index, [
   Offset delta = Offset.zero,
 ]) async {
-  final area = find.byKey(const ValueKey('hunt-event-track-preview-tap-area'));
-  final rect = tester.getRect(area);
-  const padding = 16.0;
-  const totalPoints = 3;
-  final ratio = totalPoints == 1 ? 0.0 : index / (totalPoints - 1);
-  final local = Offset(
-    padding + ((rect.width - (padding * 2)) * ratio),
-    rect.height - padding - ((rect.height - (padding * 2)) * ratio),
+  final map = tester.widget<FlutterMap>(find.byType(FlutterMap));
+  final callback = map.options.onTap;
+  if (callback == null) return;
+  final rawIndex = index + 2;
+  callback(
+    TapPosition(delta, delta),
+    LatLng(60 + rawIndex / 1000, 10 + rawIndex / 1000),
   );
-  await tester.tapAt(rect.topLeft + local + delta);
 }
 
 class _MemoryHuntEventRepository extends HuntEventRepository {
