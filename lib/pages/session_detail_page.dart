@@ -2944,23 +2944,6 @@ class _SessionDetailPageState extends State<SessionDetailPage>
                               null) ...[
                             SizedBox(
                               width: double.infinity,
-                              child: FilledButton.icon(
-                                key: ValueKey(
-                                  'hunt-replay-${filteredEntries[i].key}',
-                                ),
-                                icon: const Icon(Icons.play_circle_outline),
-                                label: Text(l10n.hunt_replay_open),
-                                onPressed: _anyBusy
-                                    ? null
-                                    : () => _openReplayForSession(
-                                          filteredEntries[i].key,
-                                          filteredEntries[i].value,
-                                        ),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            SizedBox(
-                              width: double.infinity,
                               child: OutlinedButton.icon(
                                 key: ValueKey(
                                   'edit-gps-track-${filteredEntries[i].key}',
@@ -2993,6 +2976,28 @@ class _SessionDetailPageState extends State<SessionDetailPage>
                             ),
                           ),
                           const SizedBox(height: 8),
+                          if (_editableTrackForSession(
+                                filteredEntries[i].value,
+                              ) !=
+                              null) ...[
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton.icon(
+                                key: ValueKey(
+                                  'hunt-replay-${filteredEntries[i].key}',
+                                ),
+                                icon: const Icon(Icons.play_circle_outline),
+                                label: Text(l10n.hunt_replay_open),
+                                onPressed: _anyBusy
+                                    ? null
+                                    : () => _openReplayForSession(
+                                          filteredEntries[i].key,
+                                          filteredEntries[i].value,
+                                        ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
                           SizedBox(
                             width: double.infinity,
                             child: OutlinedButton.icon(

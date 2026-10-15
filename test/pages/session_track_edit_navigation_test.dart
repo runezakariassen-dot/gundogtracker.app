@@ -14,8 +14,11 @@ import 'package:jakthund_app/l10n/app_localizations.dart';
 import 'package:jakthund_app/models/dog.dart';
 import 'package:jakthund_app/models/gps_point.dart';
 import 'package:jakthund_app/models/hunt_session.dart';
+import 'package:jakthund_app/models/session_track_edit.dart';
 import 'package:jakthund_app/models/track.dart';
+import 'package:jakthund_app/pages/hunt_replay_page.dart';
 import 'package:jakthund_app/pages/session_track_edit_page.dart';
+import 'package:jakthund_app/services/effective_track_resolver.dart';
 import 'package:jakthund_app/services/hive_lifecycle_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -106,6 +109,85 @@ void main() {
       expect(find.byKey(const ValueKey('edit-gps-track-0')), findsNothing);
       expect(find.byKey(const ValueKey('edit-gps-track-1')), findsNothing);
     });
+
+    testWidgets('valid imported local Track shows replay and opens page',
+        (tester) async {
+      await tester.runAsync(() async {
+        await _storeSession(key: 0, trackId: 'imported-track');
+        await Hive.box<Track>(tracksBoxName).put(
+          'imported-track',
+          _track('imported-track', source: 'gpx_import'),
+        );
+      });
+      await _pumpSessions(tester);
+
+      final replay = find.byKey(
+        const ValueKey('hunt-replay-0'),
+        skipOffstage: false,
+      );
+      expect(replay, findsOneWidget);
+      await tester.ensureVisible(replay);
+      await _pumpRoute(tester);
+      await tester.tap(replay);
+      await _pumpRoute(tester);
+      expect(find.byType(HuntReplayPage), findsOneWidget);
+    });
+
+    testWidgets('valid trimmed Track shows replay', (tester) async {
+      final track = _track('trimmed-track');
+      await tester.runAsync(() async {
+        await _storeSession(key: 0, trackId: track.id);
+        await Hive.box<Track>(tracksBoxName).put(track.id, track);
+        await Hive.box<SessionTrackEdit>(sessionTrackEditsBoxName).put(
+          'session-0',
+          SessionTrackEdit(
+            sessionId: 'session-0',
+            sourceTrackId: track.id,
+            startIndexInclusive: 1,
+            endIndexExclusive: 2,
+            startTimeAnchor: track.points[1].time,
+            endTimeAnchor: track.points[1].time,
+            sourcePointCount: track.points.length,
+            sourceFingerprint: EffectiveTrackResolver.fingerprint(track),
+            createdAt: DateTime.utc(2026),
+            updatedAt: DateTime.utc(2026),
+          ),
+        );
+      });
+      await _pumpSessions(tester);
+
+      expect(
+        find.byKey(const ValueKey('hunt-replay-0'), skipOffstage: false),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('missing Track hides replay', (tester) async {
+      await tester.runAsync(() async {
+        await _storeSession(key: 0, trackId: 'missing-track');
+      });
+      await _pumpSessions(tester);
+
+      expect(find.byKey(const ValueKey('hunt-replay-0')), findsNothing);
+    });
+
+    testWidgets('empty Track hides replay', (tester) async {
+      await tester.runAsync(() async {
+        await _storeSession(key: 0, trackId: 'empty-track');
+        await Hive.box<Track>(tracksBoxName).put(
+          'empty-track',
+          Track(
+            id: 'empty-track',
+            createdAt: DateTime.utc(2026),
+            source: 'test',
+            points: const [],
+          ),
+        );
+      });
+      await _pumpSessions(tester);
+
+      expect(find.byKey(const ValueKey('hunt-replay-0')), findsNothing);
+    });
   });
 }
 
@@ -129,10 +211,10 @@ Future<void> _storeSession({required int key, String? trackId}) {
   );
 }
 
-Track _track(String id) => Track(
+Track _track(String id, {String source = 'test'}) => Track(
       id: id,
       createdAt: DateTime.utc(2026, 10, 14, 10),
-      source: 'test',
+      source: source,
       points: [
         GpsPoint(lat: 60, lon: 10, time: DateTime.utc(2026, 10, 14, 10)),
         GpsPoint(

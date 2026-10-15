@@ -34,12 +34,14 @@ import 'package:jakthund_app/models/hunt_session.dart';
 import 'package:jakthund_app/models/session_type.dart';
 import 'package:jakthund_app/models/track.dart';
 import 'package:jakthund_app/pages/dog_editor_page.dart';
+import 'package:jakthund_app/pages/hunt_replay_page.dart';
 import 'package:jakthund_app/pages/session_map_page.dart';
 import 'package:jakthund_app/pages/session_track_edit_page.dart';
 import 'package:jakthund_app/pages/session_events_page.dart';
 import 'package:jakthund_app/pages/session_media_image_helper.dart';
 import 'package:jakthund_app/pages/session_media_video_helper.dart';
 import 'package:jakthund_app/repositories/session_repository.dart';
+import 'package:jakthund_app/repositories/session_track_edit_repository.dart';
 import 'package:jakthund_app/repositories/track_repository.dart';
 import 'package:jakthund_app/services/dog_photo_storage.dart';
 import 'package:jakthund_app/services/cloud/firestore_session_sync_service.dart';
@@ -2170,6 +2172,25 @@ class _HuntSessionPageState extends State<HuntSessionPage>
     return track == null || track.points.isEmpty ? null : track;
   }
 
+  void _openReplayForSession(dynamic sessionKey, HuntSession session) {
+    final rawTrack = _editableTrackForSession(session);
+    if (rawTrack == null) return;
+    final storedSessionId = session.sessionId?.trim();
+    final sessionId = storedSessionId != null && storedSessionId.isNotEmpty
+        ? storedSessionId
+        : sessionKey.toString();
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => HuntReplayPage(
+          rawTrack: rawTrack,
+          trackEdit: SessionTrackEditRepository().get(sessionId),
+        ),
+      ),
+    );
+  }
+
   Future<void> _openTrackEditor(
     dynamic sessionKey,
     HuntSession session,
@@ -4104,7 +4125,8 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                     key: ValueKey(
                                       'session-events-${filteredEntries[i].key}',
                                     ),
-                                    icon: const Icon(Icons.location_on_outlined),
+                                    icon:
+                                        const Icon(Icons.location_on_outlined),
                                     label: Text(l10n.hunt_events_title),
                                     onPressed: _anyBusy
                                         ? null
@@ -4154,6 +4176,30 @@ class _HuntSessionPageState extends State<HuntSessionPage>
                                   ),
                                 ),
                                 const SizedBox(height: 8),
+                                if (_editableTrackForSession(
+                                      filteredEntries[i].value,
+                                    ) !=
+                                    null) ...[
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: FilledButton.icon(
+                                      key: ValueKey(
+                                        'hunt-replay-${filteredEntries[i].key}',
+                                      ),
+                                      icon: const Icon(
+                                        Icons.play_circle_outline,
+                                      ),
+                                      label: Text(l10n.hunt_replay_open),
+                                      onPressed: _anyBusy
+                                          ? null
+                                          : () => _openReplayForSession(
+                                                filteredEntries[i].key,
+                                                filteredEntries[i].value,
+                                              ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                ],
                                 SizedBox(
                                   width: double.infinity,
                                   child: OutlinedButton.icon(
