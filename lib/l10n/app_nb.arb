@@ -2145,6 +2145,11 @@
   "hunt_event_type_backing": "Sekundering",
   "hunt_event_type_empty_stand": "Tomstand",
   "hunt_event_type_other": "Annet",
+  "hunt_replay_open": "Spill av jakt",
+  "hunt_replay_title": "Jaktavspilling",
+  "hunt_replay_play": "Spill av",
+  "hunt_replay_pause": "Pause",
+  "hunt_replay_follow": "Følg",
   "@settings_not_signed_in": {
     "description": "Message shown when no user is currently signed in."
   }

@@ -1723,6 +1723,11 @@
   "hunt_event_type_backing": "Sekundering",
   "hunt_event_type_empty_stand": "Tom stand",
   "hunt_event_type_other": "Andet",
+  "hunt_replay_open": "Afspil jagt",
+  "hunt_replay_title": "Jagtgengivelse",
+  "hunt_replay_play": "Afspil",
+  "hunt_replay_pause": "Pause",
+  "hunt_replay_follow": "Følg",
   "@settings_not_signed_in": {
     "description": "Message shown when no user is currently signed in."
   }

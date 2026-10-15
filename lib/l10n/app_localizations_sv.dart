@@ -3899,4 +3899,19 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get hunt_event_type_other => 'Annat';
+
+  @override
+  String get hunt_replay_open => 'Spela upp jakt';
+
+  @override
+  String get hunt_replay_title => 'Jaktuppspelning';
+
+  @override
+  String get hunt_replay_play => 'Spela upp';
+
+  @override
+  String get hunt_replay_pause => 'Paus';
+
+  @override
+  String get hunt_replay_follow => 'Följ';
 }

@@ -35,6 +35,7 @@ import 'package:jakthund_app/models/session_track_edit.dart';
 import 'package:jakthund_app/models/track.dart';
 import 'package:jakthund_app/hunt_session_page.dart';
 import 'package:jakthund_app/pages/session_map_page.dart';
+import 'package:jakthund_app/pages/hunt_replay_page.dart';
 import 'package:jakthund_app/pages/session_track_edit_page.dart';
 import 'package:jakthund_app/repositories/session_track_edit_repository.dart';
 import 'package:jakthund_app/repositories/session_repository.dart';
@@ -1464,6 +1465,21 @@ class _SessionDetailPageState extends State<SessionDetailPage>
           trackId: session.trackId,
           title: l10n.session_detail_map_title,
           titleSpan: titleSpan,
+        ),
+      ),
+    );
+  }
+
+  void _openReplayForSession(int sessionKey, HuntSession session) {
+    final rawTrack = _editableTrackForSession(session);
+    if (rawTrack == null) return;
+    final sessionId = _stableSessionId(sessionKey, session);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => HuntReplayPage(
+          rawTrack: rawTrack,
+          trackEdit: _sessionTrackEditRepository.get(sessionId),
         ),
       ),
     );
@@ -2926,6 +2942,23 @@ class _SessionDetailPageState extends State<SessionDetailPage>
                                 filteredEntries[i].value,
                               ) !=
                               null) ...[
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton.icon(
+                                key: ValueKey(
+                                  'hunt-replay-${filteredEntries[i].key}',
+                                ),
+                                icon: const Icon(Icons.play_circle_outline),
+                                label: Text(l10n.hunt_replay_open),
+                                onPressed: _anyBusy
+                                    ? null
+                                    : () => _openReplayForSession(
+                                          filteredEntries[i].key,
+                                          filteredEntries[i].value,
+                                        ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
                             SizedBox(
                               width: double.infinity,
                               child: OutlinedButton.icon(

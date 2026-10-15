@@ -7070,6 +7070,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Other'**
   String get hunt_event_type_other;
+
+  /// No description provided for @hunt_replay_open.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay hunt'**
+  String get hunt_replay_open;
+
+  /// No description provided for @hunt_replay_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Hunt replay'**
+  String get hunt_replay_title;
+
+  /// No description provided for @hunt_replay_play.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get hunt_replay_play;
+
+  /// No description provided for @hunt_replay_pause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get hunt_replay_pause;
+
+  /// No description provided for @hunt_replay_follow.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow'**
+  String get hunt_replay_follow;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

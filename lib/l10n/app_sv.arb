@@ -2332,6 +2332,11 @@
   "hunt_event_type_backing": "Sekundering",
   "hunt_event_type_empty_stand": "Tomstånd",
   "hunt_event_type_other": "Annat",
+  "hunt_replay_open": "Spela upp jakt",
+  "hunt_replay_title": "Jaktuppspelning",
+  "hunt_replay_play": "Spela upp",
+  "hunt_replay_pause": "Paus",
+  "hunt_replay_follow": "Följ",
   "@settings_not_signed_in": {
     "description": "Message shown when no user is currently signed in."
   }

@@ -2170,6 +2170,11 @@
   "hunt_event_type_backing": "Backing",
   "hunt_event_type_empty_stand": "Empty point",
   "hunt_event_type_other": "Other",
+  "hunt_replay_open": "Replay hunt",
+  "hunt_replay_title": "Hunt replay",
+  "hunt_replay_play": "Play",
+  "hunt_replay_pause": "Pause",
+  "hunt_replay_follow": "Follow",
   "@settings_not_signed_in": {
     "description": "Message shown when no user is currently signed in."
   }

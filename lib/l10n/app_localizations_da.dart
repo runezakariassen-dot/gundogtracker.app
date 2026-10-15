@@ -3899,4 +3899,19 @@ class AppLocalizationsDa extends AppLocalizations {
 
   @override
   String get hunt_event_type_other => 'Andet';
+
+  @override
+  String get hunt_replay_open => 'Afspil jagt';
+
+  @override
+  String get hunt_replay_title => 'Jagtgengivelse';
+
+  @override
+  String get hunt_replay_play => 'Afspil';
+
+  @override
+  String get hunt_replay_pause => 'Pause';
+
+  @override
+  String get hunt_replay_follow => 'Følg';
 }
