@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -21,22 +22,32 @@ class SessionVideoPlayerPage extends StatefulWidget {
 }
 
 class _SessionVideoPlayerPageState extends State<SessionVideoPlayerPage> {
-  late final VideoPlayerController _controller;
+  VideoPlayerController? _controller;
   bool _initializing = true;
   String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.file(File(widget.videoPath));
-    _controller.initialize().then((_) {
+    unawaited(_initializeController());
+  }
+
+  Future<void> _initializeController() async {
+    final file = File(widget.videoPath);
+    try {
+      final controller = VideoPlayerController.file(file);
+      _controller = controller;
+      await controller.initialize();
       if (!mounted) return;
       setState(() => _initializing = false);
-      _controller.play();
-    }).catchError((error, stackTrace) {
+      await controller.play();
+    } catch (error, stackTrace) {
       if (kDebugMode) {
         debugPrint(
-          '[VIDEO] controller init failed path=${widget.videoPath} error=$error stackTrace=$stackTrace',
+          '[SESSION_MEDIA] kind=video stage=controller-initialize '
+          'resolved=${widget.videoPath} exists=${file.existsSync()} '
+          'size=${file.existsSync() ? file.lengthSync() : 0} '
+          'error=$error stackTrace=$stackTrace',
         );
       }
       if (!mounted) return;
@@ -51,20 +62,24 @@ class _SessionVideoPlayerPageState extends State<SessionVideoPlayerPage> {
           SnackBar(content: Text(l10n.session_media_video_open_failed)),
         );
       });
-    });
+    }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    final controller = _controller;
+    _controller = null;
+    if (controller != null) unawaited(controller.dispose());
     super.dispose();
   }
 
   void _togglePlayPause() {
-    if (_controller.value.isPlaying) {
-      _controller.pause();
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) return;
+    if (controller.value.isPlaying) {
+      unawaited(controller.pause());
     } else {
-      _controller.play();
+      unawaited(controller.play());
     }
     setState(() {});
   }
@@ -73,6 +88,7 @@ class _SessionVideoPlayerPageState extends State<SessionVideoPlayerPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final title = widget.displayName ?? l10n.session_media_section_title;
+    final controller = _controller;
     return Scaffold(
       appBar: AppBar(title: Text(title)),
       body: Center(
@@ -83,35 +99,39 @@ class _SessionVideoPlayerPageState extends State<SessionVideoPlayerPage> {
               )
             : _initializing
                 ? const CircularProgressIndicator()
-                : AspectRatio(
-                    aspectRatio: _controller.value.aspectRatio,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        VideoPlayer(_controller),
-                        Positioned(
-                          bottom: 0,
-                          left: 0,
-                          right: 0,
-                          child: VideoProgressIndicator(
-                            _controller,
-                            allowScrubbing: true,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
+                : controller == null || !controller.value.isInitialized
+                    ? Text(l10n.session_media_video_open_failed)
+                    : AspectRatio(
+                        aspectRatio: controller.value.aspectRatio,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            VideoPlayer(controller),
+                            Positioned(
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
+                              child: VideoProgressIndicator(
+                                controller,
+                                allowScrubbing: true,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
+                      ),
       ),
       floatingActionButton: _errorMessage != null || _initializing
           ? null
           : FloatingActionButton(
               onPressed: _togglePlayPause,
               child: Icon(
-                _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+                controller?.value.isPlaying == true
+                    ? Icons.pause
+                    : Icons.play_arrow,
               ),
             ),
     );

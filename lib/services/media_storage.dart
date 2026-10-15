@@ -197,6 +197,10 @@ class MediaStorage {
       if (relative != null) {
         return _absoluteFromRelativePath(relative, docsDir.path);
       }
+      final legacyRelative = _mediaRelativeFromLegacyDocuments(sanitized);
+      if (legacyRelative != null) {
+        return _absoluteFromRelativePath(legacyRelative, docsDir.path);
+      }
       return sanitized;
     }
     return _absoluteFromRelativePath(sanitized, docsDir.path);
@@ -257,6 +261,17 @@ class MediaStorage {
     return relative.replaceAll('\\', '/');
   }
 
+  /// Recovers media saved with a previous iOS app-container root. The UUID in
+  /// an absolute sandbox path changes across installs/updates, while the part
+  /// below Documents remains durable.
+  static String? _mediaRelativeFromLegacyDocuments(String absolutePath) {
+    final posixPath = absolutePath.replaceAll('\\', '/');
+    const marker = '/Documents/media/';
+    final markerIndex = posixPath.indexOf(marker);
+    if (markerIndex == -1) return null;
+    return posixPath.substring(markerIndex + '/Documents/'.length);
+  }
+
   static String _absoluteFromRelativePath(
       String relativePath, String docsPath) {
     final segments =
@@ -298,6 +313,10 @@ class MediaStorage {
       final relative = _relativeFromDocuments(sanitized, _documentsDir!);
       if (relative != null) {
         return _absoluteFromRelativePath(relative, _documentsDir!);
+      }
+      final legacyRelative = _mediaRelativeFromLegacyDocuments(sanitized);
+      if (legacyRelative != null) {
+        return _absoluteFromRelativePath(legacyRelative, _documentsDir!);
       }
       return sanitized;
     }

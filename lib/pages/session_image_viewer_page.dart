@@ -6,6 +6,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
+import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
 
 import 'package:jakthund_app/data/hive_boxes.dart';
@@ -656,13 +658,31 @@ class _SessionImageViewerPageState extends State<SessionImageViewerPage> {
 
   Future<ui.Image> _loadImageInfo() async {
     final file = File(widget.imagePath);
-    if (!file.existsSync()) {
-      throw FileSystemException('Image not found', widget.imagePath);
+    try {
+      if (!file.existsSync() || file.lengthSync() <= 0) {
+        throw FileSystemException(
+            'Image is missing or empty', widget.imagePath);
+      }
+      final bytes = await file.readAsBytes();
+      final codec = await ui.instantiateImageCodec(bytes);
+      try {
+        final frame = await codec.getNextFrame();
+        return frame.image;
+      } finally {
+        codec.dispose();
+      }
+    } catch (error, stackTrace) {
+      if (kDebugMode) {
+        debugPrint(
+          '[SESSION_MEDIA] kind=image stage=decode resolved=${widget.imagePath} '
+          'extension=${p.extension(widget.imagePath).toLowerCase()} '
+          'exists=${file.existsSync()} '
+          'size=${file.existsSync() ? file.lengthSync() : 0} '
+          'error=$error stackTrace=$stackTrace',
+        );
+      }
+      rethrow;
     }
-    final bytes = await file.readAsBytes();
-    final codec = await ui.instantiateImageCodec(bytes);
-    final frame = await codec.getNextFrame();
-    return frame.image;
   }
 
   Rect _calculateContainRect(
