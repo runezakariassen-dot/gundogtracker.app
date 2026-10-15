@@ -16,7 +16,7 @@ void main() {
     if (await documents.exists()) await documents.delete(recursive: true);
   });
 
-  for (final extension in ['jpg', 'mov']) {
+  for (final extension in ['heic', 'jpeg', 'png', 'mov', 'mp4']) {
     test('picker .$extension is copied to a durable canonical session path',
         () async {
       final pickerDirectory =
@@ -26,7 +26,8 @@ void main() {
           await pickerDirectory.delete(recursive: true);
         }
       });
-      final source = File('${pickerDirectory.path}/picked.$extension');
+      final source =
+          File('${pickerDirectory.path}/iOS picked media.$extension');
       await source.writeAsBytes(List<int>.generate(64, (index) => index));
 
       final stored = await MediaStorage.ensurePickedMediaPersisted(
@@ -41,6 +42,8 @@ void main() {
       final firstValidation = await MediaStorage.validatePersistedMedia(stored);
       expect(firstValidation?.exists, isTrue);
       expect(firstValidation?.length, 64);
+      expect(firstValidation?.resolvedPath, startsWith(documents.path));
+      expect(firstValidation?.resolvedPath, isNot(stored));
 
       // Simulate a repository/widget reinitialization and app restart while
       // retaining the application documents directory.
@@ -77,6 +80,18 @@ void main() {
         dogId: 'dog-1',
         sessionId: 'session-1',
         sourcePath: '${documents.path}/missing.jpg',
+      ),
+      throwsA(isA<FileSystemException>()),
+    );
+  });
+
+  test('empty picker file gives a controlled failure', () async {
+    final source = File('${documents.path}/empty.heic')..createSync();
+    expect(
+      () => MediaStorage.ensurePickedMediaPersisted(
+        dogId: 'dog-1',
+        sessionId: 'session-1',
+        sourcePath: source.path,
       ),
       throwsA(isA<FileSystemException>()),
     );

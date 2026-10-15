@@ -31,6 +31,10 @@ class MediaStorage {
     if (!await sourceFile.exists()) {
       throw FileSystemException('Media source file not found', sourcePath);
     }
+    final sourceBytes = await sourceFile.length();
+    if (sourceBytes <= 0) {
+      throw FileSystemException('Media source file is empty', sourcePath);
+    }
 
     final docsDir = await _ensureDocumentsDirectory();
     final fileName = _generateFileName(sourceFile.path);
@@ -53,11 +57,18 @@ class MediaStorage {
       return relativePath;
     }
 
-    await targetFile.create(recursive: true);
-    await sourceFile.copy(targetPath);
-    final exists = await targetFile.exists();
-    final bytes = exists ? await targetFile.length() : 0;
+    await targetFile.parent.create(recursive: true);
+    final copiedFile = await sourceFile.copy(targetPath);
+    final exists = await copiedFile.exists();
+    final bytes = exists ? await copiedFile.length() : 0;
     _logPersist(relativePath, targetPath, sessionId, hiveKey, bytes, exists);
+
+    if (!exists || bytes <= 0) {
+      throw FileSystemException(
+        'Persisted media validation failed (exists=$exists, size=$bytes)',
+        targetPath,
+      );
+    }
 
     return relativePath;
   }
@@ -73,10 +84,23 @@ class MediaStorage {
     required String sourcePath,
     String? hiveKey,
   }) async {
+    if (kDebugMode) {
+      final source = File(sourcePath);
+      final exists = await source.exists();
+      final bytes = exists ? await source.length() : 0;
+      debugPrint(
+        '[HUNT_EVENT_MEDIA][persist-source] source=$sourcePath exists=$exists size=$bytes',
+      );
+    }
     final normalized = (await normalizeMediaPaths([sourcePath])).single;
     if (normalized.startsWith('media/')) {
       final validation = await validatePersistedMedia(normalized);
       if (validation?.exists == true && validation!.length > 0) {
+        if (kDebugMode) {
+          debugPrint(
+            '[HUNT_EVENT_MEDIA][persist-reuse] canonical=$normalized exists=true size=${validation.length}',
+          );
+        }
         return normalized;
       }
     }

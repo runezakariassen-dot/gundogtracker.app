@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:uuid/uuid.dart';
@@ -320,8 +321,10 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
   Future<void> _addMedia({required bool video}) async {
     if (!widget.canEdit || _addingMedia) return;
     setState(() => _addingMedia = true);
+    var stage = 'picker';
+    String? sourcePath;
+    String? canonicalPath;
     try {
-      String? sourcePath;
       if (widget.pickMedia != null) {
         sourcePath = await widget.pickMedia!(video);
       } else {
@@ -335,18 +338,44 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
         sourcePath = picked.path;
       }
       if (sourcePath == null || sourcePath.trim().isEmpty) return;
-      final path = await MediaStorage.ensurePickedMediaPersisted(
+      stage = 'persist';
+      canonicalPath = await MediaStorage.ensurePickedMediaPersisted(
         dogId: widget.session.dogId,
         sessionId: widget.sessionId,
         sourcePath: sourcePath,
       );
-      await _appendPathToSession(path);
-      final asset = await _canonicalAssetForPath(path, video: video);
+      final persisted =
+          await MediaStorage.validatePersistedMedia(canonicalPath);
+      if (persisted?.exists != true || persisted!.length <= 0) {
+        throw FileSystemException(
+          'Canonical HuntEvent media is missing or empty',
+          canonicalPath,
+        );
+      }
+      stage = 'session-path';
+      await _appendPathToSession(canonicalPath);
+      stage = 'canonical-asset';
+      final asset = await _canonicalAssetForPath(canonicalPath, video: video);
       if (_eventMedia.any((item) => item.mediaId == asset.mediaId)) return;
+      stage = 'preview';
       if (mounted) {
         setState(() => _eventMedia.add(asset));
       }
-    } catch (_) {
+    } catch (error, stackTrace) {
+      final sourceValidation = await _safeMediaValidation(sourcePath);
+      final canonicalValidation = await _safeMediaValidation(canonicalPath);
+      debugPrint(
+        '[HUNT_EVENT_MEDIA][FAIL] stage=$stage video=$video '
+        'source=$sourcePath sourceExists=${sourceValidation?.exists} '
+        'sourceSize=${sourceValidation?.length} canonical=$canonicalPath '
+        'canonicalExists=${canonicalValidation?.exists} '
+        'canonicalSize=${canonicalValidation?.length} '
+        'sessionsOpen=${Hive.isBoxOpen(sessionsBoxName)} '
+        'assetsOpen=${Hive.isBoxOpen(dogMediaAssetsBoxName)} '
+        'linksOpen=${Hive.isBoxOpen(huntEventMediaLinksBoxName)} '
+        'error=$error',
+      );
+      debugPrintStack(stackTrace: stackTrace);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -358,6 +387,15 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
       }
     } finally {
       if (mounted) setState(() => _addingMedia = false);
+    }
+  }
+
+  Future<MediaStorageValidation?> _safeMediaValidation(String? path) async {
+    if (path == null) return null;
+    try {
+      return await MediaStorage.validatePersistedMedia(path);
+    } catch (_) {
+      return null;
     }
   }
 
@@ -387,6 +425,12 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
       }
     }
     final validation = await MediaStorage.validatePersistedMedia(path);
+    if (validation?.exists != true || validation!.length <= 0) {
+      throw FileSystemException(
+        'Cannot create DogMediaAsset for missing or empty media',
+        path,
+      );
+    }
     final extension = p.extension(path).replaceFirst('.', '');
     final asset = DogMediaAsset(
       mediaId: const Uuid().v4(),
@@ -396,7 +440,7 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
       kind: video ? DogMediaKind.sessionVideo : DogMediaKind.sessionImage,
       localPath: path,
       contentType: '${video ? 'video' : 'image'}/$extension',
-      sizeBytes: validation?.length,
+      sizeBytes: validation.length,
       status: DogMediaStatus.active,
       syncStatus: DogMediaSyncStatus.localOnly,
       createdByUid: (widget.currentUserId ?? _currentUserId)(),
