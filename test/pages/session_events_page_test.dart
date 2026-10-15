@@ -233,12 +233,40 @@ void main() {
     await tester.tap(find.byKey(ValueKey('hunt-event-${event.id}')));
     await _pumpRoute(tester);
     expect(find.byKey(const ValueKey('save-hunt-event')), findsNothing);
+    await _scrollEditorToBottom(tester);
+    expect(
+        find.byKey(const ValueKey('hunt-event-media-section')), findsOneWidget);
+    expect(find.byKey(const ValueKey('add-hunt-event-image')), findsNothing);
+    expect(find.byKey(const ValueKey('add-hunt-event-video')), findsNothing);
     expect(find.byKey(const ValueKey('event-track-preview-1')), findsOneWidget);
     expect(find.text('Hendelse'), findsOneWidget);
 
     await _tapPreviewNearEffectiveIndex(tester, 2);
     await tester.pump();
     expect(find.byKey(const ValueKey('event-track-preview-1')), findsOneWidget);
+  });
+
+  testWidgets('media section is below note and above save with edit actions',
+      (tester) async {
+    await _pump(
+      tester,
+      canEdit: true,
+      repository: repository,
+      session: session,
+    );
+    await _openCreateEditor(tester);
+    await _scrollEditorToBottom(tester);
+
+    expect(
+        find.byKey(const ValueKey('hunt-event-media-section')), findsOneWidget);
+    expect(find.byKey(const ValueKey('add-hunt-event-image')), findsOneWidget);
+    expect(find.byKey(const ValueKey('add-hunt-event-video')), findsOneWidget);
+    final note = find.widgetWithText(TextField, 'Notat (valgfritt)');
+    final media = find.byKey(const ValueKey('hunt-event-media-section'));
+    final save = find.byKey(const ValueKey('save-hunt-event'));
+    await tester.ensureVisible(save);
+    expect(tester.getTopLeft(note).dy, lessThan(tester.getTopLeft(media).dy));
+    expect(tester.getTopLeft(media).dy, lessThan(tester.getTopLeft(save).dy));
   });
 
   testWidgets('save button is below note and reachable on a small screen', (
@@ -408,6 +436,19 @@ void _expectSelectedTime(WidgetTester tester, GpsPoint point) {
 Future<void> _openCreateEditor(WidgetTester tester) async {
   await tester.tap(find.byKey(const ValueKey('add-hunt-event')));
   await _pumpRoute(tester);
+}
+
+Future<void> _scrollEditorToBottom(WidgetTester tester) async {
+  final scrollable = tester.state<ScrollableState>(
+    find
+        .descendant(
+          of: find.byKey(const ValueKey('hunt-event-editor-scroll')),
+          matching: find.byType(Scrollable),
+        )
+        .first,
+  );
+  scrollable.position.jumpTo(scrollable.position.maxScrollExtent);
+  await tester.pump();
 }
 
 Future<void> _tapPreviewNearEffectiveIndex(

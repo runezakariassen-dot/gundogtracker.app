@@ -3901,6 +3901,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hunt_event_type_other => 'Other';
 
   @override
+  String get hunt_event_media_title => 'Photos and video';
+
+  @override
+  String get hunt_event_media_add_image => 'Add photo';
+
+  @override
+  String get hunt_event_media_add_video => 'Add video';
+
+  @override
+  String get hunt_event_media_choose_session => 'Choose from session';
+
+  @override
+  String get hunt_event_media_remove => 'Remove from event';
+
+  @override
+  String get hunt_event_media_open_error => 'Could not open media';
+
+  @override
   String get hunt_replay_open => 'Replay hunt';
 
   @override

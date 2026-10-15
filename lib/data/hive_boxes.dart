@@ -6,6 +6,7 @@ import '../models/dog_milestone_state.dart';
 import '../models/dog_membership.dart';
 import '../models/hunt_session.dart';
 import '../models/hunt_event.dart';
+import '../models/hunt_event_media_link.dart';
 import '../models/health_record.dart';
 import '../models/ownership_transfer.dart';
 import '../models/share_invitation.dart';
@@ -23,6 +24,7 @@ const String sessionsBoxName = 'sessionsBox_v2';
 const String tracksBoxName = 'tracks';
 const String sessionTrackEditsBoxName = 'session_track_edits_v1';
 const String huntEventsBoxName = 'hunt_events_v1';
+const String huntEventMediaLinksBoxName = 'hunt_event_media_links_v1';
 const String dogMembershipsBoxName = 'dogMembershipsBox_v1';
 const String shareInvitesBoxName = 'shareInvitesBox_v1';
 const String ownershipTransfersBoxName = 'ownershipTransfersBox_v1';
@@ -74,6 +76,9 @@ Box<SessionTrackEdit> sessionTrackEditsBox() =>
 
 Box<HuntEvent> huntEventsBox() =>
     HiveLifecycleService.getBox<HuntEvent>(huntEventsBoxName);
+
+Box<HuntEventMediaLink> huntEventMediaLinksBox() =>
+    HiveLifecycleService.getBox<HuntEventMediaLink>(huntEventMediaLinksBoxName);
 
 Box<DogMembership> dogMembershipsBox() =>
     HiveLifecycleService.getBox<DogMembership>(dogMembershipsBoxName);

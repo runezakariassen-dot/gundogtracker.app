@@ -3901,6 +3901,24 @@ class AppLocalizationsDa extends AppLocalizations {
   String get hunt_event_type_other => 'Andet';
 
   @override
+  String get hunt_event_media_title => 'Billeder og video';
+
+  @override
+  String get hunt_event_media_add_image => 'Tilføj billede';
+
+  @override
+  String get hunt_event_media_add_video => 'Tilføj video';
+
+  @override
+  String get hunt_event_media_choose_session => 'Vælg fra sessionen';
+
+  @override
+  String get hunt_event_media_remove => 'Fjern fra hændelsen';
+
+  @override
+  String get hunt_event_media_open_error => 'Mediet kunne ikke åbnes';
+
+  @override
   String get hunt_replay_open => 'Afspil jagt';
 
   @override

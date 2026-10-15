@@ -7071,6 +7071,42 @@ abstract class AppLocalizations {
   /// **'Other'**
   String get hunt_event_type_other;
 
+  /// No description provided for @hunt_event_media_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos and video'**
+  String get hunt_event_media_title;
+
+  /// No description provided for @hunt_event_media_add_image.
+  ///
+  /// In en, this message translates to:
+  /// **'Add photo'**
+  String get hunt_event_media_add_image;
+
+  /// No description provided for @hunt_event_media_add_video.
+  ///
+  /// In en, this message translates to:
+  /// **'Add video'**
+  String get hunt_event_media_add_video;
+
+  /// No description provided for @hunt_event_media_choose_session.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from session'**
+  String get hunt_event_media_choose_session;
+
+  /// No description provided for @hunt_event_media_remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from event'**
+  String get hunt_event_media_remove;
+
+  /// No description provided for @hunt_event_media_open_error.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open media'**
+  String get hunt_event_media_open_error;
+
   /// No description provided for @hunt_replay_open.
   ///
   /// In en, this message translates to:

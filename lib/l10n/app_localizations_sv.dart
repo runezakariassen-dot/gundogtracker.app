@@ -3901,6 +3901,24 @@ class AppLocalizationsSv extends AppLocalizations {
   String get hunt_event_type_other => 'Annat';
 
   @override
+  String get hunt_event_media_title => 'Bilder och video';
+
+  @override
+  String get hunt_event_media_add_image => 'Lägg till bild';
+
+  @override
+  String get hunt_event_media_add_video => 'Lägg till video';
+
+  @override
+  String get hunt_event_media_choose_session => 'Välj från passet';
+
+  @override
+  String get hunt_event_media_remove => 'Ta bort från händelsen';
+
+  @override
+  String get hunt_event_media_open_error => 'Det gick inte att öppna mediet';
+
+  @override
   String get hunt_replay_open => 'Spela upp jakt';
 
   @override

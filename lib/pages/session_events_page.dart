@@ -1,22 +1,31 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:uuid/uuid.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as p;
 
 import '../data/hive_boxes.dart';
 import '../models/gps_point.dart';
+import '../models/dog_media_asset.dart';
 import '../models/hunt_event.dart';
 import '../models/hunt_session.dart';
 import '../models/session_track_edit.dart';
 import '../models/track.dart';
 import '../repositories/hunt_event_repository.dart';
+import '../repositories/hunt_event_media_repository.dart';
+import '../services/media_storage.dart';
 import '../services/hunt_event_track_resolver.dart';
 import '../services/user_identity_service.dart';
 import '../ui/hunt_event_labels.dart';
 import '../l10n/app_localizations.dart';
 import '../features/map/map_tile_sources.dart';
+import 'session_media_image_helper.dart';
+import 'session_media_video_helper.dart';
 
 class SessionEventsPage extends StatefulWidget {
   const SessionEventsPage({
@@ -27,6 +36,7 @@ class SessionEventsPage extends StatefulWidget {
     this.repository,
     this.currentUserId,
     this.eventMapTileProvider,
+    this.mediaRepository,
   });
 
   final Object sessionKey;
@@ -35,6 +45,7 @@ class SessionEventsPage extends StatefulWidget {
   final HuntEventRepository? repository;
   final String Function()? currentUserId;
   final TileProvider? eventMapTileProvider;
+  final HuntEventMediaRepository? mediaRepository;
 
   @override
   State<SessionEventsPage> createState() => _SessionEventsPageState();
@@ -42,11 +53,13 @@ class SessionEventsPage extends StatefulWidget {
 
 class _SessionEventsPageState extends State<SessionEventsPage> {
   late final HuntEventRepository _repository;
+  late final HuntEventMediaRepository _mediaRepository;
 
   @override
   void initState() {
     super.initState();
     _repository = widget.repository ?? HuntEventRepository();
+    _mediaRepository = widget.mediaRepository ?? HuntEventMediaRepository();
   }
 
   String get _sessionId {
@@ -81,6 +94,7 @@ class _SessionEventsPageState extends State<SessionEventsPage> {
           repository: _repository,
           currentUserId: widget.currentUserId,
           mapTileProvider: widget.eventMapTileProvider,
+          mediaRepository: _mediaRepository,
         ),
       ),
     );
@@ -112,6 +126,7 @@ class _SessionEventsPageState extends State<SessionEventsPage> {
       deletedAt: DateTime.now().toUtc(),
       updatedByUserId: (widget.currentUserId ?? _currentUserId)(),
     );
+    await _mediaRepository.deleteLinksForEvent(event.id);
     if (mounted) setState(() {});
   }
 
@@ -189,6 +204,8 @@ class HuntEventEditPage extends StatefulWidget {
     this.currentUserId,
     this.mapTileProvider,
     this.event,
+    this.mediaRepository,
+    this.pickMedia,
   });
 
   final HuntSession session;
@@ -200,6 +217,8 @@ class HuntEventEditPage extends StatefulWidget {
   final HuntEventRepository repository;
   final String Function()? currentUserId;
   final TileProvider? mapTileProvider;
+  final HuntEventMediaRepository? mediaRepository;
+  final Future<String?> Function(bool video)? pickMedia;
 
   @override
   State<HuntEventEditPage> createState() => _HuntEventEditPageState();
@@ -212,6 +231,11 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
   late final TextEditingController _species;
   late final TextEditingController _note;
   bool _saving = false;
+  late final String _eventId;
+  late final HuntEventMediaRepository _mediaRepository;
+  late final List<DogMediaAsset> _eventMedia;
+  final ImagePicker _imagePicker = ImagePicker();
+  bool _addingMedia = false;
 
   @override
   void initState() {
@@ -220,6 +244,9 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
       widget.rawTrack,
       widget.trackEdit,
     );
+    _eventId = widget.event?.id ?? const Uuid().v4();
+    _mediaRepository = widget.mediaRepository ?? HuntEventMediaRepository();
+    _eventMedia = _mediaRepository.mediaForEvent(_eventId);
     _type = widget.event?.type ?? HuntEventType.stand;
     if (_selection.points.isEmpty) {
       _index = 0;
@@ -248,7 +275,7 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
     final userId = (widget.currentUserId ?? _currentUserId)();
     final existing = widget.event;
     final event = HuntEvent(
-      id: existing?.id ?? const Uuid().v4(),
+      id: _eventId,
       sessionId: widget.sessionId,
       dogId: widget.session.dogId,
       dogKey: widget.session.dogKey,
@@ -270,6 +297,10 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
     );
     try {
       await widget.repository.upsert(event);
+      await _mediaRepository.replaceLinks(
+        _eventId,
+        _eventMedia.map((asset) => asset.mediaId),
+      );
       if (mounted) Navigator.pop(context);
     } catch (_) {
       if (!mounted) return;
@@ -284,6 +315,245 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
   String? _nullable(String value) {
     final trimmed = value.trim();
     return trimmed.isEmpty ? null : trimmed;
+  }
+
+  Future<void> _addMedia({required bool video}) async {
+    if (!widget.canEdit || _addingMedia) return;
+    setState(() => _addingMedia = true);
+    try {
+      String? path;
+      if (widget.pickMedia != null) {
+        path = await widget.pickMedia!(video);
+      } else {
+        final picked = video
+            ? await _imagePicker.pickVideo(source: ImageSource.gallery)
+            : await _imagePicker.pickImage(
+                source: ImageSource.gallery,
+                imageQuality: 90,
+              );
+        if (picked == null) return;
+        path = await MediaStorage.persistPickedMedia(
+          dogId: widget.session.dogId,
+          sessionId: widget.sessionId,
+          sourcePath: picked.path,
+        );
+        await _appendPathToSession(path);
+      }
+      if (path == null || path.trim().isEmpty) return;
+      final asset = await _canonicalAssetForPath(path, video: video);
+      if (_eventMedia.any((item) => item.mediaId == asset.mediaId)) return;
+      if (mounted) setState(() => _eventMedia.add(asset));
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.hunt_event_media_open_error,
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _addingMedia = false);
+    }
+  }
+
+  Future<void> _appendPathToSession(String path) async {
+    for (final entry in sessionsBox().toMap().entries) {
+      final sessionId = entry.value.sessionId?.trim();
+      if (sessionId != widget.sessionId &&
+          entry.key.toString() != widget.sessionId) {
+        continue;
+      }
+      if (entry.value.mediaPaths.contains(path)) return;
+      await sessionsBox().put(
+        entry.key,
+        entry.value.copyWith(mediaPaths: [...entry.value.mediaPaths, path]),
+      );
+      return;
+    }
+  }
+
+  Future<DogMediaAsset> _canonicalAssetForPath(
+    String path, {
+    required bool video,
+  }) async {
+    for (final asset in dogMediaAssetsBox().values) {
+      if (asset.sessionId == widget.sessionId && asset.localPath == path) {
+        return asset;
+      }
+    }
+    final validation = await MediaStorage.validatePersistedMedia(path);
+    final extension = p.extension(path).replaceFirst('.', '');
+    final asset = DogMediaAsset(
+      mediaId: const Uuid().v4(),
+      dogCloudId: widget.session.dogId,
+      dogKey: widget.session.dogKey ?? widget.session.dogId,
+      sessionId: widget.sessionId,
+      kind: video ? DogMediaKind.sessionVideo : DogMediaKind.sessionImage,
+      localPath: path,
+      contentType: '${video ? 'video' : 'image'}/$extension',
+      sizeBytes: validation?.length,
+      status: DogMediaStatus.active,
+      syncStatus: DogMediaSyncStatus.localOnly,
+      createdByUid: (widget.currentUserId ?? _currentUserId)(),
+      createdAt: DateTime.now().toUtc(),
+    );
+    await dogMediaAssetsBox().put(asset.mediaId, asset);
+    return asset;
+  }
+
+  Future<void> _chooseFromSession() async {
+    final choices = <DogMediaAsset>[];
+    for (final path in widget.session.mediaPaths) {
+      final asset = await _canonicalAssetForPath(
+        path,
+        video: _isVideo(path),
+      );
+      if (!_eventMedia.any((item) => item.mediaId == asset.mediaId)) {
+        choices.add(asset);
+      }
+    }
+    if (!mounted || choices.isEmpty) return;
+    final selected = await showModalBottomSheet<DogMediaAsset>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: choices
+              .map(
+                (asset) => ListTile(
+                  leading: Icon(
+                    asset.kind == DogMediaKind.sessionVideo
+                        ? Icons.videocam
+                        : Icons.image,
+                  ),
+                  title: Text(p.basename(asset.localPath ?? asset.mediaId)),
+                  onTap: () => Navigator.pop(context, asset),
+                ),
+              )
+              .toList(growable: false),
+        ),
+      ),
+    );
+    if (selected != null && mounted) {
+      setState(() => _eventMedia.add(selected));
+    }
+  }
+
+  bool _isVideo(String path) {
+    final extension = p.extension(path).toLowerCase();
+    return const {'.mp4', '.mov', '.m4v', '.avi', '.webm', '.mkv'}
+        .contains(extension);
+  }
+
+  Future<void> _openMedia(DogMediaAsset asset) async {
+    final path = asset.localPath;
+    if (path == null) return;
+    if (asset.kind == DogMediaKind.sessionVideo) {
+      await openSessionVideo(context: context, storedPath: path);
+    } else {
+      await openSessionImage(context: context, storedPath: path);
+    }
+  }
+
+  Widget _imagePreview(String? path) {
+    if (path == null) {
+      return const Icon(Icons.broken_image_outlined, size: 36);
+    }
+    final validation = MediaStorage.resolveAndValidateMedia(path);
+    if (validation?.exists != true) {
+      return const Icon(Icons.broken_image_outlined, size: 36);
+    }
+    return Image.file(
+      File(validation!.resolvedPath),
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) =>
+          const Icon(Icons.broken_image_outlined, size: 36),
+    );
+  }
+
+  Widget _buildMediaSection(AppLocalizations l10n, bool readOnly) {
+    return Column(
+      key: const ValueKey('hunt-event-media-section'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+        Text(
+          l10n.hunt_event_media_title,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        if (_eventMedia.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final asset in _eventMedia)
+                Stack(
+                  children: [
+                    InkWell(
+                      key: ValueKey('hunt-event-media-${asset.mediaId}'),
+                      onTap: () => _openMedia(asset),
+                      child: Container(
+                        width: 88,
+                        height: 88,
+                        color: Colors.black12,
+                        alignment: Alignment.center,
+                        child: asset.kind == DogMediaKind.sessionVideo
+                            ? const Icon(Icons.play_circle_outline, size: 40)
+                            : _imagePreview(asset.localPath),
+                      ),
+                    ),
+                    if (!readOnly)
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: IconButton.filledTonal(
+                          key: ValueKey(
+                            'unlink-hunt-event-media-${asset.mediaId}',
+                          ),
+                          tooltip: l10n.hunt_event_media_remove,
+                          onPressed: () =>
+                              setState(() => _eventMedia.remove(asset)),
+                          icon: const Icon(Icons.close, size: 18),
+                        ),
+                      ),
+                  ],
+                ),
+            ],
+          ),
+        ],
+        if (!readOnly) ...[
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                key: const ValueKey('add-hunt-event-image'),
+                onPressed: _addingMedia ? null : () => _addMedia(video: false),
+                icon: const Icon(Icons.add_photo_alternate_outlined),
+                label: Text(l10n.hunt_event_media_add_image),
+              ),
+              OutlinedButton.icon(
+                key: const ValueKey('add-hunt-event-video'),
+                onPressed: _addingMedia ? null : () => _addMedia(video: true),
+                icon: const Icon(Icons.video_call_outlined),
+                label: Text(l10n.hunt_event_media_add_video),
+              ),
+              if (widget.session.mediaPaths.isNotEmpty)
+                OutlinedButton.icon(
+                  key: const ValueKey('choose-hunt-event-session-media'),
+                  onPressed: _addingMedia ? null : _chooseFromSession,
+                  icon: const Icon(Icons.collections_outlined),
+                  label: Text(l10n.hunt_event_media_choose_session),
+                ),
+            ],
+          ),
+        ],
+      ],
+    );
   }
 
   @override
@@ -390,6 +660,7 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
                 labelText: l10n.hunt_event_field_note_optional,
               ),
             ),
+            _buildMediaSection(l10n, readOnly),
             if (!readOnly) ...[
               const SizedBox(height: 16),
               SizedBox(

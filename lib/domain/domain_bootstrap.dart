@@ -15,6 +15,7 @@ import '../models/dog_sex.dart';
 import '../models/gps_point.dart';
 import '../models/hunt_session.dart';
 import '../models/hunt_event.dart';
+import '../models/hunt_event_media_link.dart';
 import '../models/health_record.dart';
 import '../models/outbox_entry.dart';
 import '../models/ownership_transfer.dart';
@@ -62,6 +63,7 @@ void registerDomainAdapters() {
   _registerAdapterIfNeeded(SyncStateAdapter());
   _registerAdapterIfNeeded(SessionTrackEditAdapter());
   _registerAdapterIfNeeded(HuntEventAdapter());
+  _registerAdapterIfNeeded(HuntEventMediaLinkAdapter());
 
   // ✅ Test forventer typeId=16, og du har den i track_adapter_v2.dart
   _registerAdapterIfNeeded(TrackAdapterV2());
