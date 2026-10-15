@@ -93,13 +93,13 @@ class HuntReplayTimeline {
 class HuntReplayController extends ChangeNotifier {
   HuntReplayController(
     List<GpsPoint> points, {
-    double initialSpeed = 10,
+    double initialSpeed = 50,
     Duration tickInterval = const Duration(milliseconds: 50),
   })  : timeline = HuntReplayTimeline(points),
         _speed = initialSpeed,
         _tickInterval = tickInterval;
 
-  static const List<double> supportedSpeeds = [1, 5, 10, 20];
+  static const List<double> supportedSpeeds = [1, 10, 25, 50, 100, 250, 500];
 
   final HuntReplayTimeline timeline;
   final Duration _tickInterval;

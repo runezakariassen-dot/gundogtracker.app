@@ -8,6 +8,7 @@ import 'dart:math' as math;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hive/hive.dart';
@@ -40,6 +41,7 @@ import 'package:jakthund_app/pages/session_track_edit_page.dart';
 import 'package:jakthund_app/pages/session_events_page.dart';
 import 'package:jakthund_app/pages/session_media_image_helper.dart';
 import 'package:jakthund_app/pages/session_media_video_helper.dart';
+import 'package:jakthund_app/repositories/hunt_event_repository.dart';
 import 'package:jakthund_app/repositories/session_repository.dart';
 import 'package:jakthund_app/repositories/session_track_edit_repository.dart';
 import 'package:jakthund_app/repositories/track_repository.dart';
@@ -231,6 +233,7 @@ class HuntSessionPage extends StatefulWidget {
     this.pageTitle,
     this.initialDraft,
     this.detailMode = false,
+    this.replayTileProvider,
   });
 
   final bool showNewSessionSection;
@@ -244,6 +247,7 @@ class HuntSessionPage extends StatefulWidget {
   final String? pageTitle;
   final ActiveSessionDraft? initialDraft;
   final bool detailMode;
+  final TileProvider? replayTileProvider;
 
   @override
   State<HuntSessionPage> createState() => _HuntSessionPageState();
@@ -2186,6 +2190,8 @@ class _HuntSessionPageState extends State<HuntSessionPage>
         builder: (_) => HuntReplayPage(
           rawTrack: rawTrack,
           trackEdit: SessionTrackEditRepository().get(sessionId),
+          events: HuntEventRepository().listForSession(sessionId),
+          tileProvider: widget.replayTileProvider,
         ),
       ),
     );

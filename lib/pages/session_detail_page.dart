@@ -37,6 +37,7 @@ import 'package:jakthund_app/hunt_session_page.dart';
 import 'package:jakthund_app/pages/session_map_page.dart';
 import 'package:jakthund_app/pages/hunt_replay_page.dart';
 import 'package:jakthund_app/pages/session_track_edit_page.dart';
+import 'package:jakthund_app/repositories/hunt_event_repository.dart';
 import 'package:jakthund_app/repositories/session_track_edit_repository.dart';
 import 'package:jakthund_app/repositories/session_repository.dart';
 import 'package:jakthund_app/repositories/track_repository.dart';
@@ -1480,6 +1481,7 @@ class _SessionDetailPageState extends State<SessionDetailPage>
         builder: (_) => HuntReplayPage(
           rawTrack: rawTrack,
           trackEdit: _sessionTrackEditRepository.get(sessionId),
+          events: HuntEventRepository().listForSession(sessionId),
         ),
       ),
     );

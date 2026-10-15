@@ -3,6 +3,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:jakthund_app/data/hive_boxes.dart';
@@ -72,7 +73,8 @@ void main() {
         await _storeSession(key: 0, trackId: 'track-1');
         await Hive.box<Track>(tracksBoxName).put('track-1', _track('track-1'));
       });
-      await _pumpSessions(tester);
+      await _pumpSessions(tester,
+          replayTileProvider: _TransparentTileProvider());
 
       expect(find.text('Rediger GPS-spor'), findsOneWidget);
 
@@ -103,7 +105,10 @@ void main() {
         await _storeSession(key: 0);
         await _storeSession(key: 1, trackId: 'missing-track');
       });
-      await _pumpSessions(tester);
+      await _pumpSessions(
+        tester,
+        replayTileProvider: _TransparentTileProvider(),
+      );
 
       expect(find.text('Rediger GPS-spor'), findsNothing);
       expect(find.byKey(const ValueKey('edit-gps-track-0')), findsNothing);
@@ -119,7 +124,10 @@ void main() {
           _track('imported-track', source: 'gpx_import'),
         );
       });
-      await _pumpSessions(tester);
+      await _pumpSessions(
+        tester,
+        replayTileProvider: _TransparentTileProvider(),
+      );
 
       final replay = find.byKey(
         const ValueKey('hunt-replay-0'),
@@ -225,20 +233,30 @@ Track _track(String id, {String source = 'test'}) => Track(
       ],
     );
 
-Future<void> _pumpSessions(WidgetTester tester) async {
+Future<void> _pumpSessions(
+  WidgetTester tester, {
+  TileProvider? replayTileProvider,
+}) async {
   await tester.pumpWidget(
-    const MaterialApp(
-      locale: Locale('nb'),
+    MaterialApp(
+      locale: const Locale('nb'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: HuntSessionPage(
         showNewSessionSection: false,
         showSessionList: true,
+        replayTileProvider: replayTileProvider,
       ),
     ),
   );
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 100));
+}
+
+class _TransparentTileProvider extends TileProvider {
+  @override
+  ImageProvider getImage(TileCoordinates coordinates, TileLayer options) =>
+      MemoryImage(TileProvider.transparentImage);
 }
 
 Future<void> _pumpRoute(WidgetTester tester) async {

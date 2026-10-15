@@ -56,8 +56,13 @@ void main() {
   });
 
   test('play pause speed seek end and restart are safe', () {
+    expect(
+      HuntReplayController.supportedSpeeds,
+      [1, 10, 25, 50, 100, 250, 500],
+    );
     for (final speed in HuntReplayController.supportedSpeeds) {
-      final replay = HuntReplayController([point(0), point(100)]);
+      final replay = HuntReplayController([point(0), point(1000)]);
+      expect(replay.speed, 50);
       replay.setSpeed(speed);
       replay.play();
       replay.advanceBy(const Duration(seconds: 1));
@@ -68,16 +73,41 @@ void main() {
       expect(replay.elapsed, paused);
 
       replay.seekToProgress(0.5);
-      expect(replay.elapsed, const Duration(seconds: 50));
-      expect(replay.frame!.latitude, 50);
+      expect(replay.elapsed, const Duration(seconds: 500));
+      expect(replay.frame!.latitude, 500);
       replay.play();
-      replay.advanceBy(const Duration(seconds: 100));
+      replay.advanceBy(const Duration(seconds: 1000));
       expect(replay.elapsed, replay.totalDuration);
       expect(replay.isPlaying, isFalse);
       replay.play();
       expect(replay.elapsed, Duration.zero);
       replay.dispose();
     }
+  });
+
+  test('unsupported speed is ignored and live speed change keeps position', () {
+    final replay = HuntReplayController([point(0), point(1000)]);
+    replay.play();
+    replay.seekToProgress(0.05);
+    final before = replay.elapsed;
+    replay.setSpeed(123);
+    expect(replay.speed, 50);
+    expect(replay.elapsed, greaterThanOrEqualTo(before));
+
+    final beforeSupportedChange = replay.elapsed;
+    replay.setSpeed(500);
+    expect(replay.speed, 500);
+    expect(replay.elapsed, greaterThanOrEqualTo(beforeSupportedChange));
+    expect(
+      replay.elapsed - beforeSupportedChange,
+      lessThan(const Duration(seconds: 1)),
+    );
+    replay.advanceBy(const Duration(seconds: 1));
+    expect(
+      replay.elapsed - beforeSupportedChange,
+      greaterThanOrEqualTo(const Duration(seconds: 499)),
+    );
+    replay.dispose();
   });
 
   test('one point and bad timestamps are safe', () {
@@ -112,11 +142,11 @@ void main() {
   });
 
   test('approximately 3000 points initialize and seek', () {
-    final points = List.generate(3001, point);
+    final points = List.generate(5221, point);
     final replay = HuntReplayController(points);
     replay.seekToProgress(0.75);
     expect(replay.frame, isNotNull);
-    expect(replay.elapsed, const Duration(seconds: 2250));
+    expect(replay.elapsed, const Duration(seconds: 3915));
     replay.dispose();
   });
 

@@ -1,26 +1,38 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../features/map/map_tile_sources.dart';
 import '../features/map/offline_tiles/tile_cache_service.dart';
 import '../l10n/app_localizations.dart';
+import '../models/hunt_event.dart';
 import '../models/session_track_edit.dart';
 import '../models/track.dart';
 import '../services/effective_track_resolver.dart';
 import '../services/hunt_replay_controller.dart';
+import '../services/hunt_replay_event_resolver.dart';
+import '../ui/hunt_event_labels.dart';
 
 class HuntReplayPage extends StatefulWidget {
   const HuntReplayPage({
     super.key,
     required this.rawTrack,
     this.trackEdit,
+    this.events = const [],
     this.tileProvider,
+    this.eventPauseDuration = const Duration(milliseconds: 2500),
+    this.replayController,
   });
 
   final Track rawTrack;
   final SessionTrackEdit? trackEdit;
+  final List<HuntEvent> events;
   final TileProvider? tileProvider;
+  final Duration eventPauseDuration;
+  final HuntReplayController? replayController;
 
   @override
   State<HuntReplayPage> createState() => _HuntReplayPageState();
@@ -31,7 +43,14 @@ class _HuntReplayPageState extends State<HuntReplayPage> {
   late final List<LatLng> _trackPoints;
   late final Polyline _trackPolyline;
   late final HuntReplayController _replay;
+  late final List<HuntReplayEvent> _events;
   TileProvider? _tileProvider;
+  Timer? _eventPauseTimer;
+  HuntReplayEvent? _selectedEvent;
+  Duration _lastReplayElapsed = Duration.zero;
+  int _nextEventIndex = 0;
+  bool _handlingEventPause = false;
+  bool _resumeAfterEvent = false;
   bool _following = true;
   bool _programmaticMove = false;
   LatLng? _lastFollowedPosition;
@@ -43,7 +62,13 @@ class _HuntReplayPageState extends State<HuntReplayPage> {
       widget.rawTrack,
       widget.trackEdit,
     );
-    _replay = HuntReplayController(effective.points)..addListener(_onReplay);
+    _replay = widget.replayController ?? HuntReplayController(effective.points);
+    _replay.addListener(_onReplay);
+    _events = const HuntReplayEventResolver().resolve(
+      rawTrack: widget.rawTrack,
+      edit: widget.trackEdit,
+      events: widget.events,
+    );
     _trackPoints = effective.points
         .map((point) => LatLng(point.lat, point.lon))
         .toList(growable: false);
@@ -57,19 +82,109 @@ class _HuntReplayPageState extends State<HuntReplayPage> {
   }
 
   Future<void> _initializeTiles() async {
-    await TileCacheService.ensureStoreReady(standardTileSource);
-    if (!mounted) return;
-    setState(() {
-      _tileProvider = TileCacheService.tileProviderFor(standardTileSource);
-    });
+    try {
+      await TileCacheService.ensureStoreReady(standardTileSource);
+      if (!mounted) return;
+      setState(() {
+        _tileProvider = TileCacheService.tileProviderFor(standardTileSource);
+      });
+    } catch (_) {
+      // A null provider lets TileLayer use its normal network provider.
+      // Replay must remain usable even when the offline cache cannot start.
+    }
   }
 
   void _onReplay() {
     if (!mounted) return;
+    final elapsed = _replay.elapsed;
+    if (!_handlingEventPause) {
+      if (elapsed < _lastReplayElapsed) {
+        _nextEventIndex = _firstEventAfter(elapsed);
+      } else if (elapsed > _lastReplayElapsed || _replay.isPlaying) {
+        _triggerCrossedEvent(_lastReplayElapsed, elapsed);
+      }
+    }
+    _lastReplayElapsed = elapsed;
     setState(() {});
     if (_following && _replay.isPlaying) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _followMarker());
     }
+  }
+
+  int _firstEventAfter(Duration elapsed) {
+    var low = 0;
+    var high = _events.length;
+    while (low < high) {
+      final middle = (low + high) >> 1;
+      if (_events[middle].elapsed <= elapsed) {
+        low = middle + 1;
+      } else {
+        high = middle;
+      }
+    }
+    return low;
+  }
+
+  void _triggerCrossedEvent(Duration previous, Duration current) {
+    if (_eventPauseTimer != null || _nextEventIndex >= _events.length) return;
+    final candidate = _events[_nextEventIndex];
+    if (candidate.elapsed < previous || candidate.elapsed > current) return;
+
+    _nextEventIndex++;
+    while (_nextEventIndex < _events.length &&
+        (_events[_nextEventIndex].elapsed - candidate.elapsed).abs() <=
+            const Duration(milliseconds: 250)) {
+      _nextEventIndex++;
+    }
+
+    _handlingEventPause = true;
+    _resumeAfterEvent = _replay.isPlaying;
+    _selectedEvent = candidate;
+    _replay.pause();
+    _handlingEventPause = false;
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _followMarker(force: true),
+    );
+    _eventPauseTimer = Timer(widget.eventPauseDuration, _finishEventPause);
+  }
+
+  void _finishEventPause() {
+    _eventPauseTimer = null;
+    final shouldResume = _resumeAfterEvent;
+    _resumeAfterEvent = false;
+    if (!mounted) return;
+    setState(() => _selectedEvent = null);
+    if (shouldResume) _replay.play();
+  }
+
+  void _manualPauseDuringEvent() {
+    _resumeAfterEvent = false;
+    setState(() {});
+  }
+
+  void _beginSeek(double _) {
+    _cancelEventPause();
+    _replay.pause();
+  }
+
+  void _seekToProgress(double value) {
+    final target = Duration(
+      microseconds:
+          (_replay.totalDuration.inMicroseconds * value.clamp(0.0, 1.0))
+              .round(),
+    );
+    _nextEventIndex = _firstEventAfter(target);
+    _lastReplayElapsed = target;
+    _handlingEventPause = true;
+    _replay.seekToProgress(value);
+    _handlingEventPause = false;
+  }
+
+  void _cancelEventPause() {
+    _eventPauseTimer?.cancel();
+    _eventPauseTimer = null;
+    _selectedEvent = null;
+    _resumeAfterEvent = false;
   }
 
   void _followMarker({bool force = false}) {
@@ -99,6 +214,7 @@ class _HuntReplayPageState extends State<HuntReplayPage> {
 
   @override
   void dispose() {
+    _eventPauseTimer?.cancel();
     _replay
       ..removeListener(_onReplay)
       ..dispose();
@@ -119,14 +235,6 @@ class _HuntReplayPageState extends State<HuntReplayPage> {
         ),
       );
     }
-    final provider = _tileProvider;
-    if (provider == null) {
-      return Scaffold(
-        appBar: AppBar(title: Text(l10n.hunt_replay_title)),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
-
     final frame = _replay.frame!;
     final markerPosition = LatLng(frame.latitude, frame.longitude);
     return Scaffold(
@@ -156,11 +264,38 @@ class _HuntReplayPageState extends State<HuntReplayPage> {
                         key: const ValueKey('hunt-replay-basemap'),
                         urlTemplate: standardTileSource.urlTemplate,
                         userAgentPackageName: 'com.example.jakthund_app',
-                        tileProvider: provider,
+                        tileProvider: _tileProvider,
                       ),
                       PolylineLayer(
                         key: const ValueKey('hunt-replay-track'),
                         polylines: [_trackPolyline],
+                      ),
+                      MarkerLayer(
+                        key: const ValueKey('hunt-replay-event-markers'),
+                        markers: [
+                          for (final event in _events)
+                            Marker(
+                              point: LatLng(event.point.lat, event.point.lon),
+                              width: 38,
+                              height: 38,
+                              child: Icon(
+                                huntEventTypeIcon(event.event.type),
+                                key: ValueKey(
+                                  'hunt-replay-event-${event.event.id}',
+                                ),
+                                color: _selectedEvent?.event.id ==
+                                        event.event.id
+                                    ? Colors.amber.shade800
+                                    : Theme.of(context).colorScheme.secondary,
+                                size: _selectedEvent?.event.id == event.event.id
+                                    ? 34
+                                    : 26,
+                                shadows: const [
+                                  Shadow(color: Colors.white, blurRadius: 5),
+                                ],
+                              ),
+                            ),
+                        ],
                       ),
                       MarkerLayer(
                         key: const ValueKey('hunt-replay-marker'),
@@ -207,6 +342,8 @@ class _HuntReplayPageState extends State<HuntReplayPage> {
                 ],
               ),
             ),
+            if (_selectedEvent != null)
+              _ReplayEventCard(event: _selectedEvent!),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
               child: Column(
@@ -220,9 +357,12 @@ class _HuntReplayPageState extends State<HuntReplayPage> {
                   Slider(
                     key: const ValueKey('hunt-replay-slider'),
                     value: _replay.progress.clamp(0.0, 1.0),
+                    onChangeStart: _replay.totalDuration == Duration.zero
+                        ? null
+                        : _beginSeek,
                     onChanged: _replay.totalDuration == Duration.zero
                         ? null
-                        : _replay.seekToProgress,
+                        : _seekToProgress,
                   ),
                   Row(
                     children: [
@@ -231,14 +371,18 @@ class _HuntReplayPageState extends State<HuntReplayPage> {
                           key: const ValueKey('hunt-replay-play-pause'),
                           onPressed: _replay.totalDuration == Duration.zero
                               ? null
-                              : (_replay.isPlaying
-                                  ? _replay.pause
-                                  : _replay.play),
+                              : (_eventPauseTimer != null
+                                  ? _manualPauseDuringEvent
+                                  : _replay.isPlaying
+                                      ? _replay.pause
+                                      : _replay.play),
                           icon: Icon(
-                            _replay.isPlaying ? Icons.pause : Icons.play_arrow,
+                            _replay.isPlaying || _eventPauseTimer != null
+                                ? Icons.pause
+                                : Icons.play_arrow,
                           ),
                           label: Text(
-                            _replay.isPlaying
+                            _replay.isPlaying || _eventPauseTimer != null
                                 ? l10n.hunt_replay_pause
                                 : l10n.hunt_replay_play,
                           ),
@@ -262,6 +406,53 @@ class _HuntReplayPageState extends State<HuntReplayPage> {
                       ),
                     ],
                   ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ReplayEventCard extends StatelessWidget {
+  const _ReplayEventCard({required this.event});
+
+  final HuntReplayEvent event;
+
+  @override
+  Widget build(BuildContext context) {
+    final model = event.event;
+    return Card(
+      key: ValueKey('hunt-replay-event-card-${model.id}'),
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          children: [
+            Icon(huntEventTypeIcon(model.type)),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    huntEventTypeLabel(context, model.type),
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  Text(
+                    '${formatReplayDuration(event.elapsed)} · '
+                    '${DateFormat.Hms().format(event.point.time.toLocal())}',
+                  ),
+                  if (model.birdSpecies?.trim().isNotEmpty == true)
+                    Text(model.birdSpecies!.trim()),
+                  if (model.note?.trim().isNotEmpty == true)
+                    Text(
+                      model.note!.trim(),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                 ],
               ),
             ),
