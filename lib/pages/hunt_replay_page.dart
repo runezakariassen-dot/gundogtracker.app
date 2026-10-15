@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -9,12 +10,17 @@ import '../features/map/map_tile_sources.dart';
 import '../features/map/offline_tiles/tile_cache_service.dart';
 import '../l10n/app_localizations.dart';
 import '../models/hunt_event.dart';
+import '../models/dog_media_asset.dart';
 import '../models/session_track_edit.dart';
 import '../models/track.dart';
 import '../services/effective_track_resolver.dart';
 import '../services/hunt_replay_controller.dart';
 import '../services/hunt_replay_event_resolver.dart';
+import '../services/media_storage.dart';
+import '../repositories/hunt_event_media_repository.dart';
 import '../ui/hunt_event_labels.dart';
+import 'session_media_image_helper.dart';
+import 'session_media_video_helper.dart';
 
 class HuntReplayPage extends StatefulWidget {
   const HuntReplayPage({
@@ -25,6 +31,8 @@ class HuntReplayPage extends StatefulWidget {
     this.tileProvider,
     this.eventPauseDuration = const Duration(milliseconds: 2500),
     this.replayController,
+    this.mediaRepository,
+    this.openMedia,
   });
 
   final Track rawTrack;
@@ -33,6 +41,8 @@ class HuntReplayPage extends StatefulWidget {
   final TileProvider? tileProvider;
   final Duration eventPauseDuration;
   final HuntReplayController? replayController;
+  final HuntEventMediaRepository? mediaRepository;
+  final Future<void> Function(BuildContext, DogMediaAsset)? openMedia;
 
   @override
   State<HuntReplayPage> createState() => _HuntReplayPageState();
@@ -54,6 +64,7 @@ class _HuntReplayPageState extends State<HuntReplayPage> {
   bool _following = true;
   bool _programmaticMove = false;
   LatLng? _lastFollowedPosition;
+  final Map<String, List<DogMediaAsset>> _mediaByEventId = {};
 
   @override
   void initState() {
@@ -79,6 +90,31 @@ class _HuntReplayPageState extends State<HuntReplayPage> {
     );
     _tileProvider = widget.tileProvider;
     if (_tileProvider == null) _initializeTiles();
+    _preloadEventMedia();
+  }
+
+  void _preloadEventMedia() {
+    HuntEventMediaRepository repository;
+    try {
+      repository = widget.mediaRepository ?? HuntEventMediaRepository();
+      for (final replayEvent in _events) {
+        final available = <DogMediaAsset>[];
+        for (final asset in repository.mediaForEvent(replayEvent.event.id)) {
+          final path = asset.localPath;
+          if (path == null) continue;
+          final validation = MediaStorage.resolveAndValidateMedia(path);
+          if (validation?.exists == true && validation!.length > 0) {
+            available.add(asset.copyWith(localPath: validation.resolvedPath));
+          }
+        }
+        if (available.isNotEmpty) {
+          _mediaByEventId[replayEvent.event.id] = available;
+        }
+      }
+    } catch (_) {
+      // Replay and its event card remain usable if local-only media is absent
+      // or its boxes are unavailable during startup.
+    }
   }
 
   Future<void> _initializeTiles() async {
@@ -160,6 +196,29 @@ class _HuntReplayPageState extends State<HuntReplayPage> {
   void _manualPauseDuringEvent() {
     _resumeAfterEvent = false;
     setState(() {});
+  }
+
+  Future<void> _openEventMedia(DogMediaAsset asset) async {
+    final shouldResume = _resumeAfterEvent;
+    _eventPauseTimer?.cancel();
+    _eventPauseTimer = null;
+    _resumeAfterEvent = false;
+    _replay.pause();
+    if (mounted) setState(() {});
+
+    if (widget.openMedia != null) {
+      await widget.openMedia!(context, asset);
+    } else if (asset.localPath != null) {
+      if (asset.kind == DogMediaKind.sessionVideo) {
+        await openSessionVideo(context: context, storedPath: asset.localPath!);
+      } else {
+        await openSessionImage(context: context, storedPath: asset.localPath!);
+      }
+    }
+
+    if (!mounted) return;
+    setState(() => _selectedEvent = null);
+    if (shouldResume) _replay.play();
   }
 
   void _beginSeek(double _) {
@@ -343,7 +402,11 @@ class _HuntReplayPageState extends State<HuntReplayPage> {
               ),
             ),
             if (_selectedEvent != null)
-              _ReplayEventCard(event: _selectedEvent!),
+              _ReplayEventCard(
+                event: _selectedEvent!,
+                media: _mediaByEventId[_selectedEvent!.event.id] ?? const [],
+                onOpenMedia: _openEventMedia,
+              ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
               child: Column(
@@ -417,9 +480,15 @@ class _HuntReplayPageState extends State<HuntReplayPage> {
 }
 
 class _ReplayEventCard extends StatelessWidget {
-  const _ReplayEventCard({required this.event});
+  const _ReplayEventCard({
+    required this.event,
+    required this.media,
+    required this.onOpenMedia,
+  });
 
   final HuntReplayEvent event;
+  final List<DogMediaAsset> media;
+  final ValueChanged<DogMediaAsset> onOpenMedia;
 
   @override
   Widget build(BuildContext context) {
@@ -429,33 +498,86 @@ class _ReplayEventCard extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(huntEventTypeIcon(model.type)),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    huntEventTypeLabel(context, model.type),
-                    style: Theme.of(context).textTheme.titleSmall,
+            Row(
+              children: [
+                Icon(huntEventTypeIcon(model.type)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        huntEventTypeLabel(context, model.type),
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      Text(
+                        '${formatReplayDuration(event.elapsed)} · '
+                        '${DateFormat.Hms().format(event.point.time.toLocal())}',
+                      ),
+                      if (model.birdSpecies?.trim().isNotEmpty == true)
+                        Text(model.birdSpecies!.trim()),
+                      if (model.note?.trim().isNotEmpty == true)
+                        Text(
+                          model.note!.trim(),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                    ],
                   ),
-                  Text(
-                    '${formatReplayDuration(event.elapsed)} · '
-                    '${DateFormat.Hms().format(event.point.time.toLocal())}',
-                  ),
-                  if (model.birdSpecies?.trim().isNotEmpty == true)
-                    Text(model.birdSpecies!.trim()),
-                  if (model.note?.trim().isNotEmpty == true)
-                    Text(
-                      model.note!.trim(),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                ],
-              ),
+                ),
+              ],
             ),
+            if (media.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 86,
+                child: ListView.separated(
+                  key: ValueKey('hunt-replay-media-${model.id}'),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: media.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (context, index) {
+                    final asset = media[index];
+                    final video = asset.kind == DogMediaKind.sessionVideo;
+                    return InkWell(
+                      key: ValueKey('hunt-replay-media-${asset.mediaId}'),
+                      onTap: () => onOpenMedia(asset),
+                      child: Container(
+                        width: video ? 132 : 96,
+                        clipBehavior: Clip.antiAlias,
+                        decoration: BoxDecoration(
+                          color: Colors.black12,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: video
+                            ? Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.play_circle_outline,
+                                      size: 34),
+                                  Text(
+                                    '${AppLocalizations.of(context)!.hunt_replay_play} video',
+                                    maxLines: 1,
+                                  ),
+                                ],
+                              )
+                            : Image.file(
+                                File(asset.localPath!),
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => const Icon(
+                                  Icons.broken_image_outlined,
+                                  size: 34,
+                                ),
+                              ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ],
         ),
       ),

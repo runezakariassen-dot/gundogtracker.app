@@ -321,9 +321,9 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
     if (!widget.canEdit || _addingMedia) return;
     setState(() => _addingMedia = true);
     try {
-      String? path;
+      String? sourcePath;
       if (widget.pickMedia != null) {
-        path = await widget.pickMedia!(video);
+        sourcePath = await widget.pickMedia!(video);
       } else {
         final picked = video
             ? await _imagePicker.pickVideo(source: ImageSource.gallery)
@@ -332,17 +332,20 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
                 imageQuality: 90,
               );
         if (picked == null) return;
-        path = await MediaStorage.persistPickedMedia(
-          dogId: widget.session.dogId,
-          sessionId: widget.sessionId,
-          sourcePath: picked.path,
-        );
-        await _appendPathToSession(path);
+        sourcePath = picked.path;
       }
-      if (path == null || path.trim().isEmpty) return;
+      if (sourcePath == null || sourcePath.trim().isEmpty) return;
+      final path = await MediaStorage.ensurePickedMediaPersisted(
+        dogId: widget.session.dogId,
+        sessionId: widget.sessionId,
+        sourcePath: sourcePath,
+      );
+      await _appendPathToSession(path);
       final asset = await _canonicalAssetForPath(path, video: video);
       if (_eventMedia.any((item) => item.mediaId == asset.mediaId)) return;
-      if (mounted) setState(() => _eventMedia.add(asset));
+      if (mounted) {
+        setState(() => _eventMedia.add(asset));
+      }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

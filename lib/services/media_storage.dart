@@ -12,6 +12,11 @@ class MediaStorage {
   static final _random = math.Random();
   static String? _documentsDir;
 
+  @visibleForTesting
+  static void setDocumentsDirectoryForTesting(String? path) {
+    _documentsDir = path;
+  }
+
   static Future<void> ensureDocumentDirectoryReady() async {
     await _ensureDocumentsDirectory();
   }
@@ -55,6 +60,32 @@ class MediaStorage {
     _logPersist(relativePath, targetPath, sessionId, hiveKey, bytes, exists);
 
     return relativePath;
+  }
+
+  /// Returns the canonical durable path for picker output.
+  ///
+  /// Existing session media is kept in place. Temporary picker files are
+  /// copied into the app documents media tree and represented by a relative
+  /// path so they continue to resolve if the iOS sandbox root changes.
+  static Future<String> ensurePickedMediaPersisted({
+    required String dogId,
+    required String sessionId,
+    required String sourcePath,
+    String? hiveKey,
+  }) async {
+    final normalized = (await normalizeMediaPaths([sourcePath])).single;
+    if (normalized.startsWith('media/')) {
+      final validation = await validatePersistedMedia(normalized);
+      if (validation?.exists == true && validation!.length > 0) {
+        return normalized;
+      }
+    }
+    return persistPickedMedia(
+      dogId: dogId,
+      sessionId: sessionId,
+      sourcePath: sourcePath,
+      hiveKey: hiveKey,
+    );
   }
 
   static Future<List<String>> normalizeMediaPaths(
