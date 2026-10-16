@@ -93,6 +93,7 @@ class _SessionEventsPageState extends State<SessionEventsPage> {
         builder: (_) => HuntEventEditPage(
           session: widget.session,
           sessionId: _sessionId,
+          sessionKey: widget.sessionKey,
           rawTrack: track,
           trackEdit: _trackEdit,
           event: event,
@@ -204,6 +205,7 @@ class HuntEventEditPage extends StatefulWidget {
     super.key,
     required this.session,
     required this.sessionId,
+    this.sessionKey,
     required this.rawTrack,
     required this.trackEdit,
     required this.canEdit,
@@ -217,6 +219,7 @@ class HuntEventEditPage extends StatefulWidget {
 
   final HuntSession session;
   final String sessionId;
+  final Object? sessionKey;
   final Track rawTrack;
   final SessionTrackEdit? trackEdit;
   final HuntEvent? event;
@@ -312,6 +315,8 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
       await _mediaRepository.replaceLinks(
         _eventId,
         _eventMedia.map((asset) => asset.mediaId),
+        sessionKey: widget.sessionKey,
+        sessionId: widget.sessionId,
       );
       _saved = true;
       if (mounted) Navigator.pop(context);

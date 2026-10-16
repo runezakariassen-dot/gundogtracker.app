@@ -7,23 +7,30 @@ import '../models/dog_media_asset.dart';
 import '../models/hunt_event_media_link.dart';
 import '../models/hunt_session.dart';
 import '../services/media_storage.dart';
+import 'session_media_repository.dart';
 
 class HuntEventMediaRepository {
   HuntEventMediaRepository({
     Box<HuntEventMediaLink>? linkBox,
     Box<DogMediaAsset>? mediaBox,
     Box<HuntSession>? sessionBox,
+    SessionMediaRepository? sessionMediaRepository,
   })  : _linkBox = linkBox,
         _mediaBox = mediaBox,
-        _sessionBox = sessionBox;
+        _sessionBox = sessionBox,
+        _sessionMediaRepository = sessionMediaRepository;
 
   final Box<HuntEventMediaLink>? _linkBox;
   final Box<DogMediaAsset>? _mediaBox;
   final Box<HuntSession>? _sessionBox;
+  final SessionMediaRepository? _sessionMediaRepository;
 
   Box<HuntEventMediaLink> get _links => _linkBox ?? huntEventMediaLinksBox();
   Box<DogMediaAsset> get _media => _mediaBox ?? dogMediaAssetsBox();
   Box<HuntSession> get _sessions => _sessionBox ?? sessionsBox();
+  SessionMediaRepository get _sessionMedia =>
+      _sessionMediaRepository ??
+      SessionMediaRepository(sessionBox: _sessions, mediaBox: _media);
 
   List<HuntEventMediaLink> linksForEvent(String eventId) {
     final links = _links.values
@@ -73,9 +80,8 @@ class HuntEventMediaRepository {
   }
 
   Future<void> replaceLinks(
-    String huntEventId,
-    Iterable<String> orderedMediaIds,
-  ) async {
+      String huntEventId, Iterable<String> orderedMediaIds,
+      {Object? sessionKey, String? sessionId}) async {
     final seenMediaIds = <String>{};
     final ids = orderedMediaIds
         .where((mediaId) => seenMediaIds.add(mediaId))
@@ -97,6 +103,8 @@ class HuntEventMediaRepository {
         removedLink.mediaId,
         huntEventId: huntEventId,
         removedLinkIds: removedLinkIds,
+        sessionKey: sessionKey,
+        sessionId: sessionId,
       );
     }
 
@@ -147,6 +155,8 @@ class HuntEventMediaRepository {
     String mediaId, {
     String? huntEventId,
     Iterable<dynamic> removedLinkIds = const [],
+    Object? sessionKey,
+    String? sessionId,
   }) async {
     final remainingReferenceCount =
         _links.values.where((link) => link.mediaId == mediaId).length;
@@ -214,108 +224,73 @@ class HuntEventMediaRepository {
       }
     }
 
-    final matchingSessions = <MapEntry<dynamic, HuntSession>>[];
-    var sessionFound = false;
-    for (final entry in _sessions.toMap().entries) {
-      final session = entry.value;
-      if (session.sessionId != asset.sessionId &&
-          entry.key.toString() != asset.sessionId) {
-        continue;
-      }
-      sessionFound = true;
-      final normalizedSessionPaths =
-          await MediaStorage.normalizeMediaPaths(session.mediaPaths);
-      if (normalizedSessionPaths.contains(normalizedPath)) {
-        matchingSessions.add(entry);
-      }
-    }
-    if (!sessionFound) {
-      _logRetain(mediaId, 'session_not_found');
+    final result = await _sessionMedia.removeSessionMedia(
+      path: normalizedPath,
+      sessionKey: sessionKey,
+      sessionId: sessionId ?? asset.sessionId,
+      mediaId: mediaId,
+      deleteAsset: true,
+    );
+    if (!result.sessionFound) {
+      _logRetain(mediaId, 'session_not_found', sharedDeleteCalled: true);
       return false;
     }
-    if (matchingSessions.isEmpty) {
-      _logRetain(mediaId, 'session_path_not_found');
+    if (!result.pathFound) {
+      _logRetain(mediaId, 'session_path_not_found', sharedDeleteCalled: true);
       return false;
     }
-    for (final entry in matchingSessions) {
-      final before = entry.value.mediaPaths;
-      final normalizedBefore = await MediaStorage.normalizeMediaPaths(before);
-      final after = <String>[
-        for (var index = 0; index < before.length; index++)
-          if (normalizedBefore[index] != normalizedPath) before[index],
-      ];
-      await _sessions.put(
-        entry.key,
-        entry.value.copyWith(mediaPaths: after),
+    if (result.assetExistsAfter || result.fileExistsAfter) {
+      _logRetain(
+        mediaId,
+        'other_session_or_asset_reference',
+        sharedDeleteCalled: true,
       );
-      final persistedAfter = _sessions.get(entry.key)?.mediaPaths;
-      if (kDebugMode) {
-        debugPrint(
-          '[HUNT_EVENT_MEDIA][cleanup-session] mediaId=$mediaId '
-          'sessionId=${entry.value.sessionId} hiveKey=${entry.key} '
-          'mediaPathsBefore=$before mediaPathsAfter=$persistedAfter',
-        );
-      }
-    }
-
-    await _media.delete(mediaId);
-
-    var pathStillReferencedBySession = false;
-    for (final session in _sessions.values) {
-      final paths = await MediaStorage.normalizeMediaPaths(session.mediaPaths);
-      if (paths.contains(normalizedPath)) {
-        pathStillReferencedBySession = true;
-        break;
-      }
-    }
-    var pathStillReferencedByAsset = false;
-    for (final candidate in _media.values) {
-      if (candidate.status != DogMediaStatus.active ||
-          candidate.localPath == null) {
-        continue;
-      }
-      final candidatePath =
-          (await MediaStorage.normalizeMediaPaths([candidate.localPath!]))
-              .single;
-      if (candidatePath == normalizedPath) {
-        pathStillReferencedByAsset = true;
-        break;
-      }
-    }
-    var fileRemoved = false;
-    if (!pathStillReferencedBySession && !pathStillReferencedByAsset) {
-      await MediaStorage.deletePersistedMedia(normalizedPath);
-      final validation = await MediaStorage.validatePersistedMedia(
-        normalizedPath,
-      );
-      fileRemoved = validation?.exists != true;
+      return false;
     }
     if (kDebugMode) {
       debugPrint(
         '[HUNT_EVENT_MEDIA][cleanup-result] eventId=${huntEventId ?? ''} '
-        'mediaId=$mediaId assetRemoved=${_media.get(mediaId) == null} '
-        'fileRemoved=$fileRemoved decision=delete',
+        'mediaId=$mediaId remainingEventReferences=$remainingReferenceCount '
+        'createdByHuntEventId=${asset.createdByHuntEventId} '
+        'sessionId=${asset.sessionId} sessionHiveKey=${result.sessionKey} '
+        'sessionPathsBefore=${result.pathsBefore} '
+        'targetNormalizedPath=$normalizedPath sharedDeleteCalled=yes '
+        'sessionPathsAfter=${result.pathsAfter} '
+        'assetExistsAfter=${result.assetExistsAfter} '
+        'fileExistsAfter=${result.fileExistsAfter} decision=delete',
       );
     }
     return true;
   }
 
-  void _logRetain(String mediaId, String reason) {
+  void _logRetain(
+    String mediaId,
+    String reason, {
+    bool sharedDeleteCalled = false,
+  }) {
     if (kDebugMode) {
       debugPrint(
         '[HUNT_EVENT_MEDIA][cleanup-result] mediaId=$mediaId '
+        'sharedDeleteCalled=${sharedDeleteCalled ? 'yes' : 'no'} '
         'decision=retain retain_reason=$reason',
       );
     }
   }
 
   Future<void> deleteLinksForEvent(String huntEventId) async {
-    final keys = _links
+    final removedLinks = _links
         .toMap()
         .entries
         .where((entry) => entry.value.huntEventId == huntEventId)
-        .map((entry) => entry.key)
         .toList(growable: false);
+    final keys = removedLinks.map((entry) => entry.key).toList(growable: false);
     await _links.deleteAll(keys);
+    for (final entry in removedLinks) {
+      await deleteEventCreatedMediaIfUnreferenced(
+        entry.value.mediaId,
+        huntEventId: huntEventId,
+        removedLinkIds: keys,
+      );
+    }
   }
 }

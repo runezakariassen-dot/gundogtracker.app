@@ -40,6 +40,7 @@ import 'package:jakthund_app/pages/session_track_edit_page.dart';
 import 'package:jakthund_app/repositories/hunt_event_repository.dart';
 import 'package:jakthund_app/repositories/session_track_edit_repository.dart';
 import 'package:jakthund_app/repositories/session_repository.dart';
+import 'package:jakthund_app/repositories/session_media_repository.dart';
 import 'package:jakthund_app/repositories/track_repository.dart';
 import 'package:jakthund_app/services/gpx_file_loader.dart';
 import 'package:jakthund_app/services/gpx_importer.dart';
@@ -1925,17 +1926,16 @@ class _SessionDetailPageState extends State<SessionDetailPage>
     if (kDebugMode) {
       debugPrint('[MEDIA] removed from session: $path');
     }
-    final sessionKey = _editingSessionKey;
-    if (sessionKey != null) {
-      final source = _editingSession ?? _sessionsBox.get(sessionKey);
-      if (source != null) {
-        final updated =
-            source.copyWith(mediaPaths: List<String>.from(_mediaPaths));
-        await _sessionsBox.put(sessionKey, updated);
-        _editingSession = updated;
-      }
+    final result = await SessionMediaRepository(
+      sessionBox: _sessionsBox,
+    ).removeSessionMedia(
+      path: path,
+      sessionKey: _editingSessionKey,
+      sessionId: _editingSession?.sessionId,
+    );
+    if (result.sessionKey != null) {
+      _editingSession = _sessionsBox.get(result.sessionKey);
     }
-    await MediaStorage.deletePersistedMedia(path);
   }
 
   Future<void> _handleMediaTap(String path) async {

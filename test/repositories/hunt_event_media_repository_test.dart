@@ -295,6 +295,35 @@ void main() {
     expect(await file.exists(), isFalse);
   });
 
+  test('final event-created video uses exact session Hive key', () async {
+    final asset = _asset(
+      'event-video.mp4',
+      DogMediaKind.sessionVideo,
+      createdByHuntEventId: 'event-video',
+    ).copyWith(sessionId: 'stale-session-id');
+    final file = File('${tempDirectory.path}/${asset.localPath!}');
+    await file.parent.create(recursive: true);
+    await file.writeAsBytes([0, 0, 0, 20, 102, 116, 121, 112]);
+    await mediaBox.put(asset.mediaId, asset);
+    await sessionBox.put(42, _session([asset.localPath!]));
+    await repository.link(
+      huntEventId: 'event-video',
+      mediaId: asset.mediaId,
+    );
+
+    await repository.replaceLinks(
+      'event-video',
+      const [],
+      sessionKey: 42,
+      sessionId: 'session',
+    );
+
+    expect(repository.linksForEvent('event-video'), isEmpty);
+    expect(sessionBox.get(42)!.mediaPaths, isEmpty);
+    expect(mediaBox.get(asset.mediaId), isNull);
+    expect(await file.exists(), isFalse);
+  });
+
   test('another event link retains asset session path and file', () async {
     final asset = _asset(
       'shared-photo',
