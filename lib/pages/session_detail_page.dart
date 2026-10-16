@@ -46,6 +46,7 @@ import 'package:jakthund_app/services/gpx_importer.dart';
 import 'package:jakthund_app/services/effective_track_resolver.dart';
 import 'package:jakthund_app/services/session_track_edit_permission_service.dart';
 import 'package:jakthund_app/pages/session_media_image_helper.dart';
+import 'package:jakthund_app/pages/session_media_image.dart';
 import 'package:jakthund_app/pages/session_media_video_helper.dart';
 import 'package:jakthund_app/services/media_storage.dart';
 import 'package:jakthund_app/services/cloud/firestore_session_sync_service.dart';
@@ -1399,11 +1400,12 @@ class _SessionDetailPageState extends State<SessionDetailPage>
                   ),
                   clipBehavior: Clip.hardEdge,
                   child: exists && !isVideo && resolvedPath != null
-                      ? Image.file(
-                          File(resolvedPath),
+                      ? SessionMediaImage(
+                          storedPath: path,
+                          displayWidth: 56,
+                          displayHeight: 56,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
-                              const Icon(Icons.broken_image),
+                          placeholder: const Icon(Icons.broken_image),
                         )
                       : Center(
                           child: Icon(
@@ -1807,9 +1809,12 @@ class _SessionDetailPageState extends State<SessionDetailPage>
         ? placeholder
         : isVideo
             ? const Icon(Icons.videocam, size: 36)
-            : Image.file(
-                File(resolvedPath),
+            : SessionMediaImage(
+                storedPath: path,
+                displayWidth: 108,
+                displayHeight: 108,
                 fit: BoxFit.cover,
+                placeholder: placeholder,
               );
     return InkWell(
       onTap:
@@ -1845,10 +1850,12 @@ class _SessionDetailPageState extends State<SessionDetailPage>
         ? placeholder
         : isVideo
             ? const Icon(Icons.videocam, size: 32)
-            : Image.file(
-                File(resolvedPath),
+            : SessionMediaImage(
+                storedPath: path,
+                displayWidth: 72,
+                displayHeight: 72,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const Icon(
+                placeholder: const Icon(
                   Icons.broken_image,
                   size: 32,
                 ),

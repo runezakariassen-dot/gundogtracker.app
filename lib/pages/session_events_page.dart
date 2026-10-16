@@ -26,6 +26,7 @@ import '../ui/hunt_event_labels.dart';
 import '../l10n/app_localizations.dart';
 import '../features/map/map_tile_sources.dart';
 import 'session_media_image_helper.dart';
+import 'session_media_image.dart';
 import 'session_media_video_helper.dart';
 
 class SessionEventsPage extends StatefulWidget {
@@ -512,11 +513,12 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
     if (validation?.exists != true) {
       return const Icon(Icons.broken_image_outlined, size: 36);
     }
-    return Image.file(
-      File(validation!.resolvedPath),
+    return SessionMediaImage(
+      storedPath: path,
+      displayWidth: 88,
+      displayHeight: 88,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) =>
-          const Icon(Icons.broken_image_outlined, size: 36),
+      placeholder: const Icon(Icons.broken_image_outlined, size: 36),
     );
   }
 

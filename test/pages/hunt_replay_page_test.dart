@@ -13,6 +13,8 @@ import 'package:jakthund_app/models/hunt_event.dart';
 import 'package:jakthund_app/models/dog_media_asset.dart';
 import 'package:jakthund_app/models/track.dart';
 import 'package:jakthund_app/pages/hunt_replay_page.dart';
+import 'package:jakthund_app/pages/session_media_image.dart';
+import 'package:jakthund_app/pages/session_video_player_page.dart';
 import 'package:jakthund_app/repositories/hunt_event_media_repository.dart';
 import 'package:jakthund_app/services/hunt_replay_controller.dart';
 import 'package:jakthund_app/services/media_storage.dart';
@@ -245,6 +247,8 @@ void main() {
     expect(find.byKey(ValueKey('hunt-replay-media-${image.mediaId}')),
         findsOneWidget);
     expect(find.text('Spill av video'), findsOneWidget);
+    expect(find.byType(SessionMediaImage), findsOneWidget);
+    expect(find.byType(SessionVideoPlayerPage), findsNothing);
     final videoX = tester
         .getTopLeft(find.byKey(ValueKey('hunt-replay-media-${video.mediaId}')))
         .dx;

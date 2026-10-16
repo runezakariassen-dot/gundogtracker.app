@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -20,6 +19,7 @@ import '../services/media_storage.dart';
 import '../repositories/hunt_event_media_repository.dart';
 import '../ui/hunt_event_labels.dart';
 import 'session_media_image_helper.dart';
+import 'session_media_image.dart';
 import 'session_media_video_helper.dart';
 
 class HuntReplayPage extends StatefulWidget {
@@ -564,10 +564,12 @@ class _ReplayEventCard extends StatelessWidget {
                                   ),
                                 ],
                               )
-                            : Image.file(
-                                File(asset.localPath!),
+                            : SessionMediaImage(
+                                storedPath: asset.localPath!,
+                                displayWidth: 96,
+                                displayHeight: 86,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => const Icon(
+                                placeholder: const Icon(
                                   Icons.broken_image_outlined,
                                   size: 34,
                                 ),

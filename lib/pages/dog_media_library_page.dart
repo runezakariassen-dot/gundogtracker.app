@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path/path.dart' as p;
@@ -11,6 +9,7 @@ import 'package:jakthund_app/models/hunt_session.dart';
 import 'package:jakthund_app/models/session_type.dart';
 import 'package:jakthund_app/pages/session_detail_page.dart';
 import 'package:jakthund_app/pages/session_media_image_helper.dart';
+import 'package:jakthund_app/pages/session_media_image.dart';
 import 'package:jakthund_app/pages/session_media_video_helper.dart';
 import 'package:jakthund_app/services/hive_lifecycle_service.dart';
 import 'package:jakthund_app/services/media_storage.dart';
@@ -394,10 +393,12 @@ class _DogMediaPreview extends StatelessWidget {
       );
     }
 
-    return Image.file(
-      File(resolvedPath),
+    return SessionMediaImage(
+      storedPath: item.path,
+      displayWidth: 180,
+      displayHeight: 180,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => const Center(
+      placeholder: const Center(
         child: Icon(Icons.broken_image),
       ),
     );

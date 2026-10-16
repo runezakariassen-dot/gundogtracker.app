@@ -2,17 +2,15 @@
 
 import 'dart:io';
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart';
-import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
 
 import 'package:jakthund_app/data/hive_boxes.dart';
 import 'package:jakthund_app/l10n/app_localizations.dart';
 import 'package:jakthund_app/models/dog.dart';
+import 'package:jakthund_app/pages/session_media_image.dart';
 import 'package:jakthund_app/services/dog_photo_watermark.dart';
 import 'package:jakthund_app/services/hive_lifecycle_service.dart';
 
@@ -61,7 +59,6 @@ class _SessionImageViewerPageState extends State<SessionImageViewerPage> {
   late bool _showOfficialName;
   late bool _showNickname;
   late bool _useDarkText;
-  late final Future<ui.Image> _imageInfoFuture;
 
   Color get _wmFillColor => _useDarkText ? Colors.black : Colors.white;
   double get _wmFillOpacity => _useDarkText ? 0.82 : 0.92;
@@ -77,7 +74,6 @@ class _SessionImageViewerPageState extends State<SessionImageViewerPage> {
     _showOfficialName = widget.watermarkShowOfficialName ?? true;
     _showNickname = widget.watermarkShowNickname ?? true;
     _useDarkText = widget.watermarkUseDarkText ?? false;
-    _imageInfoFuture = _loadImageInfo();
     WidgetsBinding.instance
         .addPostFrameCallback((_) => _loadDogColorPreference());
   }
@@ -112,47 +108,21 @@ class _SessionImageViewerPageState extends State<SessionImageViewerPage> {
       width: double.infinity,
       height: double.infinity,
       color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      child: FutureBuilder<ui.Image>(
-        future: _imageInfoFuture,
-        builder: (context, snapshot) =>
-            _buildFutureContent(context, snapshot, l10n),
+      child: LayoutBuilder(
+        builder: (context, constraints) =>
+            _buildInteractiveViewer(context, constraints, l10n),
       ),
-    );
-  }
-
-  Widget _buildFutureContent(
-    BuildContext context,
-    AsyncSnapshot<ui.Image> snapshot,
-    AppLocalizations l10n,
-  ) {
-    if (snapshot.hasError || !snapshot.hasData) {
-      return _buildPlaceholder(context, l10n);
-    }
-    final imageInfo = snapshot.data!;
-    return LayoutBuilder(
-      builder: (context, constraints) =>
-          _buildInteractiveViewer(context, imageInfo, constraints, l10n),
     );
   }
 
   Widget _buildInteractiveViewer(
     BuildContext context,
-    ui.Image imageInfo,
     BoxConstraints constraints,
     AppLocalizations l10n,
   ) {
     final availWidth = constraints.maxWidth;
     final availHeight = constraints.maxHeight;
-    final imageRect = _calculateContainRect(
-      availWidth,
-      availHeight,
-      imageInfo.width.toDouble(),
-      imageInfo.height.toDouble(),
-    );
-    final bottomInset = (availHeight - imageRect.bottom) + _overlayInset;
-    final leftInset = imageRect.left + _overlayInset;
-    final rightInset = (availWidth - imageRect.right) + _overlayInset + 2;
-    final plateMaxWidth = math.min(_maxPlateWidth, imageRect.width * 0.60);
+    final plateMaxWidth = math.min(_maxPlateWidth, availWidth * 0.60);
     final stamp = _buildWatermarkStamp(context);
     final plate = _buildWatermarkPlate(context, maxWidth: plateMaxWidth);
 
@@ -167,23 +137,26 @@ class _SessionImageViewerPageState extends State<SessionImageViewerPage> {
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            Positioned.fromRect(
-              rect: imageRect,
-              child: Image.file(
-                File(widget.imagePath),
-                fit: BoxFit.fill,
-                errorBuilder: (_, __, ___) => _buildPlaceholder(context, l10n),
+            Positioned.fill(
+              child: SessionMediaImage(
+                storedPath: widget.imagePath,
+                displayWidth: availWidth,
+                displayHeight: availHeight,
+                fullScreen: true,
+                evictOnDispose: true,
+                fit: BoxFit.contain,
+                placeholder: _buildPlaceholder(context, l10n),
               ),
             ),
             Positioned(
-              left: leftInset,
-              bottom: bottomInset,
+              left: _overlayInset,
+              bottom: _overlayInset,
               child: IgnorePointer(child: stamp),
             ),
             if (plate != null)
               Positioned(
-                right: rightInset,
-                bottom: bottomInset,
+                right: _overlayInset + 2,
+                bottom: _overlayInset,
                 child: IgnorePointer(child: plate),
               ),
           ],
@@ -654,52 +627,6 @@ class _SessionImageViewerPageState extends State<SessionImageViewerPage> {
       }
     }
     return best;
-  }
-
-  Future<ui.Image> _loadImageInfo() async {
-    final file = File(widget.imagePath);
-    try {
-      if (!file.existsSync() || file.lengthSync() <= 0) {
-        throw FileSystemException(
-            'Image is missing or empty', widget.imagePath);
-      }
-      final bytes = await file.readAsBytes();
-      final codec = await ui.instantiateImageCodec(bytes);
-      try {
-        final frame = await codec.getNextFrame();
-        return frame.image;
-      } finally {
-        codec.dispose();
-      }
-    } catch (error, stackTrace) {
-      if (kDebugMode) {
-        debugPrint(
-          '[SESSION_MEDIA] kind=image stage=decode resolved=${widget.imagePath} '
-          'extension=${p.extension(widget.imagePath).toLowerCase()} '
-          'exists=${file.existsSync()} '
-          'size=${file.existsSync() ? file.lengthSync() : 0} '
-          'error=$error stackTrace=$stackTrace',
-        );
-      }
-      rethrow;
-    }
-  }
-
-  Rect _calculateContainRect(
-    double availWidth,
-    double availHeight,
-    double imageWidth,
-    double imageHeight,
-  ) {
-    if (imageWidth <= 0 || imageHeight <= 0) {
-      return Rect.fromLTWH(0, 0, availWidth, availHeight);
-    }
-    final scale = math.min(availWidth / imageWidth, availHeight / imageHeight);
-    final displayWidth = imageWidth * scale;
-    final displayHeight = imageHeight * scale;
-    final dx = (availWidth - displayWidth) / 2;
-    final dy = (availHeight - displayHeight) / 2;
-    return Rect.fromLTWH(dx, dy, displayWidth, displayHeight);
   }
 }
 
