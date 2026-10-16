@@ -309,9 +309,6 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
         _eventId,
         _eventMedia.map((asset) => asset.mediaId),
       );
-      for (final mediaId in _removedMediaIds) {
-        await _mediaRepository.deleteEventCreatedMediaIfUnreferenced(mediaId);
-      }
       _saved = true;
       if (mounted) Navigator.pop(context);
     } catch (_) {

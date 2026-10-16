@@ -255,7 +255,8 @@ void main() {
     expect(mediaBox.toMap(), before);
   });
 
-  test('last link deletes event-created local session media', () async {
+  test('replaceLinks removes final event-created media and survives reopen',
+      () async {
     final asset = _asset(
       'event-photo',
       DogMediaKind.sessionImage,
@@ -265,17 +266,32 @@ void main() {
     await file.parent.create(recursive: true);
     await file.writeAsBytes([1, 2, 3]);
     await mediaBox.put(asset.mediaId, asset);
-    await sessionBox.put('session', _session([asset.localPath!]));
+    final absoluteSessionPath = file.path;
+    await sessionBox.put('session-key', _session([absoluteSessionPath]));
     await repository.link(huntEventId: 'event-a', mediaId: asset.mediaId);
 
-    await repository.unlink('event-a', asset.mediaId);
-    expect(
-      await repository.deleteEventCreatedMediaIfUnreferenced(asset.mediaId),
-      isTrue,
+    await repository.replaceLinks('event-a', const []);
+
+    expect(repository.linksForEvent('event-a'), isEmpty);
+    expect(mediaBox.get(asset.mediaId), isNull);
+    expect(sessionBox.get('session-key')!.mediaPaths, isEmpty);
+    expect(await file.exists(), isFalse);
+
+    await linkBox.close();
+    await mediaBox.close();
+    await sessionBox.close();
+    linkBox = await Hive.openBox<HuntEventMediaLink>('links');
+    mediaBox = await Hive.openBox<DogMediaAsset>('media');
+    sessionBox = await Hive.openBox<HuntSession>('sessions');
+    repository = HuntEventMediaRepository(
+      linkBox: linkBox,
+      mediaBox: mediaBox,
+      sessionBox: sessionBox,
     );
 
+    expect(repository.linksForEvent('event-a'), isEmpty);
     expect(mediaBox.get(asset.mediaId), isNull);
-    expect(sessionBox.get('session')!.mediaPaths, isEmpty);
+    expect(sessionBox.get('session-key')!.mediaPaths, isEmpty);
     expect(await file.exists(), isFalse);
   });
 
@@ -293,21 +309,15 @@ void main() {
     await repository.link(huntEventId: 'event-a', mediaId: asset.mediaId);
     await repository.link(huntEventId: 'event-b', mediaId: asset.mediaId);
 
-    await repository.unlink('event-a', asset.mediaId);
-    expect(
-      await repository.deleteEventCreatedMediaIfUnreferenced(asset.mediaId),
-      isFalse,
-    );
+    await repository.replaceLinks('event-a', const []);
     expect(mediaBox.get(asset.mediaId), isNotNull);
     expect(sessionBox.get('session')!.mediaPaths, [asset.localPath]);
     expect(await file.exists(), isTrue);
 
-    await repository.unlink('event-b', asset.mediaId);
-    expect(
-      await repository.deleteEventCreatedMediaIfUnreferenced(asset.mediaId),
-      isTrue,
-    );
+    await repository.replaceLinks('event-b', const []);
     expect(mediaBox.get(asset.mediaId), isNull);
+    expect(sessionBox.get('session')!.mediaPaths, isEmpty);
+    expect(await file.exists(), isFalse);
   });
 
   test('unrelated session and profile media are never deleted', () async {
