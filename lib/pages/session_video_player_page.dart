@@ -12,10 +12,12 @@ class SessionVideoPlayerPage extends StatefulWidget {
     super.key,
     required this.videoPath,
     this.displayName,
+    this.autoCloseOnCompletion = false,
   });
 
   final String videoPath;
   final String? displayName;
+  final bool autoCloseOnCompletion;
 
   @override
   State<SessionVideoPlayerPage> createState() => _SessionVideoPlayerPageState();
@@ -25,6 +27,7 @@ class _SessionVideoPlayerPageState extends State<SessionVideoPlayerPage> {
   VideoPlayerController? _controller;
   bool _initializing = true;
   String? _errorMessage;
+  bool _completionHandled = false;
 
   @override
   void initState() {
@@ -39,6 +42,7 @@ class _SessionVideoPlayerPageState extends State<SessionVideoPlayerPage> {
       _controller = controller;
       await controller.initialize();
       if (!mounted) return;
+      controller.addListener(_handlePlaybackState);
       setState(() => _initializing = false);
       await controller.play();
     } catch (error, stackTrace) {
@@ -65,11 +69,35 @@ class _SessionVideoPlayerPageState extends State<SessionVideoPlayerPage> {
     }
   }
 
+  void _handlePlaybackState() {
+    final controller = _controller;
+    if (!widget.autoCloseOnCompletion ||
+        _completionHandled ||
+        controller == null ||
+        !controller.value.isInitialized) {
+      return;
+    }
+    final value = controller.value;
+    if (value.duration <= Duration.zero ||
+        value.position < value.duration - const Duration(milliseconds: 100)) {
+      return;
+    }
+    _completionHandled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+    });
+  }
+
   @override
   void dispose() {
     final controller = _controller;
     _controller = null;
-    if (controller != null) unawaited(controller.dispose());
+    if (controller != null) {
+      controller.removeListener(_handlePlaybackState);
+      unawaited(controller.dispose());
+    }
     super.dispose();
   }
 

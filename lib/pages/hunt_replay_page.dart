@@ -61,10 +61,14 @@ class _HuntReplayPageState extends State<HuntReplayPage> {
   int _nextEventIndex = 0;
   bool _handlingEventPause = false;
   bool _resumeAfterEvent = false;
+  bool _mediaPresentationActive = false;
+  bool _manualPauseRequested = false;
+  int _currentMediaIndex = -1;
   bool _following = true;
   bool _programmaticMove = false;
   LatLng? _lastFollowedPosition;
   final Map<String, List<DogMediaAsset>> _mediaByEventId = {};
+  final Set<String> _triggeredEventIds = <String>{};
 
   @override
   void initState() {
@@ -135,12 +139,19 @@ class _HuntReplayPageState extends State<HuntReplayPage> {
     final elapsed = _replay.elapsed;
     if (!_handlingEventPause) {
       if (elapsed < _lastReplayElapsed) {
-        _nextEventIndex = _firstEventAfter(elapsed);
+        final backwardDelta = _lastReplayElapsed - elapsed;
+        if (backwardDelta > const Duration(milliseconds: 250)) {
+          _resetTriggeredEventsAfter(elapsed);
+          _nextEventIndex = _firstEventAfter(elapsed);
+        }
       } else if (elapsed > _lastReplayElapsed || _replay.isPlaying) {
         _triggerCrossedEvent(_lastReplayElapsed, elapsed);
       }
     }
-    _lastReplayElapsed = elapsed;
+    // Pausing for an event notifies listeners recursively and may update the
+    // controller's elapsed value. Keep the newest value instead of restoring
+    // the stale value captured by the outer notification.
+    _lastReplayElapsed = _replay.elapsed;
     setState(() {});
     if (_following && _replay.isPlaying) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _followMarker());
@@ -163,9 +174,16 @@ class _HuntReplayPageState extends State<HuntReplayPage> {
 
   void _triggerCrossedEvent(Duration previous, Duration current) {
     if (_eventPauseTimer != null || _nextEventIndex >= _events.length) return;
+    while (_nextEventIndex < _events.length &&
+        _triggeredEventIds.contains(_events[_nextEventIndex].event.id) &&
+        _events[_nextEventIndex].elapsed <= current) {
+      _nextEventIndex++;
+    }
+    if (_nextEventIndex >= _events.length) return;
     final candidate = _events[_nextEventIndex];
     if (candidate.elapsed < previous || candidate.elapsed > current) return;
 
+    _triggeredEventIds.add(candidate.event.id);
     _nextEventIndex++;
     while (_nextEventIndex < _events.length &&
         (_events[_nextEventIndex].elapsed - candidate.elapsed).abs() <=
@@ -175,13 +193,21 @@ class _HuntReplayPageState extends State<HuntReplayPage> {
 
     _handlingEventPause = true;
     _resumeAfterEvent = _replay.isPlaying;
+    _manualPauseRequested = false;
     _selectedEvent = candidate;
     _replay.pause();
     _handlingEventPause = false;
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => _followMarker(force: true),
     );
-    _eventPauseTimer = Timer(widget.eventPauseDuration, _finishEventPause);
+    final media = _mediaByEventId[candidate.event.id] ?? const [];
+    if (media.isEmpty) {
+      _eventPauseTimer = Timer(widget.eventPauseDuration, _finishEventPause);
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _presentEventMedia(candidate, media),
+      );
+    }
   }
 
   void _finishEventPause() {
@@ -190,15 +216,63 @@ class _HuntReplayPageState extends State<HuntReplayPage> {
     _resumeAfterEvent = false;
     if (!mounted) return;
     setState(() => _selectedEvent = null);
-    if (shouldResume) _replay.play();
+    if (shouldResume && !_manualPauseRequested) _replay.play();
   }
 
   void _manualPauseDuringEvent() {
+    _manualPauseRequested = true;
     _resumeAfterEvent = false;
     setState(() {});
   }
 
+  Future<void> _presentEventMedia(
+    HuntReplayEvent event,
+    List<DogMediaAsset> media,
+  ) async {
+    if (!mounted || _mediaPresentationActive || _selectedEvent != event) {
+      return;
+    }
+    _eventPauseTimer?.cancel();
+    _eventPauseTimer = null;
+    _mediaPresentationActive = true;
+    try {
+      for (var index = 0; index < media.length; index++) {
+        if (!mounted || _selectedEvent != event) return;
+        _currentMediaIndex = index;
+        setState(() {});
+        await _presentMediaItem(media[index]);
+      }
+    } finally {
+      _currentMediaIndex = -1;
+      _mediaPresentationActive = false;
+    }
+    if (!mounted || _selectedEvent != event) return;
+    final shouldResume = _resumeAfterEvent && !_manualPauseRequested;
+    _resumeAfterEvent = false;
+    setState(() => _selectedEvent = null);
+    if (shouldResume) _replay.play();
+  }
+
+  Future<void> _presentMediaItem(DogMediaAsset asset) async {
+    if (widget.openMedia != null) {
+      await widget.openMedia!(context, asset);
+      return;
+    }
+    final path = asset.localPath;
+    if (path == null || !mounted) return;
+    if (asset.kind == DogMediaKind.sessionVideo) {
+      await openSessionVideo(
+        context: context,
+        storedPath: path,
+        autoCloseOnCompletion: true,
+      );
+    } else {
+      await openSessionImage(context: context, storedPath: path);
+    }
+  }
+
   Future<void> _openEventMedia(DogMediaAsset asset) async {
+    if (_mediaPresentationActive) return;
     final shouldResume = _resumeAfterEvent;
     _eventPauseTimer?.cancel();
     _eventPauseTimer = null;
@@ -218,7 +292,7 @@ class _HuntReplayPageState extends State<HuntReplayPage> {
 
     if (!mounted) return;
     setState(() => _selectedEvent = null);
-    if (shouldResume) _replay.play();
+    if (shouldResume && !_manualPauseRequested) _replay.play();
   }
 
   void _beginSeek(double _) {
@@ -233,10 +307,20 @@ class _HuntReplayPageState extends State<HuntReplayPage> {
               .round(),
     );
     _nextEventIndex = _firstEventAfter(target);
+    _resetTriggeredEventsAfter(target);
     _lastReplayElapsed = target;
     _handlingEventPause = true;
     _replay.seekToProgress(value);
     _handlingEventPause = false;
+  }
+
+  void _resetTriggeredEventsAfter(Duration elapsed) {
+    _triggeredEventIds.removeWhere((eventId) {
+      for (final event in _events) {
+        if (event.event.id == eventId) return event.elapsed > elapsed;
+      }
+      return true;
+    });
   }
 
   void _cancelEventPause() {
@@ -244,6 +328,7 @@ class _HuntReplayPageState extends State<HuntReplayPage> {
     _eventPauseTimer = null;
     _selectedEvent = null;
     _resumeAfterEvent = false;
+    _manualPauseRequested = false;
   }
 
   void _followMarker({bool force = false}) {
@@ -406,6 +491,7 @@ class _HuntReplayPageState extends State<HuntReplayPage> {
                 event: _selectedEvent!,
                 media: _mediaByEventId[_selectedEvent!.event.id] ?? const [],
                 onOpenMedia: _openEventMedia,
+                activeMediaIndex: _currentMediaIndex,
               ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
@@ -434,18 +520,23 @@ class _HuntReplayPageState extends State<HuntReplayPage> {
                           key: const ValueKey('hunt-replay-play-pause'),
                           onPressed: _replay.totalDuration == Duration.zero
                               ? null
-                              : (_eventPauseTimer != null
+                              : (_eventPauseTimer != null ||
+                                      _mediaPresentationActive
                                   ? _manualPauseDuringEvent
                                   : _replay.isPlaying
                                       ? _replay.pause
                                       : _replay.play),
                           icon: Icon(
-                            _replay.isPlaying || _eventPauseTimer != null
+                            _replay.isPlaying ||
+                                    _eventPauseTimer != null ||
+                                    _mediaPresentationActive
                                 ? Icons.pause
                                 : Icons.play_arrow,
                           ),
                           label: Text(
-                            _replay.isPlaying || _eventPauseTimer != null
+                            _replay.isPlaying ||
+                                    _eventPauseTimer != null ||
+                                    _mediaPresentationActive
                                 ? l10n.hunt_replay_pause
                                 : l10n.hunt_replay_play,
                           ),
@@ -484,11 +575,13 @@ class _ReplayEventCard extends StatelessWidget {
     required this.event,
     required this.media,
     required this.onOpenMedia,
+    required this.activeMediaIndex,
   });
 
   final HuntReplayEvent event;
   final List<DogMediaAsset> media;
   final ValueChanged<DogMediaAsset> onOpenMedia;
+  final int activeMediaIndex;
 
   @override
   Widget build(BuildContext context) {
@@ -551,6 +644,12 @@ class _ReplayEventCard extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: Colors.black12,
                           borderRadius: BorderRadius.circular(8),
+                          border: activeMediaIndex == index
+                              ? Border.all(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  width: 2,
+                                )
+                              : null,
                         ),
                         child: video
                             ? Column(

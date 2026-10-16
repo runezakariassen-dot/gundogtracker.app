@@ -11,12 +11,12 @@ import 'package:jakthund_app/l10n/app_localizations.dart';
 import 'package:jakthund_app/models/gps_point.dart';
 import 'package:jakthund_app/models/hunt_event.dart';
 import 'package:jakthund_app/models/dog_media_asset.dart';
+import 'package:jakthund_app/models/session_track_edit.dart';
 import 'package:jakthund_app/models/track.dart';
 import 'package:jakthund_app/pages/hunt_replay_page.dart';
-import 'package:jakthund_app/pages/session_media_image.dart';
-import 'package:jakthund_app/pages/session_video_player_page.dart';
 import 'package:jakthund_app/repositories/hunt_event_media_repository.dart';
 import 'package:jakthund_app/services/hunt_replay_controller.dart';
+import 'package:jakthund_app/services/effective_track_resolver.dart';
 import 'package:jakthund_app/services/media_storage.dart';
 
 void main() {
@@ -216,48 +216,123 @@ void main() {
     expect(find.byKey(const ValueKey('hunt-replay-empty')), findsOneWidget);
   });
 
-  testWidgets('event media shows image and video in repository order',
+  testWidgets('image opens automatically and replay resumes after close',
       (tester) async {
     final track = _timedTrack();
     final event = _event('media-event', 1, track);
     final image = await tester.runAsync(
       () => _mediaAsset(mediaDirectory, 'image', video: false),
     ) as DogMediaAsset;
-    final video = await tester.runAsync(
-      () => _mediaAsset(mediaDirectory, 'video', video: true),
-    ) as DogMediaAsset;
-    final repository = _ReplayMediaRepository({
-      event.id: [video, image]
-    });
     final replay = HuntReplayController(track.points);
+    final closed = Completer<void>();
+    final opened = <String>[];
 
     await _pump(
       tester,
       track,
       events: [event],
       replayController: replay,
-      mediaRepository: repository,
+      mediaRepository: _ReplayMediaRepository({
+        event.id: [image]
+      }),
+      openMedia: (_, asset) {
+        opened.add(asset.mediaId);
+        return closed.future;
+      },
     );
     await tester.tap(find.byKey(const ValueKey('hunt-replay-play-pause')));
     replay.advanceBy(const Duration(milliseconds: 100));
     await tester.pump();
+    await tester.pump();
 
-    expect(find.byKey(ValueKey('hunt-replay-media-${video.mediaId}')),
-        findsOneWidget);
-    expect(find.byKey(ValueKey('hunt-replay-media-${image.mediaId}')),
-        findsOneWidget);
-    expect(find.text('Spill av video'), findsOneWidget);
-    expect(find.byType(SessionMediaImage), findsOneWidget);
-    expect(find.byType(SessionVideoPlayerPage), findsNothing);
-    final videoX = tester
-        .getTopLeft(find.byKey(ValueKey('hunt-replay-media-${video.mediaId}')))
-        .dx;
-    final imageX = tester
-        .getTopLeft(find.byKey(ValueKey('hunt-replay-media-${image.mediaId}')))
-        .dx;
-    expect(videoX, lessThan(imageX));
-    expect(find.text('Rype'), findsOneWidget);
-    expect(find.text('Testnotat'), findsOneWidget);
+    expect(opened, [image.mediaId]);
+    expect(replay.isPlaying, isFalse);
+    closed.complete();
+    await tester.pump();
+    expect(replay.isPlaying, isTrue);
+    replay.advanceBy(const Duration(milliseconds: 100));
+    await tester.pump();
+    expect(opened, [image.mediaId]);
+  });
+
+  testWidgets('video opens automatically and completion resumes replay',
+      (tester) async {
+    final track = _timedTrack();
+    final event = _event('video-event', 1, track);
+    final video = await tester.runAsync(
+      () => _mediaAsset(mediaDirectory, 'video', video: true),
+    ) as DogMediaAsset;
+    final replay = HuntReplayController(track.points);
+    final completed = Completer<void>();
+    var opened = false;
+    await _pump(
+      tester,
+      track,
+      events: [event],
+      replayController: replay,
+      mediaRepository: _ReplayMediaRepository({
+        event.id: [video]
+      }),
+      openMedia: (_, asset) {
+        opened = asset.kind == DogMediaKind.sessionVideo;
+        return completed.future;
+      },
+    );
+    await tester.tap(find.byKey(const ValueKey('hunt-replay-play-pause')));
+    replay.advanceBy(const Duration(milliseconds: 100));
+    await tester.pump();
+    await tester.pump();
+
+    expect(opened, isTrue);
+    expect(replay.isPlaying, isFalse);
+    completed.complete();
+    await tester.pump();
+    expect(replay.isPlaying, isTrue);
+  });
+
+  testWidgets('multiple media open in link order and resume after final item',
+      (tester) async {
+    final track = _timedTrack();
+    final event = _event('sequence-event', 1, track);
+    final image = await tester.runAsync(
+      () => _mediaAsset(mediaDirectory, 'first-image', video: false),
+    ) as DogMediaAsset;
+    final video = await tester.runAsync(
+      () => _mediaAsset(mediaDirectory, 'second-video', video: true),
+    ) as DogMediaAsset;
+    final replay = HuntReplayController(track.points);
+    final imageClosed = Completer<void>();
+    final videoCompleted = Completer<void>();
+    final opened = <String>[];
+    await _pump(
+      tester,
+      track,
+      events: [event],
+      replayController: replay,
+      mediaRepository: _ReplayMediaRepository({
+        event.id: [image, video]
+      }),
+      openMedia: (_, asset) {
+        opened.add(asset.mediaId);
+        return asset.mediaId == image.mediaId
+            ? imageClosed.future
+            : videoCompleted.future;
+      },
+    );
+    await tester.tap(find.byKey(const ValueKey('hunt-replay-play-pause')));
+    replay.advanceBy(const Duration(milliseconds: 100));
+    await tester.pump();
+    await tester.pump();
+    expect(opened, [image.mediaId]);
+
+    imageClosed.complete();
+    await tester.pump();
+    expect(opened, [image.mediaId, video.mediaId]);
+    expect(replay.isPlaying, isFalse);
+
+    videoCompleted.complete();
+    await tester.pump();
+    expect(replay.isPlaying, isTrue);
   });
 
   testWidgets('missing media is skipped while event remains visible',
@@ -285,7 +360,51 @@ void main() {
         findsNothing);
   });
 
-  testWidgets('media cancels auto-resume and resumes only when appropriate',
+  testWidgets('trimmed-out event does not auto-present media', (tester) async {
+    final track = _timedTrack();
+    final hiddenEvent = _event('trimmed-media', 0, track);
+    final image = await tester.runAsync(
+      () => _mediaAsset(mediaDirectory, 'trimmed-image', video: false),
+    ) as DogMediaAsset;
+    final edit = SessionTrackEdit(
+      sessionId: 'session',
+      sourceTrackId: track.id,
+      startIndexInclusive: 1,
+      endIndexExclusive: track.points.length,
+      startTimeAnchor: track.points[1].time,
+      endTimeAnchor: track.points.last.time,
+      sourcePointCount: track.points.length,
+      sourceFingerprint: EffectiveTrackResolver.fingerprint(track),
+      createdAt: DateTime.utc(2026),
+      updatedAt: DateTime.utc(2026),
+    );
+    var opened = false;
+    final replay = HuntReplayController(track.points.sublist(1));
+    await _pump(
+      tester,
+      track,
+      trackEdit: edit,
+      events: [hiddenEvent],
+      replayController: replay,
+      mediaRepository: _ReplayMediaRepository({
+        hiddenEvent.id: [image]
+      }),
+      openMedia: (_, __) async {
+        opened = true;
+      },
+    );
+    await tester.tap(find.byKey(const ValueKey('hunt-replay-play-pause')));
+    replay.advanceBy(const Duration(seconds: 2));
+    await tester.pump();
+
+    expect(opened, isFalse);
+    expect(
+      find.byKey(const ValueKey('hunt-replay-event-card-trimmed-media')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('manual pause during automatic media prevents resume',
       (tester) async {
     final track = _timedTrack();
     final event = _event('pause-media', 1, track);
@@ -308,16 +427,13 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('hunt-replay-play-pause')));
     replay.advanceBy(const Duration(milliseconds: 100));
     await tester.pump();
-    await tester
-        .tap(find.byKey(ValueKey('hunt-replay-media-${image.mediaId}')));
-    await tester.pump(const Duration(milliseconds: 150));
+    await tester.pump();
     expect(replay.isPlaying, isFalse);
-    expect(find.byKey(const ValueKey('hunt-replay-event-card-pause-media')),
-        findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('hunt-replay-play-pause')));
 
     viewerClosed.complete();
     await tester.pump();
-    expect(replay.isPlaying, isTrue);
+    expect(replay.isPlaying, isFalse);
     expect(find.byKey(const ValueKey('hunt-replay-event-card-pause-media')),
         findsNothing);
   });
@@ -357,6 +473,7 @@ HuntEvent _event(String id, int index, Track track) => HuntEvent(
 Future<void> _pump(
   WidgetTester tester,
   Track track, {
+  SessionTrackEdit? trackEdit,
   List<HuntEvent> events = const [],
   Duration eventPauseDuration = const Duration(milliseconds: 2500),
   HuntReplayController? replayController,
@@ -371,6 +488,7 @@ Future<void> _pump(
       home: HuntReplayPage(
         key: ValueKey(track.id),
         rawTrack: track,
+        trackEdit: trackEdit,
         events: events,
         tileProvider: _TransparentTileProvider(),
         eventPauseDuration: eventPauseDuration,

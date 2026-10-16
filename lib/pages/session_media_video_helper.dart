@@ -10,6 +10,7 @@ Future<bool> openSessionVideo({
   required BuildContext context,
   required String storedPath,
   String? displayName,
+  bool autoCloseOnCompletion = false,
 }) async {
   final l10n = AppLocalizations.of(context)!;
   final validation = await resolveSessionMediaForOpening(
@@ -40,6 +41,7 @@ Future<bool> openSessionVideo({
         builder: (_) => SessionVideoPlayerPage(
           videoPath: resolved,
           displayName: name,
+          autoCloseOnCompletion: autoCloseOnCompletion,
         ),
       ),
     );
