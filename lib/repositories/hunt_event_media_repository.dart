@@ -165,30 +165,77 @@ class HuntEventMediaRepository {
         'normalizedPath=$normalizedPath',
       );
     }
-    if (remainingReferenceCount != 0) return false;
-    final safeLocalAsset = asset != null &&
-        asset.createdByHuntEventId != null &&
-        asset.createdByHuntEventId!.isNotEmpty &&
-        asset.sessionId != null &&
-        asset.kind != DogMediaKind.profileImage &&
-        asset.syncStatus == DogMediaSyncStatus.localOnly &&
-        asset.storagePath == null &&
-        normalizedPath != null &&
-        normalizedPath.startsWith('media/');
-    if (!safeLocalAsset) return false;
+    if (remainingReferenceCount != 0) {
+      _logRetain(mediaId, 'remaining_event_reference');
+      return false;
+    }
+    if (asset == null) {
+      _logRetain(mediaId, 'asset_not_found');
+      return false;
+    }
+    if (asset.createdByHuntEventId == null ||
+        asset.createdByHuntEventId!.isEmpty) {
+      _logRetain(mediaId, 'no_hunt_event_provenance');
+      return false;
+    }
+    if (asset.kind == DogMediaKind.profileImage) {
+      _logRetain(mediaId, 'profile_media');
+      return false;
+    }
+    if (asset.storagePath != null) {
+      _logRetain(mediaId, 'cloud_backed');
+      return false;
+    }
+    if (asset.syncStatus != DogMediaSyncStatus.localOnly) {
+      _logRetain(mediaId, 'not_local_only');
+      return false;
+    }
+    if (asset.sessionId == null || asset.sessionId!.isEmpty) {
+      _logRetain(mediaId, 'session_not_found');
+      return false;
+    }
+    if (normalizedPath == null || !normalizedPath.startsWith('media/')) {
+      _logRetain(mediaId, 'unsafe_local_path');
+      return false;
+    }
+
+    for (final candidate in _media.values) {
+      if (candidate.mediaId == mediaId ||
+          candidate.status != DogMediaStatus.active ||
+          candidate.localPath == null) {
+        continue;
+      }
+      final candidatePath =
+          (await MediaStorage.normalizeMediaPaths([candidate.localPath!]))
+              .single;
+      if (candidatePath == normalizedPath) {
+        _logRetain(mediaId, 'other_asset_reference');
+        return false;
+      }
+    }
 
     final matchingSessions = <MapEntry<dynamic, HuntSession>>[];
+    var sessionFound = false;
     for (final entry in _sessions.toMap().entries) {
       final session = entry.value;
       if (session.sessionId != asset.sessionId &&
           entry.key.toString() != asset.sessionId) {
         continue;
       }
+      sessionFound = true;
       final normalizedSessionPaths =
           await MediaStorage.normalizeMediaPaths(session.mediaPaths);
       if (normalizedSessionPaths.contains(normalizedPath)) {
         matchingSessions.add(entry);
       }
+    }
+    if (!sessionFound) {
+      _logRetain(mediaId, 'session_not_found');
+      return false;
+    }
+    if (matchingSessions.isEmpty) {
+      _logRetain(mediaId, 'session_path_not_found');
+      return false;
     }
     for (final entry in matchingSessions) {
       final before = entry.value.mediaPaths;
@@ -247,10 +294,19 @@ class HuntEventMediaRepository {
       debugPrint(
         '[HUNT_EVENT_MEDIA][cleanup-result] eventId=${huntEventId ?? ''} '
         'mediaId=$mediaId assetRemoved=${_media.get(mediaId) == null} '
-        'fileRemoved=$fileRemoved',
+        'fileRemoved=$fileRemoved decision=delete',
       );
     }
     return true;
+  }
+
+  void _logRetain(String mediaId, String reason) {
+    if (kDebugMode) {
+      debugPrint(
+        '[HUNT_EVENT_MEDIA][cleanup-result] mediaId=$mediaId '
+        'decision=retain retain_reason=$reason',
+      );
+    }
   }
 
   Future<void> deleteLinksForEvent(String huntEventId) async {

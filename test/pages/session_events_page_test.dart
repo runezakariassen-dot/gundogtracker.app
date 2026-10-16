@@ -13,12 +13,14 @@ import 'package:jakthund_app/data/hive_path_service.dart';
 import 'package:jakthund_app/domain/domain_bootstrap.dart';
 import 'package:jakthund_app/l10n/app_localizations.dart';
 import 'package:jakthund_app/models/gps_point.dart';
+import 'package:jakthund_app/models/dog_media_asset.dart';
 import 'package:jakthund_app/models/hunt_event.dart';
 import 'package:jakthund_app/models/hunt_session.dart';
 import 'package:jakthund_app/models/session_track_edit.dart';
 import 'package:jakthund_app/models/track.dart';
 import 'package:jakthund_app/pages/session_events_page.dart';
 import 'package:jakthund_app/repositories/hunt_event_repository.dart';
+import 'package:jakthund_app/services/media_storage.dart';
 import 'package:jakthund_app/services/effective_track_resolver.dart';
 import 'package:jakthund_app/services/hive_lifecycle_service.dart';
 
@@ -33,6 +35,7 @@ void main() {
     final temp = await Directory.systemTemp.createTemp('session_events_');
     tempPath = temp.path;
     HivePathService.setOverridePathForTesting(tempPath);
+    MediaStorage.setDocumentsDirectoryForTesting(tempPath);
     HiveLifecycleService.resetForTesting();
     await HivePathService.init();
     registerDomainAdapters();
@@ -87,6 +90,7 @@ void main() {
     await Hive.close();
     HiveLifecycleService.resetForTesting();
     HivePathService.setOverridePathForTesting(null);
+    MediaStorage.setDocumentsDirectoryForTesting(null);
     final directory = Directory(tempPath);
     if (await directory.exists()) await directory.delete(recursive: true);
   });
@@ -377,6 +381,219 @@ void main() {
     expect(repository.listForSession('session-1'), isEmpty);
     expect(repository.getById(event.id)!.isDeleted, isTrue);
   });
+
+  testWidgets(
+      'production editor import persists provenance and removes final media',
+      (tester) async {
+    final persistedRepository = HuntEventRepository(enableSync: false);
+    final source = File('$tempPath/new-event-image.png');
+    await tester.runAsync(
+      () => source.writeAsBytes(TileProvider.transparentImage),
+    );
+
+    await _pump(
+      tester,
+      canEdit: true,
+      repository: persistedRepository,
+      session: session,
+      pickMedia: (_) async => source.path,
+    );
+    await _openCreateEditor(tester);
+    await _scrollEditorToBottom(tester);
+    final saveEvent = tester
+        .widget<FilledButton>(
+          find.byKey(const ValueKey('save-hunt-event')),
+        )
+        .onPressed!;
+    final addImage = find.byKey(const ValueKey('add-hunt-event-image'));
+    await tester.ensureVisible(addImage);
+    final addImageCallback = tester.widget<OutlinedButton>(addImage).onPressed!;
+    await tester.runAsync(
+      () => _waitForAsyncOperation(
+        addImageCallback,
+        () => huntEventMediaLinksBox().isNotEmpty,
+      ),
+    );
+    await tester.pump();
+    await tester.runAsync(
+      () => _waitForAsyncOperation(saveEvent, () => huntEventsBox().isNotEmpty),
+    );
+    await _pumpRoute(tester);
+
+    final event = huntEventsBox().values.single;
+    final link = huntEventMediaLinksBox().values.single;
+    final asset = dogMediaAssetsBox().get(link.mediaId)!;
+    final storedSession = sessionsBox().get(0)!;
+    final normalizedAfterAdd =
+        await MediaStorage.normalizeMediaPaths(storedSession.mediaPaths);
+
+    expect(link.huntEventId, event.id);
+    expect(asset.mediaId, link.mediaId);
+    expect(asset.createdByHuntEventId, event.id);
+    expect(asset.sessionId, session.sessionId);
+    expect(normalizedAfterAdd, hasLength(1));
+    expect(normalizedAfterAdd.single, asset.localPath);
+    final persistedFile = File(
+      (await MediaStorage.resolveMediaPath(asset.localPath!))!,
+    );
+    expect(await tester.runAsync(persistedFile.exists), isTrue);
+
+    await tester.tap(find.byKey(ValueKey('hunt-event-${event.id}')));
+    await _pumpRoute(tester);
+    await _scrollEditorToBottom(tester);
+    final saveRemoval = tester
+        .widget<FilledButton>(
+          find.byKey(const ValueKey('save-hunt-event')),
+        )
+        .onPressed!;
+    await tester.tap(
+      find.byKey(ValueKey('unlink-hunt-event-media-${asset.mediaId}')),
+    );
+    await tester.runAsync(
+      () => _waitForAsyncOperation(
+        saveRemoval,
+        () =>
+            huntEventMediaLinksBox().isEmpty &&
+            dogMediaAssetsBox().get(asset.mediaId) == null,
+      ),
+    );
+    await _pumpRoute(tester);
+
+    expect(huntEventMediaLinksBox().values, isEmpty);
+    expect(dogMediaAssetsBox().get(asset.mediaId), isNull);
+    expect(sessionsBox().get(0)!.mediaPaths, isEmpty);
+    expect(await tester.runAsync(persistedFile.exists), isFalse);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.runAsync(() async {
+      await Hive.close();
+      HiveLifecycleService.resetForTesting();
+      await HivePathService.init();
+      registerDomainAdapters();
+      await HiveLifecycleService.init();
+    });
+
+    expect(huntEventMediaLinksBox().values, isEmpty);
+    expect(dogMediaAssetsBox().get(asset.mediaId), isNull);
+    expect(sessionsBox().get(0)!.mediaPaths, isEmpty);
+    expect(await tester.runAsync(persistedFile.exists), isFalse);
+  });
+
+  testWidgets(
+      'direct import repairs orphan provenance but session choice does not',
+      (tester) async {
+    const canonicalPath =
+        'media/dogs/dog-1/sessions/session-1/reused-image.png';
+    final canonicalFile = File('$tempPath/$canonicalPath');
+    await tester.runAsync(() async {
+      await canonicalFile.parent.create(recursive: true);
+      await canonicalFile.writeAsBytes(TileProvider.transparentImage);
+    });
+    final orphan = DogMediaAsset(
+      mediaId: 'orphan-media',
+      dogCloudId: 'dog-1',
+      dogKey: 'DOG-1',
+      sessionId: 'session-1',
+      kind: DogMediaKind.sessionImage,
+      localPath: canonicalPath,
+      status: DogMediaStatus.active,
+      syncStatus: DogMediaSyncStatus.localOnly,
+      createdAt: DateTime.utc(2026),
+    );
+    await tester.runAsync(
+      () => dogMediaAssetsBox().put(orphan.mediaId, orphan),
+    );
+    final persistedRepository = HuntEventRepository(enableSync: false);
+
+    await _pump(
+      tester,
+      canEdit: true,
+      repository: persistedRepository,
+      session: session,
+      pickMedia: (_) async => canonicalPath,
+    );
+    await _openCreateEditor(tester);
+    await _scrollEditorToBottom(tester);
+    final saveFirstEvent = tester
+        .widget<FilledButton>(
+          find.byKey(const ValueKey('save-hunt-event')),
+        )
+        .onPressed!;
+    final addImage = find.byKey(const ValueKey('add-hunt-event-image'));
+    await tester.ensureVisible(addImage);
+    final addImageCallback = tester.widget<OutlinedButton>(addImage).onPressed!;
+    await tester.runAsync(
+      () => _waitForAsyncOperation(
+        addImageCallback,
+        () =>
+            dogMediaAssetsBox()
+                .get(orphan.mediaId)
+                ?.createdByHuntEventId
+                ?.isNotEmpty ==
+            true,
+      ),
+    );
+    await tester.pump();
+
+    final repaired = dogMediaAssetsBox().get(orphan.mediaId)!;
+    expect(repaired.createdByHuntEventId, isNotNull);
+
+    await tester.runAsync(
+      () => _waitForAsyncOperation(
+        saveFirstEvent,
+        () => huntEventsBox().isNotEmpty,
+      ),
+    );
+    await _pumpRoute(tester);
+    final firstEvent = huntEventsBox().values.single;
+    expect(repaired.createdByHuntEventId, firstEvent.id);
+
+    const preExistingPath =
+        'media/dogs/dog-1/sessions/session-1/pre-existing.png';
+    final preExistingFile = File('$tempPath/$preExistingPath');
+    await tester.runAsync(
+      () => preExistingFile.writeAsBytes(TileProvider.transparentImage),
+    );
+    final preExisting = DogMediaAsset(
+      mediaId: 'pre-existing-media',
+      dogCloudId: 'dog-1',
+      dogKey: 'DOG-1',
+      sessionId: 'session-1',
+      kind: DogMediaKind.sessionImage,
+      localPath: preExistingPath,
+      status: DogMediaStatus.active,
+      syncStatus: DogMediaSyncStatus.localOnly,
+      createdAt: DateTime.utc(2026),
+    );
+    await tester.runAsync(
+      () => dogMediaAssetsBox().put(preExisting.mediaId, preExisting),
+    );
+    final sessionWithExisting =
+        sessionsBox().get(0)!.copyWith(mediaPaths: <String>[preExistingPath]);
+    await tester.runAsync(() => sessionsBox().put(0, sessionWithExisting));
+
+    await _pump(
+      tester,
+      canEdit: true,
+      repository: persistedRepository,
+      session: sessionWithExisting,
+    );
+    await _openCreateEditor(tester);
+    await _scrollEditorToBottom(tester);
+    tester
+        .widget<OutlinedButton>(
+          find.byKey(const ValueKey('choose-hunt-event-session-media')),
+        )
+        .onPressed!();
+    await _pumpRoute(tester);
+    await tester.tap(find.text('pre-existing.png'));
+    await _pumpRoute(tester);
+
+    expect(
+      dogMediaAssetsBox().get(preExisting.mediaId)!.createdByHuntEventId,
+      isNull,
+    );
+  });
 }
 
 HuntEvent _event(GpsPoint point) => HuntEvent(
@@ -399,6 +616,7 @@ Future<void> _pump(
   required bool canEdit,
   required HuntEventRepository repository,
   required HuntSession session,
+  Future<String?> Function(bool video)? pickMedia,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
@@ -412,6 +630,7 @@ Future<void> _pump(
         repository: repository,
         currentUserId: () => 'owner',
         eventMapTileProvider: _TransparentTileProvider(),
+        pickMedia: pickMedia,
       ),
     ),
   );
@@ -427,6 +646,20 @@ class _TransparentTileProvider extends TileProvider {
 Future<void> _pumpRoute(WidgetTester tester) async {
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 500));
+}
+
+Future<void> _waitForAsyncOperation(
+  VoidCallback start,
+  bool Function() condition,
+) async {
+  start();
+  for (var attempt = 0; attempt < 250 && !condition(); attempt++) {
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+  }
+  expect(condition(), isTrue);
+  // The observable persistence condition can become true just before the
+  // editor's async callback reaches its final setState.
+  await Future<void>.delayed(const Duration(milliseconds: 50));
 }
 
 void _expectSelectedTime(WidgetTester tester, GpsPoint point) {

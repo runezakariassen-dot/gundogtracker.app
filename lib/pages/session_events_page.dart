@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -40,6 +41,7 @@ class SessionEventsPage extends StatefulWidget {
     this.currentUserId,
     this.eventMapTileProvider,
     this.mediaRepository,
+    this.pickMedia,
   });
 
   final Object sessionKey;
@@ -49,6 +51,7 @@ class SessionEventsPage extends StatefulWidget {
   final String Function()? currentUserId;
   final TileProvider? eventMapTileProvider;
   final HuntEventMediaRepository? mediaRepository;
+  final Future<String?> Function(bool video)? pickMedia;
 
   @override
   State<SessionEventsPage> createState() => _SessionEventsPageState();
@@ -98,6 +101,7 @@ class _SessionEventsPageState extends State<SessionEventsPage> {
           currentUserId: widget.currentUserId,
           mapTileProvider: widget.eventMapTileProvider,
           mediaRepository: _mediaRepository,
+          pickMedia: widget.pickMedia,
         ),
       ),
     );
@@ -361,21 +365,41 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
           canonicalPath,
         );
       }
+      final pathWasAlreadyInSession =
+          await _sessionContainsCanonicalPath(canonicalPath);
       stage = 'hunt_event_media.asset';
       final asset = await _canonicalAssetForPath(
         canonicalPath,
         video: video,
         createdByEvent: true,
+        pathWasAlreadyInSession: pathWasAlreadyInSession,
       );
       stage = 'hunt_event_media.session_append';
       await _appendPathToSession(canonicalPath);
       if (_eventMedia.any((item) => item.mediaId == asset.mediaId)) return;
       stage = 'hunt_event_media.link';
-      await _mediaRepository.link(
+      final link = await _mediaRepository.link(
         huntEventId: _eventId,
         mediaId: asset.mediaId,
         sortOrder: _eventMedia.length,
       );
+      if (kDebugMode) {
+        final sessionEntry = sessionsBox().toMap().entries.firstWhere(
+              (entry) =>
+                  entry.value.sessionId == widget.sessionId ||
+                  entry.key.toString() == widget.sessionId,
+            );
+        final persistedAsset = dogMediaAssetsBox().get(asset.mediaId);
+        debugPrint(
+          '[HUNT_EVENT_MEDIA][add-result] eventId=$_eventId '
+          'linkId=${link.id} linkEventId=${link.huntEventId} '
+          'mediaId=${link.mediaId} assetMediaId=${persistedAsset?.mediaId} '
+          'createdByHuntEventId=${persistedAsset?.createdByHuntEventId} '
+          'sessionId=${sessionEntry.value.sessionId} '
+          'sessionHiveKey=${sessionEntry.key} '
+          'mediaPaths=${sessionEntry.value.mediaPaths}',
+        );
+      }
       _linksCreatedByEditor.add(asset.mediaId);
       _removedMediaIds.remove(asset.mediaId);
       stage = 'hunt_event_media.preview';
@@ -431,7 +455,11 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
           entry.key.toString() != widget.sessionId) {
         continue;
       }
-      if (entry.value.mediaPaths.contains(path)) return;
+      final normalizedPaths =
+          await MediaStorage.normalizeMediaPaths(entry.value.mediaPaths);
+      final normalizedPath =
+          (await MediaStorage.normalizeMediaPaths([path])).single;
+      if (normalizedPaths.contains(normalizedPath)) return;
       await sessionsBox().put(
         entry.key,
         entry.value.copyWith(mediaPaths: [...entry.value.mediaPaths, path]),
@@ -440,13 +468,40 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
     }
   }
 
+  Future<bool> _sessionContainsCanonicalPath(String path) async {
+    final normalizedPath =
+        (await MediaStorage.normalizeMediaPaths([path])).single;
+    for (final entry in sessionsBox().toMap().entries) {
+      final sessionId = entry.value.sessionId?.trim();
+      if (sessionId != widget.sessionId &&
+          entry.key.toString() != widget.sessionId) {
+        continue;
+      }
+      final normalizedPaths =
+          await MediaStorage.normalizeMediaPaths(entry.value.mediaPaths);
+      return normalizedPaths.contains(normalizedPath);
+    }
+    return false;
+  }
+
   Future<DogMediaAsset> _canonicalAssetForPath(
     String path, {
     required bool video,
     required bool createdByEvent,
+    bool pathWasAlreadyInSession = false,
   }) async {
     for (final asset in dogMediaAssetsBox().values) {
       if (asset.sessionId == widget.sessionId && asset.localPath == path) {
+        if (createdByEvent &&
+            !pathWasAlreadyInSession &&
+            (asset.createdByHuntEventId == null ||
+                asset.createdByHuntEventId!.isEmpty)) {
+          final eventOwnedAsset = asset.copyWith(
+            createdByHuntEventId: _eventId,
+          );
+          await dogMediaAssetsBox().put(asset.mediaId, eventOwnedAsset);
+          return eventOwnedAsset;
+        }
         return asset;
       }
     }
