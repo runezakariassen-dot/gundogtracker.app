@@ -3919,6 +3919,9 @@ class AppLocalizationsDa extends AppLocalizations {
   String get hunt_event_media_open_error => 'Mediet kunne ikke åbnes';
 
   @override
+  String get hunt_event_media_add_error => 'Mediet kunne ikke tilføjes';
+
+  @override
   String get hunt_replay_open => 'Afspil jagt';
 
   @override

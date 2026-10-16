@@ -2338,6 +2338,7 @@
   "hunt_event_media_choose_session": "Välj från passet",
   "hunt_event_media_remove": "Ta bort från händelsen",
   "hunt_event_media_open_error": "Det gick inte att öppna mediet",
+  "hunt_event_media_add_error": "Det gick inte att lägga till mediet",
   "hunt_replay_open": "Spela upp jakt",
   "hunt_replay_title": "Jaktuppspelning",
   "hunt_replay_play": "Spela upp",

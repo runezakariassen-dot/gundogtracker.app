@@ -4,12 +4,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:jakthund_app/models/dog_media_asset.dart';
 import 'package:jakthund_app/models/hunt_event_media_link.dart';
+import 'package:jakthund_app/models/hunt_session.dart';
+import 'package:jakthund_app/models/session_type_adapter.dart';
 import 'package:jakthund_app/repositories/hunt_event_media_repository.dart';
+import 'package:jakthund_app/services/media_storage.dart';
 
 void main() {
   late Directory tempDirectory;
   late Box<HuntEventMediaLink> linkBox;
   late Box<DogMediaAsset> mediaBox;
+  late Box<HuntSession> sessionBox;
   late HuntEventMediaRepository repository;
 
   setUp(() async {
@@ -21,15 +25,25 @@ void main() {
     if (!Hive.isAdapterRegistered(49)) {
       Hive.registerAdapter(DogMediaAssetAdapter());
     }
+    if (!Hive.isAdapterRegistered(1)) {
+      Hive.registerAdapter(HuntSessionAdapter());
+    }
+    if (!Hive.isAdapterRegistered(17)) {
+      Hive.registerAdapter(SessionTypeAdapter());
+    }
     linkBox = await Hive.openBox<HuntEventMediaLink>('links');
     mediaBox = await Hive.openBox<DogMediaAsset>('media');
+    sessionBox = await Hive.openBox<HuntSession>('sessions');
+    MediaStorage.setDocumentsDirectoryForTesting(tempDirectory.path);
     repository = HuntEventMediaRepository(
       linkBox: linkBox,
       mediaBox: mediaBox,
+      sessionBox: sessionBox,
     );
   });
 
   tearDown(() async {
+    MediaStorage.setDocumentsDirectoryForTesting(null);
     await Hive.close();
     await tempDirectory.delete(recursive: true);
   });
@@ -240,12 +254,96 @@ void main() {
 
     expect(mediaBox.toMap(), before);
   });
+
+  test('last link deletes event-created local session media', () async {
+    final asset = _asset(
+      'event-photo',
+      DogMediaKind.sessionImage,
+      createdByHuntEventId: 'event-a',
+    );
+    final file = File('${tempDirectory.path}/${asset.localPath!}');
+    await file.parent.create(recursive: true);
+    await file.writeAsBytes([1, 2, 3]);
+    await mediaBox.put(asset.mediaId, asset);
+    await sessionBox.put('session', _session([asset.localPath!]));
+    await repository.link(huntEventId: 'event-a', mediaId: asset.mediaId);
+
+    await repository.unlink('event-a', asset.mediaId);
+    expect(
+      await repository.deleteEventCreatedMediaIfUnreferenced(asset.mediaId),
+      isTrue,
+    );
+
+    expect(mediaBox.get(asset.mediaId), isNull);
+    expect(sessionBox.get('session')!.mediaPaths, isEmpty);
+    expect(await file.exists(), isFalse);
+  });
+
+  test('another event link retains asset session path and file', () async {
+    final asset = _asset(
+      'shared-photo',
+      DogMediaKind.sessionImage,
+      createdByHuntEventId: 'event-a',
+    );
+    final file = File('${tempDirectory.path}/${asset.localPath!}');
+    await file.parent.create(recursive: true);
+    await file.writeAsBytes([1]);
+    await mediaBox.put(asset.mediaId, asset);
+    await sessionBox.put('session', _session([asset.localPath!]));
+    await repository.link(huntEventId: 'event-a', mediaId: asset.mediaId);
+    await repository.link(huntEventId: 'event-b', mediaId: asset.mediaId);
+
+    await repository.unlink('event-a', asset.mediaId);
+    expect(
+      await repository.deleteEventCreatedMediaIfUnreferenced(asset.mediaId),
+      isFalse,
+    );
+    expect(mediaBox.get(asset.mediaId), isNotNull);
+    expect(sessionBox.get('session')!.mediaPaths, [asset.localPath]);
+    expect(await file.exists(), isTrue);
+
+    await repository.unlink('event-b', asset.mediaId);
+    expect(
+      await repository.deleteEventCreatedMediaIfUnreferenced(asset.mediaId),
+      isTrue,
+    );
+    expect(mediaBox.get(asset.mediaId), isNull);
+  });
+
+  test('unrelated session and profile media are never deleted', () async {
+    final unrelated = _asset('unrelated', DogMediaKind.sessionImage);
+    final profile = _asset(
+      'profile',
+      DogMediaKind.profileImage,
+      createdByHuntEventId: 'event-a',
+    );
+    await mediaBox.putAll({
+      unrelated.mediaId: unrelated,
+      profile.mediaId: profile,
+    });
+    await sessionBox.put('session', _session([unrelated.localPath!]));
+
+    expect(
+      await repository.deleteEventCreatedMediaIfUnreferenced(
+        unrelated.mediaId,
+      ),
+      isFalse,
+    );
+    expect(
+      await repository.deleteEventCreatedMediaIfUnreferenced(profile.mediaId),
+      isFalse,
+    );
+    expect(mediaBox.get(unrelated.mediaId), isNotNull);
+    expect(mediaBox.get(profile.mediaId), isNotNull);
+    expect(sessionBox.get('session')!.mediaPaths, [unrelated.localPath]);
+  });
 }
 
 DogMediaAsset _asset(
   String id,
   DogMediaKind kind, {
   DogMediaStatus status = DogMediaStatus.active,
+  String? createdByHuntEventId,
 }) {
   return DogMediaAsset(
     mediaId: id,
@@ -253,9 +351,23 @@ DogMediaAsset _asset(
     dogKey: 'DOG',
     sessionId: 'session',
     kind: kind,
-    localPath: 'media/$id',
+    localPath: 'media/dogs/dog/sessions/session/$id',
     status: status,
     syncStatus: DogMediaSyncStatus.localOnly,
     createdAt: DateTime.utc(2026),
+    createdByHuntEventId: createdByHuntEventId,
   );
 }
+
+HuntSession _session(List<String> mediaPaths) => HuntSession(
+      dogId: 'dog',
+      sessionId: 'session',
+      dateTime: DateTime.utc(2026),
+      location: '',
+      durationMinutes: 1,
+      birdsSeen: 0,
+      points: 0,
+      flushes: 0,
+      notes: '',
+      mediaPaths: mediaPaths,
+    );

@@ -4,19 +4,25 @@ import 'package:uuid/uuid.dart';
 import '../data/hive_boxes.dart';
 import '../models/dog_media_asset.dart';
 import '../models/hunt_event_media_link.dart';
+import '../models/hunt_session.dart';
+import '../services/media_storage.dart';
 
 class HuntEventMediaRepository {
   HuntEventMediaRepository({
     Box<HuntEventMediaLink>? linkBox,
     Box<DogMediaAsset>? mediaBox,
+    Box<HuntSession>? sessionBox,
   })  : _linkBox = linkBox,
-        _mediaBox = mediaBox;
+        _mediaBox = mediaBox,
+        _sessionBox = sessionBox;
 
   final Box<HuntEventMediaLink>? _linkBox;
   final Box<DogMediaAsset>? _mediaBox;
+  final Box<HuntSession>? _sessionBox;
 
   Box<HuntEventMediaLink> get _links => _linkBox ?? huntEventMediaLinksBox();
   Box<DogMediaAsset> get _media => _mediaBox ?? dogMediaAssetsBox();
+  Box<HuntSession> get _sessions => _sessionBox ?? sessionsBox();
 
   List<HuntEventMediaLink> linksForEvent(String eventId) {
     final links = _links.values
@@ -120,6 +126,59 @@ class HuntEventMediaRepository {
         .map((entry) => entry.key)
         .toList(growable: false);
     await _links.deleteAll(keys);
+  }
+
+  bool isReferenced(String mediaId) =>
+      _links.values.any((link) => link.mediaId == mediaId);
+
+  /// Removes local media created through a HuntEvent after its final event
+  /// link is gone. Existing session media, profile media, and cloud-backed
+  /// assets are deliberately retained.
+  Future<bool> deleteEventCreatedMediaIfUnreferenced(String mediaId) async {
+    if (isReferenced(mediaId)) return false;
+    final asset = _media.get(mediaId);
+    final path = asset?.localPath;
+    final safeLocalAsset = asset != null &&
+        asset.createdByHuntEventId != null &&
+        asset.createdByHuntEventId!.isNotEmpty &&
+        asset.sessionId != null &&
+        asset.kind != DogMediaKind.profileImage &&
+        asset.syncStatus == DogMediaSyncStatus.localOnly &&
+        asset.storagePath == null &&
+        path != null &&
+        path.startsWith('media/');
+    if (!safeLocalAsset) return false;
+
+    final matchingSessions = _sessions.toMap().entries.where((entry) {
+      final session = entry.value;
+      return (session.sessionId == asset.sessionId ||
+              entry.key.toString() == asset.sessionId) &&
+          session.mediaPaths.contains(path);
+    }).toList(growable: false);
+    for (final entry in matchingSessions) {
+      await _sessions.put(
+        entry.key,
+        entry.value.copyWith(
+          mediaPaths: entry.value.mediaPaths
+              .where((candidate) => candidate != path)
+              .toList(growable: false),
+        ),
+      );
+    }
+
+    await _media.delete(mediaId);
+
+    final pathStillReferencedBySession =
+        _sessions.values.any((session) => session.mediaPaths.contains(path));
+    final pathStillReferencedByAsset = _media.values.any(
+      (candidate) =>
+          candidate.status == DogMediaStatus.active &&
+          candidate.localPath == path,
+    );
+    if (!pathStillReferencedBySession && !pathStillReferencedByAsset) {
+      await MediaStorage.deletePersistedMedia(path);
+    }
+    return true;
   }
 
   Future<void> deleteLinksForEvent(String huntEventId) async {

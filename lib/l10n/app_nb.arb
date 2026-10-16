@@ -2151,6 +2151,7 @@
   "hunt_event_media_choose_session": "Velg fra økten",
   "hunt_event_media_remove": "Fjern fra hendelsen",
   "hunt_event_media_open_error": "Kunne ikke åpne mediet",
+  "hunt_event_media_add_error": "Kunne ikke legge til mediet",
   "hunt_replay_open": "Spill av jakt",
   "hunt_replay_title": "Jaktavspilling",
   "hunt_replay_play": "Spill av",

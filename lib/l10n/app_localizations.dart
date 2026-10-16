@@ -7107,6 +7107,12 @@ abstract class AppLocalizations {
   /// **'Could not open media'**
   String get hunt_event_media_open_error;
 
+  /// No description provided for @hunt_event_media_add_error.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not add media'**
+  String get hunt_event_media_add_error;
+
   /// No description provided for @hunt_replay_open.
   ///
   /// In en, this message translates to:

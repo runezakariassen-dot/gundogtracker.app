@@ -3919,6 +3919,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hunt_event_media_open_error => 'Could not open media';
 
   @override
+  String get hunt_event_media_add_error => 'Could not add media';
+
+  @override
   String get hunt_replay_open => 'Replay hunt';
 
   @override

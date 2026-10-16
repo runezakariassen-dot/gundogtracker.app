@@ -64,6 +64,7 @@ void main() {
       notes: '',
       trackId: track.id,
     );
+    await sessionsBox().put(0, session);
     await tracksBox().put(track.id, track);
     await sessionTrackEditsBox().put(
       session.sessionId,

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -236,6 +237,9 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
   late final String _eventId;
   late final HuntEventMediaRepository _mediaRepository;
   late final List<DogMediaAsset> _eventMedia;
+  final Set<String> _removedMediaIds = <String>{};
+  final Set<String> _linksCreatedByEditor = <String>{};
+  bool _saved = false;
   final ImagePicker _imagePicker = ImagePicker();
   bool _addingMedia = false;
 
@@ -248,7 +252,9 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
     );
     _eventId = widget.event?.id ?? const Uuid().v4();
     _mediaRepository = widget.mediaRepository ?? HuntEventMediaRepository();
-    _eventMedia = _mediaRepository.mediaForEvent(_eventId);
+    _eventMedia = List<DogMediaAsset>.of(
+      _mediaRepository.mediaForEvent(_eventId),
+    );
     _type = widget.event?.type ?? HuntEventType.stand;
     if (_selection.points.isEmpty) {
       _index = 0;
@@ -303,6 +309,10 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
         _eventId,
         _eventMedia.map((asset) => asset.mediaId),
       );
+      for (final mediaId in _removedMediaIds) {
+        await _mediaRepository.deleteEventCreatedMediaIfUnreferenced(mediaId);
+      }
+      _saved = true;
       if (mounted) Navigator.pop(context);
     } catch (_) {
       if (!mounted) return;
@@ -322,7 +332,7 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
   Future<void> _addMedia({required bool video}) async {
     if (!widget.canEdit || _addingMedia) return;
     setState(() => _addingMedia = true);
-    var stage = 'picker';
+    var stage = 'hunt_event_media.pick';
     String? sourcePath;
     String? canonicalPath;
     try {
@@ -339,12 +349,13 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
         sourcePath = picked.path;
       }
       if (sourcePath == null || sourcePath.trim().isEmpty) return;
-      stage = 'persist';
+      stage = 'hunt_event_media.persist';
       canonicalPath = await MediaStorage.ensurePickedMediaPersisted(
         dogId: widget.session.dogId,
         sessionId: widget.sessionId,
         sourcePath: sourcePath,
       );
+      stage = 'hunt_event_media.resolve';
       final persisted =
           await MediaStorage.validatePersistedMedia(canonicalPath);
       if (persisted?.exists != true || persisted!.length <= 0) {
@@ -353,22 +364,38 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
           canonicalPath,
         );
       }
-      stage = 'session-path';
+      stage = 'hunt_event_media.asset';
+      final asset = await _canonicalAssetForPath(
+        canonicalPath,
+        video: video,
+        createdByEvent: true,
+      );
+      stage = 'hunt_event_media.session_append';
       await _appendPathToSession(canonicalPath);
-      stage = 'canonical-asset';
-      final asset = await _canonicalAssetForPath(canonicalPath, video: video);
       if (_eventMedia.any((item) => item.mediaId == asset.mediaId)) return;
-      stage = 'preview';
+      stage = 'hunt_event_media.link';
+      await _mediaRepository.link(
+        huntEventId: _eventId,
+        mediaId: asset.mediaId,
+        sortOrder: _eventMedia.length,
+      );
+      _linksCreatedByEditor.add(asset.mediaId);
+      _removedMediaIds.remove(asset.mediaId);
+      stage = 'hunt_event_media.preview';
       if (mounted) {
         setState(() => _eventMedia.add(asset));
       }
     } catch (error, stackTrace) {
       final sourceValidation = await _safeMediaValidation(sourcePath);
       final canonicalValidation = await _safeMediaValidation(canonicalPath);
+      final resolvedPath = canonicalValidation?.resolvedPath;
       debugPrint(
         '[HUNT_EVENT_MEDIA][FAIL] stage=$stage video=$video '
         'source=$sourcePath sourceExists=${sourceValidation?.exists} '
         'sourceSize=${sourceValidation?.length} canonical=$canonicalPath '
+        'resolved=$resolvedPath '
+        'sourceExtension=${p.extension(sourcePath ?? '').toLowerCase()} '
+        'canonicalExtension=${p.extension(canonicalPath ?? '').toLowerCase()} '
         'canonicalExists=${canonicalValidation?.exists} '
         'canonicalSize=${canonicalValidation?.length} '
         'sessionsOpen=${Hive.isBoxOpen(sessionsBoxName)} '
@@ -381,7 +408,7 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context)!.hunt_event_media_open_error,
+              AppLocalizations.of(context)!.hunt_event_media_add_error,
             ),
           ),
         );
@@ -419,6 +446,7 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
   Future<DogMediaAsset> _canonicalAssetForPath(
     String path, {
     required bool video,
+    required bool createdByEvent,
   }) async {
     for (final asset in dogMediaAssetsBox().values) {
       if (asset.sessionId == widget.sessionId && asset.localPath == path) {
@@ -446,6 +474,7 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
       syncStatus: DogMediaSyncStatus.localOnly,
       createdByUid: (widget.currentUserId ?? _currentUserId)(),
       createdAt: DateTime.now().toUtc(),
+      createdByHuntEventId: createdByEvent ? _eventId : null,
     );
     await dogMediaAssetsBox().put(asset.mediaId, asset);
     return asset;
@@ -457,6 +486,7 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
       final asset = await _canonicalAssetForPath(
         path,
         video: _isVideo(path),
+        createdByEvent: false,
       );
       if (!_eventMedia.any((item) => item.mediaId == asset.mediaId)) {
         choices.add(asset);
@@ -485,8 +515,18 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
       ),
     );
     if (selected != null && mounted) {
-      setState(() => _eventMedia.add(selected));
+      setState(() {
+        _removedMediaIds.remove(selected.mediaId);
+        _eventMedia.add(selected);
+      });
     }
+  }
+
+  void _removeMedia(DogMediaAsset asset) {
+    setState(() {
+      _eventMedia.remove(asset);
+      _removedMediaIds.add(asset.mediaId);
+    });
   }
 
   bool _isVideo(String path) {
@@ -563,8 +603,7 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
                             'unlink-hunt-event-media-${asset.mediaId}',
                           ),
                           tooltip: l10n.hunt_event_media_remove,
-                          onPressed: () =>
-                              setState(() => _eventMedia.remove(asset)),
+                          onPressed: () => _removeMedia(asset),
                           icon: const Icon(Icons.close, size: 18),
                         ),
                       ),
@@ -607,9 +646,19 @@ class _HuntEventEditPageState extends State<HuntEventEditPage> {
 
   @override
   void dispose() {
+    if (!_saved && _linksCreatedByEditor.isNotEmpty) {
+      unawaited(_rollbackUnsavedMedia());
+    }
     _species.dispose();
     _note.dispose();
     super.dispose();
+  }
+
+  Future<void> _rollbackUnsavedMedia() async {
+    for (final mediaId in _linksCreatedByEditor) {
+      await _mediaRepository.unlink(_eventId, mediaId);
+      await _mediaRepository.deleteEventCreatedMediaIfUnreferenced(mediaId);
+    }
   }
 
   @override

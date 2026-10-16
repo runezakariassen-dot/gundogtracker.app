@@ -42,6 +42,7 @@ class DogMediaAsset {
     this.createdByUid,
     this.updatedAt,
     this.deletedAt,
+    this.createdByHuntEventId,
   });
 
   final String mediaId;
@@ -61,6 +62,7 @@ class DogMediaAsset {
   final DateTime createdAt;
   final DateTime? updatedAt;
   final DateTime? deletedAt;
+  final String? createdByHuntEventId;
 
   DogMediaAsset copyWith({
     String? mediaId,
@@ -80,6 +82,7 @@ class DogMediaAsset {
     DateTime? createdAt,
     Object? updatedAt = _noValue,
     Object? deletedAt = _noValue,
+    Object? createdByHuntEventId = _noValue,
   }) {
     return DogMediaAsset(
       mediaId: mediaId ?? this.mediaId,
@@ -118,6 +121,9 @@ class DogMediaAsset {
       deletedAt: identical(deletedAt, _noValue)
           ? this.deletedAt
           : deletedAt as DateTime?,
+      createdByHuntEventId: identical(createdByHuntEventId, _noValue)
+          ? this.createdByHuntEventId
+          : createdByHuntEventId as String?,
     );
   }
 
@@ -140,6 +146,7 @@ class DogMediaAsset {
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
       'deletedAt': deletedAt?.toIso8601String(),
+      'createdByHuntEventId': createdByHuntEventId,
     };
   }
 
@@ -174,6 +181,7 @@ class DogMediaAsset {
       createdAt: _readDateTime(json['createdAt']) ?? DateTime.now(),
       updatedAt: _readDateTime(json['updatedAt']),
       deletedAt: _readDateTime(json['deletedAt']),
+      createdByHuntEventId: _readString(json['createdByHuntEventId']),
     );
   }
 
@@ -220,13 +228,14 @@ class DogMediaAssetAdapter extends TypeAdapter<DogMediaAsset> {
       createdAt: fields[14] as DateTime,
       updatedAt: fields[15] as DateTime?,
       deletedAt: fields[16] as DateTime?,
+      createdByHuntEventId: fields[17] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, DogMediaAsset obj) {
     writer
-      ..writeByte(17)
+      ..writeByte(18)
       ..writeByte(0)
       ..write(obj.mediaId)
       ..writeByte(1)
@@ -260,7 +269,9 @@ class DogMediaAssetAdapter extends TypeAdapter<DogMediaAsset> {
       ..writeByte(15)
       ..write(obj.updatedAt)
       ..writeByte(16)
-      ..write(obj.deletedAt);
+      ..write(obj.deletedAt)
+      ..writeByte(17)
+      ..write(obj.createdByHuntEventId);
   }
 }
 

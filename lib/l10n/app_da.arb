@@ -1729,6 +1729,7 @@
   "hunt_event_media_choose_session": "Vælg fra sessionen",
   "hunt_event_media_remove": "Fjern fra hændelsen",
   "hunt_event_media_open_error": "Mediet kunne ikke åbnes",
+  "hunt_event_media_add_error": "Mediet kunne ikke tilføjes",
   "hunt_replay_open": "Afspil jagt",
   "hunt_replay_title": "Jagtgengivelse",
   "hunt_replay_play": "Afspil",
