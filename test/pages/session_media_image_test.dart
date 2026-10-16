@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -63,4 +64,76 @@ void main() {
     expect(find.text('missing'), findsOneWidget);
     expect(find.byType(Image), findsNothing);
   });
+
+  for (final dimensions in <({int width, int height, String name})>[
+    (width: 120, height: 60, name: 'landscape'),
+    (width: 60, height: 120, name: 'portrait'),
+    (width: 80, height: 80, name: 'square'),
+  ]) {
+    testWidgets('${dimensions.name} image keeps its source aspect ratio', (
+      tester,
+    ) async {
+      final file = File('${documents.path}/${dimensions.name}.png');
+      await tester.runAsync(() async {
+        final recorder = ui.PictureRecorder();
+        final canvas = Canvas(recorder);
+        canvas.drawRect(
+          Rect.fromLTWH(
+            0,
+            0,
+            dimensions.width.toDouble(),
+            dimensions.height.toDouble(),
+          ),
+          Paint()..color = Colors.blue,
+        );
+        final picture = recorder.endRecording();
+        final source = await picture.toImage(
+          dimensions.width,
+          dimensions.height,
+        );
+        final bytes = await source.toByteData(format: ui.ImageByteFormat.png);
+        source.dispose();
+        picture.dispose();
+        await file.writeAsBytes(bytes!.buffer.asUint8List());
+      });
+
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(devicePixelRatio: 1),
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: SizedBox(
+              width: 300,
+              height: 300,
+              child: SessionMediaImage(
+                storedPath: file.path,
+                displayWidth: 300,
+                displayHeight: 300,
+                fullScreen: true,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final image = tester.widget<Image>(find.byType(Image));
+      expect(image.fit, BoxFit.contain);
+      final provider = image.image as ResizeImage;
+      expect(provider.policy, ResizeImagePolicy.fit);
+      expect(provider.width, 300);
+      expect(provider.height, 300);
+
+      final fitted = applyBoxFit(
+        BoxFit.contain,
+        Size(dimensions.width.toDouble(), dimensions.height.toDouble()),
+        const Size(300, 300),
+      ).destination;
+      expect(
+        fitted.width / fitted.height,
+        closeTo(dimensions.width / dimensions.height, 0.001),
+      );
+    });
+  }
 }

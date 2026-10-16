@@ -105,10 +105,11 @@ class _SessionMediaImageState extends State<SessionMediaImage> {
       _evictProvider();
       _providerPath = validation.resolvedPath;
       _providerSize = decodeSize;
-      _provider = ResizeImage.resizeIfNeeded(
-        decodeSize.width,
-        decodeSize.height,
+      _provider = ResizeImage(
         FileImage(File(validation.resolvedPath)),
+        width: decodeSize.width,
+        height: decodeSize.height,
+        policy: ResizeImagePolicy.fit,
       );
     }
     return Image(

@@ -7,6 +7,26 @@ import 'package:video_player/video_player.dart';
 
 import 'package:jakthund_app/l10n/app_localizations.dart';
 
+class SessionVideoAspectRatio extends StatelessWidget {
+  const SessionVideoAspectRatio({
+    super.key,
+    required this.aspectRatio,
+    required this.child,
+  });
+
+  final double aspectRatio;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AspectRatio(
+      key: const ValueKey('session-video-aspect-ratio'),
+      aspectRatio: aspectRatio,
+      child: child,
+    );
+  }
+}
+
 class SessionVideoPlayerPage extends StatefulWidget {
   const SessionVideoPlayerPage({
     super.key,
@@ -129,7 +149,7 @@ class _SessionVideoPlayerPageState extends State<SessionVideoPlayerPage> {
                 ? const CircularProgressIndicator()
                 : controller == null || !controller.value.isInitialized
                     ? Text(l10n.session_media_video_open_failed)
-                    : AspectRatio(
+                    : SessionVideoAspectRatio(
                         aspectRatio: controller.value.aspectRatio,
                         child: Stack(
                           fit: StackFit.expand,
