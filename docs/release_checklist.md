@@ -43,6 +43,11 @@ Kjør disse kommandoene i rekkefølge:
 
 Do not upload to App Store Connect until this checklist is completed.
 
+Build the IPA with the checked-in export options so the build number from
+`pubspec.yaml` is preserved during export:
+
+`fvm flutter build ipa --release --export-options-plist=ios/ExportOptions.plist`
+
 ## 5. Sign-off
 
 - Dato:
